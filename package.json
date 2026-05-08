@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test": "node -c netlify/functions/on-this-day.js && node -c netlify/functions/sync.js"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^9.1.0"
+  }
+}
