@@ -1,3 +1,5 @@
+# ── Security & caching headers ──────────────────────────────────────────────
+
 [[headers]]
   for = "/*"
   [headers.values]
@@ -5,3 +7,36 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+# ── HTTPS redirect (version-controlled, not just a dashboard toggle) ─────────
+
+[[redirects]]
+  from = "http://oftheday.net/*"
+  to   = "https://oftheday.net/:splat"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "http://www.oftheday.net/*"
+  to   = "https://oftheday.net/:splat"
+  status = 301
+  force  = true
+
+# ── SPA fallback (prevents 404 on any path once routing is added) ────────────
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
