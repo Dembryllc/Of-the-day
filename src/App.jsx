@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTweaks, TweaksPanel, TweakSection, TweakSelect, TweakText } from './tweaks-panel';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+} from 'firebase/auth';
+import { auth } from './lib/firebase';
+import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage } from './lib/firestore';
 
 /* ── data ── */
 const CAT_META = {
@@ -726,95 +736,27 @@ function useToast() {
 }
 
 /* ── Auth ── */
-function readAccount() {
-  try {
-    const account = JSON.parse(localStorage.getItem("ofd:account") || "null");
-    if (account && account.password) {
-      const { password, ...safeAccount } = account;
-      localStorage.setItem("ofd:account", JSON.stringify(safeAccount));
-      return safeAccount;
-    }
-    return account;
-  } catch {
-    return null;
+function friendlyAuthError(code) {
+  switch (code) {
+    case 'auth/email-already-in-use': return 'An account with this email already exists.';
+    case 'auth/invalid-email': return 'Enter a valid email address.';
+    case 'auth/weak-password': return 'Use at least 6 characters for your password.';
+    case 'auth/user-not-found': return 'No account found for this email.';
+    case 'auth/wrong-password': return 'Incorrect password.';
+    case 'auth/invalid-credential': return 'Invalid email or password.';
+    case 'auth/too-many-requests': return 'Too many attempts. Try again later.';
+    case 'auth/network-request-failed': return 'Network error. Check your connection.';
+    default: return 'Something went wrong. Try again.';
   }
-}
-
-function safeAccountForBackup(account) {
-  if (!account) return null;
-  const { password, ...safeAccount } = account;
-  return safeAccount;
-}
-
-function makeSyncKey() {
-  const browserCrypto = globalThis.crypto;
-  if (browserCrypto?.randomUUID) return browserCrypto.randomUUID() + "-" + Date.now().toString(36);
-  const bytes = new Uint8Array(24);
-  if (browserCrypto?.getRandomValues) browserCrypto.getRandomValues(bytes);
-  return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("") + "-" + Date.now().toString(36);
-}
-
-function ensureAccountSyncKey(account) {
-  if (!account) return null;
-  if (account.syncKey) return account;
-  const next = { ...account, syncKey: makeSyncKey() };
-  try { localStorage.setItem("ofd:account", JSON.stringify(next)); } catch {}
-  return next;
-}
-
-async function hashPassword(password, salt) {
-  const value = `${salt}:${password}`;
-  if (globalThis.crypto?.subtle && globalThis.TextEncoder) {
-    const bytes = new TextEncoder().encode(value);
-    const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
-    return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
-  }
-  let hash = 0;
-  for (let i = 0; i < value.length; i++) hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0;
-  return String(hash);
-}
-
-async function verifyPassword(password, account) {
-  if (!account?.passwordHash || !account?.passwordSalt) return false;
-  return await hashPassword(password, account.passwordSalt) === account.passwordHash;
-}
-
-function cloudHeaders(account) {
-  const syncedAccount = ensureAccountSyncKey(account || readAccount());
-  if (!syncedAccount?.email || !syncedAccount?.syncKey) throw new Error("Create a profile before using cloud sync.");
-  return {
-    "Content-Type": "application/json",
-    "X-OFD-Email": syncedAccount.email,
-    "X-OFD-Sync-Key": syncedAccount.syncKey
-  };
-}
-
-async function saveCloudSnapshot(account, snapshot) {
-  const res = await fetch("/.netlify/functions/sync", {
-    method: "PUT",
-    headers: cloudHeaders(account),
-    body: JSON.stringify(snapshot)
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Cloud save failed.");
-  return data;
-}
-
-async function loadCloudSnapshot(account) {
-  const res = await fetch("/.netlify/functions/sync", {
-    method: "GET",
-    headers: cloudHeaders(account)
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Cloud restore failed.");
-  return data.data || null;
 }
 
 function AuthScreen({ onAuthed }) {
-  const [hasAccount, setHasAccount] = useState(() => !!readAccount());
-  const [mode, setMode] = useState(() => hasAccount ? "login" : "signup");
+  const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ name: "", email: "", password: "", grade: "3–5" });
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
   const setField = (key, value) => {
     setForm(f => ({ ...f, [key]: value }));
     setError("");
@@ -832,53 +774,45 @@ function AuthScreen({ onAuthed }) {
       setError("Use at least 8 characters for your password.");
       return;
     }
-
-    const existing = readAccount();
-    if (mode === "signup") {
-      const passwordSalt = makeSyncKey();
-      const account = {
-        name: form.name.trim(),
-        email,
-        grade: form.grade,
-        syncKey: makeSyncKey(),
-        passwordSalt,
-        passwordHash: await hashPassword(password, passwordSalt),
-        tutorialSeen: false,
-        createdAt: new Date().toISOString()
-      };
-      localStorage.setItem("ofd:account", JSON.stringify(account));
-      localStorage.setItem("ofd:session", JSON.stringify({ email, signedInAt: Date.now() }));
-      setHasAccount(true);
-      onAuthed(account);
-      return;
-    }
-
-    if (!existing) {
-      setMode("signup");
-      setError("Create an account first.");
-      return;
-    }
-    if (existing.email !== email) {
-      setError("That email does not match this device's saved account.");
-      return;
-    }
-    if (existing.passwordHash) {
-      const ok = await verifyPassword(password, existing);
-      if (!ok) {
-        setError("That password does not match this account.");
-        return;
+    setBusy(true);
+    setError("");
+    try {
+      if (mode === "signup") {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(cred.user);
+        await createUserDocument(cred.user.uid, { name: form.name.trim(), email, grade: form.grade });
+        onAuthed({ uid: cred.user.uid, email, name: form.name.trim(), grade: form.grade, plan: "free" });
+      } else {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const userDoc = await getUserDocument(cred.user.uid);
+        onAuthed({
+          uid: cred.user.uid,
+          email: cred.user.email,
+          name: userDoc?.name || cred.user.displayName || "",
+          grade: userDoc?.grade || "3–5",
+          plan: userDoc?.plan || "free",
+        });
       }
-    } else {
-      const passwordSalt = makeSyncKey();
-      const upgraded = { ...existing, passwordSalt, passwordHash: await hashPassword(password, passwordSalt) };
-      localStorage.setItem("ofd:account", JSON.stringify(upgraded));
-      localStorage.setItem("ofd:session", JSON.stringify({ email, signedInAt: Date.now() }));
-      onAuthed(upgraded);
-      return;
+    } catch (err) {
+      setError(friendlyAuthError(err.code));
+    } finally {
+      setBusy(false);
     }
-    const readyAccount = ensureAccountSyncKey(existing);
-    localStorage.setItem("ofd:session", JSON.stringify({ email, signedInAt: Date.now() }));
-    onAuthed(readyAccount);
+  };
+
+  const handlePasswordReset = async () => {
+    const email = form.email.trim().toLowerCase();
+    if (!email) { setError("Enter your email address first."); return; }
+    setBusy(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetSent(true);
+      setError("");
+    } catch (err) {
+      setError(friendlyAuthError(err.code));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -921,10 +855,16 @@ function AuthScreen({ onAuthed }) {
           <input type="password" value={form.password} onChange={e => setField("password", e.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"}/>
         </label>
         {error && <div className="auth-error">{error}</div>}
-        <button className="btn-primary auth-submit" type="submit">
-          {mode === "signup" ? "Create Account" : "Sign In"}
+        {resetSent && <div className="auth-success">Password reset email sent. Check your inbox.</div>}
+        <button className="btn-primary auth-submit" type="submit" disabled={busy}>
+          {busy ? "Please wait…" : mode === "signup" ? "Create Account" : "Sign In"}
         </button>
-        <button className="auth-switch" type="button" onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setError(""); }}>
+        {mode === "login" && (
+          <button className="auth-switch" type="button" onClick={handlePasswordReset} disabled={busy}>
+            Forgot your password?
+          </button>
+        )}
+        <button className="auth-switch" type="button" onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setError(""); setResetSent(false); }}>
           {mode === "signup" ? "Already have an account? Sign in" : "New to Of-The-Day? Create an account"}
         </button>
       </form>
@@ -2444,7 +2384,6 @@ function MainApp({ account, onSignOut }) {
   const buildDataSnapshot = useCallback(() => ({
     version: 1,
     exportedAt: new Date().toISOString(),
-    account: safeAccountForBackup(ensureAccountSyncKey(readAccount() || account)),
     favorites: [...favorites],
     customActivities,
     savedRoutines,
@@ -2474,14 +2413,13 @@ function MainApp({ account, onSignOut }) {
     persistCustomVocab(nextVocab);
     persistCustomDoNow(nextDoNow);
     persistProjectorStyle(nextProjectorStyle);
-    if (data.account) localStorage.setItem("ofd:account", JSON.stringify(safeAccountForBackup(data.account)));
   }, [account]);
 
   const saveToCloud = useCallback(async ({ quiet = false } = {}) => {
     if (!quiet) setCloudBusy(true);
     setCloudStatus(quiet ? "Auto-saving to cloud..." : "Saving to cloud...");
     try {
-      const result = await saveCloudSnapshot(account, buildDataSnapshot());
+      const result = await saveDataSnapshot(account.uid, buildDataSnapshot());
       const savedAt = result.savedAt ? new Date(result.savedAt).toLocaleString() : "just now";
       setCloudStatus(`Saved to cloud ${savedAt}`);
       if (!quiet) showToast("Cloud database saved");
@@ -2516,7 +2454,7 @@ function MainApp({ account, onSignOut }) {
     setCloudBusy(true);
     setCloudStatus("Restoring cloud data...");
     try {
-      const data = await loadCloudSnapshot(account);
+      const data = await loadDataSnapshot(account.uid);
       if (!data) throw new Error("No cloud data found for this profile.");
       applyDataSnapshot(data);
       setSettingsOpen(false);
@@ -3424,21 +3362,46 @@ function MainApp({ account, onSignOut }) {
 
 function App() {
   const isProjectorWindow = new URLSearchParams(window.location.search).get("projector") === "1";
-  if (isProjectorWindow) return <ProjectorReceiver/>;
+  const [authState, setAuthState] = useState({ loading: true, account: null });
 
-  const [account, setAccount] = useState(() => {
-    const account = readAccount();
-    let session = null;
-    try { session = JSON.parse(localStorage.getItem("ofd:session") || "null"); } catch {}
-    return account && session && session.email === account.email ? account : null;
-  });
-  const signOut = () => {
-    localStorage.removeItem("ofd:session");
-    setAccount(null);
-  };
-  return account
-    ? <MainApp account={account} onSignOut={signOut}/>
-    : <AuthScreen onAuthed={setAccount}/>;
+  useEffect(() => {
+    if (isProjectorWindow) {
+      setAuthState({ loading: false, account: null });
+      return;
+    }
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setAuthState({ loading: false, account: null });
+        return;
+      }
+      try {
+        const userDoc = await getUserDocument(user.uid);
+        const account = {
+          uid: user.uid,
+          email: user.email,
+          name: userDoc?.name || user.displayName || "",
+          grade: userDoc?.grade || "3–5",
+          plan: userDoc?.plan || "free",
+        };
+        await migrateFromLocalStorage(user.uid);
+        setAuthState({ loading: false, account });
+      } catch {
+        setAuthState({ loading: false, account: null });
+      }
+    });
+    return unsubscribe;
+  }, [isProjectorWindow]);
+
+  const signOut = useCallback(async () => {
+    await firebaseSignOut(auth);
+    setAuthState({ loading: false, account: null });
+  }, []);
+
+  if (isProjectorWindow) return <ProjectorReceiver/>;
+  if (authState.loading) return <div className="auth-loading">Loading…</div>;
+  return authState.account
+    ? <MainApp account={authState.account} onSignOut={signOut}/>
+    : <AuthScreen onAuthed={account => setAuthState({ loading: false, account })}/>;
 }
 
 export default App;
