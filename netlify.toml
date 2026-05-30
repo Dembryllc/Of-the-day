@@ -34,7 +34,19 @@
   status = 301
   force  = true
 
-# ── SPA fallback (prevents 404 on any path once routing is added) ────────────
+# ── App route (React SPA lives at /app) ─────────────────────────────────────
+
+[[redirects]]
+  from   = "/app"
+  to     = "/app.html"
+  status = 200
+
+[[redirects]]
+  from   = "/app/*"
+  to     = "/app.html"
+  status = 200
+
+# ── SPA fallback for landing page routes ────────────────────────────────────
 
 [[redirects]]
   from   = "/*"

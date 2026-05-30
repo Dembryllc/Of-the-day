@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /.netlify/
+
+Sitemap: https://oftheday.net/sitemap.xml
