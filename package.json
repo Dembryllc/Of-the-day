@@ -3,10 +3,12 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node -c netlify/functions/on-this-day.js && node -c netlify/functions/sync.js"
+    "test": "node -c functions/index.js",
+    "deploy": "vite build && firebase deploy",
+    "deploy:hosting": "vite build && firebase deploy --only hosting",
+    "deploy:functions": "firebase deploy --only functions"
   },
   "dependencies": {
-    "@netlify/blobs": "^9.1.0",
     "firebase": "^12.14.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"

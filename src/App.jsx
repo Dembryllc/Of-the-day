@@ -2545,7 +2545,7 @@ function MainApp({ account, onSignOut }) {
     setHistoryLoading(true);
     const fallback = getGradeHistoryItems(currentGrade, [], new Date());
     try {
-      const res = await fetch("/.netlify/functions/on-this-day");
+      const res = await fetch("/api/on-this-day");
       if (!res.ok) throw new Error("History source unavailable");
       const data = await res.json();
       const liveEvents = Array.isArray(data.events) ? data.events : [];

@@ -1,3 +1,5 @@
+const functions = require("firebase-functions");
+
 const MONTHS = [
   "january", "february", "march", "april", "may", "june",
   "july", "august", "september", "october", "november", "december"
@@ -184,7 +186,7 @@ function prioritize(items) {
   return picked;
 }
 
-exports.handler = async () => {
+exports.onthisday = functions.https.onRequest(async (req, res) => {
   const now = new Date();
   const month = MONTHS[now.getUTCMonth()];
   const day = now.getUTCDate();
@@ -206,33 +208,21 @@ exports.handler = async () => {
 
     if (!items.length) throw new Error("No OnThisDay items parsed");
 
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=21600"
-      },
-      body: JSON.stringify({
-        date: now.toISOString(),
-        source: "Kid-friendly classroom facts + OnThisDay.com",
-        sourceUrl,
-        events: items
-      })
-    };
+    res.set("Cache-Control", "public, max-age=21600");
+    res.status(200).json({
+      date: now.toISOString(),
+      source: "Kid-friendly classroom facts + OnThisDay.com",
+      sourceUrl,
+      events: items
+    });
   } catch (error) {
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=900"
-      },
-      body: JSON.stringify({
-        date: now.toISOString(),
-        source: "Classroom kid fact bank",
-        sourceUrl,
-        events: classroomFactsForDate(now, 8),
-        warning: error.message
-      })
-    };
+    res.set("Cache-Control", "public, max-age=900");
+    res.status(200).json({
+      date: now.toISOString(),
+      source: "Classroom kid fact bank",
+      sourceUrl,
+      events: classroomFactsForDate(now, 8),
+      warning: error.message
+    });
   }
-};
+});
