@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
 export async function createUserDocument(uid, { name, email, grade }) {
@@ -50,4 +50,13 @@ export async function migrateFromLocalStorage(uid) {
     await saveDataSnapshot(uid, snapshot);
   }
   localStorage.setItem('ofd:migrated', '1');
+}
+
+export async function fetchActivities() {
+  const snap = await getDocs(collection(db, 'activities'));
+  return snap.docs.map(d => {
+    const data = d.data();
+    // Restore numeric id so existing filter logic (GRADE_RITUAL_ACTIVITY_IDS) still works.
+    return { ...data, id: isNaN(Number(data.id)) ? data.id : Number(data.id) };
+  });
 }

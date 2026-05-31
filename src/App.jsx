@@ -9,7 +9,7 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 import { auth } from './lib/firebase';
-import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage } from './lib/firestore';
+import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities } from './lib/firestore';
 
 /* ── data ── */
 const CAT_META = {
@@ -543,10 +543,10 @@ function uniqueActivities(activities = []) {
   return Array.from(byId.values());
 }
 
-function buildLibraryActivities(customActivities = [], customVocab = {}, customDoNow = {}) {
+function buildLibraryActivities(customActivities = [], customVocab = {}, customDoNow = {}, pool = POOL) {
   const gradeContent = Object.keys(GRADE_RITUAL_ACTIVITY_IDS)
     .flatMap(grade => buildContentActivities(grade, customVocab, customDoNow));
-  return uniqueActivities([...POOL, ...customActivities, ...gradeContent]);
+  return uniqueActivities([...pool, ...customActivities, ...gradeContent]);
 }
 
 
@@ -2278,9 +2278,15 @@ function MainApp({ account, onSignOut }) {
   const currentGrade = filters.grade || account?.grade || tweaks.grade;
   const [customVocab, setCustomVocab] = useState(() => readCustomVocab());
   const [customDoNow, setCustomDoNow] = useState(() => readCustomDoNow());
+  const [activityPool, setActivityPool] = useState(POOL);
+  useEffect(() => {
+    fetchActivities().then(remote => {
+      if (remote.length > 0) setActivityPool(remote);
+    }).catch(() => {});
+  }, []);
   const contentActivities = useMemo(() => buildContentActivities(currentGrade, customVocab, customDoNow), [currentGrade, customVocab, customDoNow]);
-  const allActivities = useMemo(() => [...POOL, ...customActivities, ...contentActivities], [customActivities, contentActivities]);
-  const libraryActivities = useMemo(() => buildLibraryActivities(customActivities, customVocab, customDoNow), [customActivities, customVocab, customDoNow]);
+  const allActivities = useMemo(() => [...activityPool, ...customActivities, ...contentActivities], [activityPool, customActivities, contentActivities]);
+  const libraryActivities = useMemo(() => buildLibraryActivities(customActivities, customVocab, customDoNow, activityPool), [activityPool, customActivities, customVocab, customDoNow]);
   const [wordEditorOpen, setWordEditorOpen] = useState(false);
   const [editingWord, setEditingWord] = useState(null);
   const [doNowEditorOpen, setDoNowEditorOpen] = useState(false);
