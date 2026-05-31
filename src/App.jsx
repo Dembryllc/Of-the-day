@@ -9,7 +9,7 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 import { auth } from './lib/firebase';
-import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities } from './lib/firestore';
+import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade } from './lib/firestore';
 
 /* ── data ── */
 const CAT_META = {
@@ -2514,20 +2514,13 @@ function MainApp({ account, onSignOut }) {
     setSelectedDoNowProblem(null);
     setDoNowAnswerVisible(false);
     const contentForGrade = buildContentActivities(grade, customVocab, customDoNow);
-    setRoutine(pickRoutine(nextFilters, [...POOL, ...customActivities, ...contentForGrade]));
-    try {
-      const stored = readAccount();
-      if (stored) localStorage.setItem("ofd:account", JSON.stringify({ ...stored, grade }));
-    } catch {}
+    setRoutine(pickRoutine(nextFilters, [...activityPool, ...customActivities, ...contentForGrade]));
+    if (account?.uid) updateUserGrade(account.uid, grade).catch(() => {});
     showToast(`Grade set to ${grade}`);
-  }, [filters, customActivities, customVocab, customDoNow, setTweak, showToast]);
+  }, [account, activityPool, filters, customActivities, customVocab, customDoNow, setTweak, showToast]);
 
   const closeTutorial = useCallback(() => {
     localStorage.setItem("ofd:tutorialSeen", "true");
-    try {
-      const stored = readAccount();
-      if (stored) localStorage.setItem("ofd:account", JSON.stringify({ ...stored, tutorialSeen: true }));
-    } catch {}
     setTutorialOpen(false);
   }, []);
 
