@@ -49,7 +49,7 @@ export default function LandingPage() {
       <nav className="lp-nav">
         <div className="nav-inner">
           <a href="/" className="nav-logo">
-            of<span className="nav-logo-dot">·</span>the<span className="nav-logo-dot">·</span>day
+            <img src="/assets/oftheday-logo.png" alt="OfTheDay" className="nav-logo-img" />
           </a>
           <ul className={`nav-links${navOpen ? ' open' : ''}`} id="nav-links">
             <li><a href="#features" onClick={() => setNavOpen(false)}>Features</a></li>
@@ -250,7 +250,7 @@ export default function LandingPage() {
               </div>
               <div style={{marginTop:'20px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <span style={{fontSize:'12px', color:'rgba(255,255,255,0.3)'}}>Total: ~18 min</span>
-                <Link to="/dashboard" style={{fontSize:'12px', color:'#4DB896', textDecoration:'none', fontWeight:'700'}}>Open the app →</Link>
+                <Link to="/dashboard" style={{fontSize:'12px', color:'#F5A623', textDecoration:'none', fontWeight:'700'}}>Open the app →</Link>
               </div>
             </div>
           </div>
@@ -348,7 +348,7 @@ export default function LandingPage() {
       {/* ══════════ WHO IT'S FOR ══════════ */}
       <section className="who">
         <div className="container">
-          <div className="section-label" style={{color:'#4DB896'}}>Who It's For</div>
+          <div className="section-label" style={{color:'#F5A623'}}>Who It's For</div>
           <h2 className="section-title">Made for K–12 Teachers Who Run Morning Meetings</h2>
           <p className="section-sub">
             OfTheDay.net is built for teachers who follow Responsive Classroom, PBIS,

@@ -3,7 +3,7 @@
 .lp {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #1C1C2E;
-  background: #fff;
+  background: #f8f8f6;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
@@ -11,18 +11,18 @@
 
 /* ── VARIABLES (scoped to landing wrapper) ── */
 .lp {
-  --lp-ink:     #1C1C2E;
+  --lp-ink:     #1a2e5a;
   --lp-ink2:    #4B5563;
   --lp-muted:   #9CA3AF;
   --lp-border:  #E8E4DC;
   --lp-sand:    #F5F1EA;
   --lp-white:   #ffffff;
-  --lp-dark:    #111827;
-  --lp-dark2:   #1a2535;
-  --lp-teal:    #2D7A6A;
-  --lp-teal-bg: #EBF5F2;
-  --lp-green:   #4DB896;
-  --lp-green2:  #3aa882;
+  --lp-dark:    #1a2e5a;
+  --lp-dark2:   #14234a;
+  --lp-teal:    #1a2e5a;
+  --lp-teal-bg: #FEF3E2;
+  --lp-green:   #F5A623;
+  --lp-green2:  #d4891e;
   --lp-radius:  12px;
 }
 
@@ -40,11 +40,15 @@
   height: 64px; gap: 32px;
 }
 .lp .nav-logo {
-  display: flex; align-items: center; gap: 10px;
-  text-decoration: none; color: var(--lp-ink); font-weight: 800; font-size: 18px;
+  display: flex; align-items: center;
+  text-decoration: none;
   flex-shrink: 0;
 }
-.lp .nav-logo-dot { color: var(--lp-green); }
+.lp .nav-logo-img {
+  height: 36px; width: auto;
+  mix-blend-mode: multiply;
+  display: block;
+}
 .lp .nav-links {
   display: flex; align-items: center; gap: 28px;
   list-style: none;
@@ -67,21 +71,21 @@
   font-size: 14px; font-weight: 600; padding: 9px 20px; border-radius: 8px;
   transition: background 0.15s; white-space: nowrap;
 }
-.lp .btn-primary:hover { background: var(--lp-green2); }
+.lp .btn-primary:hover { background: var(--lp-dark2); }
 .lp .btn-primary-lg {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--lp-teal); color: #fff; text-decoration: none;
   font-size: 16px; font-weight: 700; padding: 14px 28px; border-radius: 10px;
   transition: background 0.15s, transform 0.12s;
 }
-.lp .btn-primary-lg:hover { background: var(--lp-green2); transform: translateY(-1px); }
+.lp .btn-primary-lg:hover { background: var(--lp-dark2); transform: translateY(-1px); }
 .lp .btn-secondary-lg {
   display: inline-flex; align-items: center; gap: 8px;
-  background: transparent; color: rgba(255,255,255,0.7); text-decoration: none;
+  background: transparent; color: var(--lp-teal); text-decoration: none;
   font-size: 16px; font-weight: 600; padding: 14px 28px; border-radius: 10px;
-  border: 2px solid rgba(255,255,255,0.25); transition: all 0.15s;
+  border: 2px solid var(--lp-teal); transition: all 0.15s;
 }
-.lp .btn-secondary-lg:hover { background: rgba(255,255,255,0.08); }
+.lp .btn-secondary-lg:hover { background: rgba(26,46,90,0.06); }
 .lp .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
 .lp .hamburger span { display: block; width: 22px; height: 2px; background: var(--lp-ink); margin: 5px 0; border-radius: 2px; transition: all 0.2s; }
 
@@ -104,14 +108,14 @@
 
 /* ── HERO ── */
 .lp .hero {
-  background: linear-gradient(160deg, var(--lp-dark) 0%, #1a2e26 100%);
+  background: #f8f8f6;
   padding: 80px 24px 72px;
   position: relative; overflow: hidden;
 }
 .lp .hero::before {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 60% 50% at 65% 50%, rgba(77,184,150,0.15) 0%, transparent 70%);
+  background: radial-gradient(ellipse 50% 60% at 70% 40%, rgba(245,166,35,0.08) 0%, transparent 70%);
   pointer-events: none;
 }
 .lp .hero-inner {
@@ -120,7 +124,7 @@
 }
 .lp .hero-badge {
   display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(77,184,150,0.15); border: 1px solid rgba(77,184,150,0.3);
+  background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.35);
   color: var(--lp-green); font-size: 12px; font-weight: 700;
   padding: 6px 14px; border-radius: 100px; margin-bottom: 20px;
   text-transform: uppercase; letter-spacing: 0.08em;
@@ -128,21 +132,21 @@
 .lp .hero-badge span { width: 6px; height: 6px; background: var(--lp-green); border-radius: 50%; flex-shrink: 0; }
 .lp .hero h1 {
   font-size: clamp(32px, 4.5vw, 52px); font-weight: 800; line-height: 1.15;
-  color: #fff; margin-bottom: 20px; letter-spacing: -0.02em;
+  color: var(--lp-ink); margin-bottom: 20px; letter-spacing: -0.02em;
 }
 .lp .hero h1 em { color: var(--lp-green); font-style: normal; }
 .lp .hero-sub {
-  font-size: 18px; color: rgba(255,255,255,0.7); line-height: 1.65; margin-bottom: 36px;
+  font-size: 18px; color: var(--lp-ink2); line-height: 1.65; margin-bottom: 36px;
 }
 .lp .hero-ctas { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.lp .hero-note { margin-top: 14px; font-size: 13px; color: rgba(255,255,255,0.4); }
+.lp .hero-note { margin-top: 14px; font-size: 13px; color: var(--lp-muted); }
 
 /* App mockup */
 .lp .hero-visual { position: relative; }
 .lp .app-mockup {
   background: #0f1923; border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(77,184,150,0.2);
+  box-shadow: 0 32px 80px rgba(26,46,90,0.18), 0 0 0 1px rgba(245,166,35,0.15);
   overflow: hidden;
 }
 .lp .mockup-bar {
@@ -166,8 +170,8 @@
   font-size: 14px; color: rgba(255,255,255,0.4); cursor: default;
 }
 .lp .mockup-nav-item.lp-active {
-  background: rgba(77,184,150,0.15); color: var(--lp-green);
-  border-left: 2px solid var(--lp-green); border-radius: 0 8px 8px 0;
+  background: rgba(245,166,35,0.15); color: #F5A623;
+  border-left: 2px solid #F5A623; border-radius: 0 8px 8px 0;
   width: 38px; margin-left: -2px;
 }
 .lp .mockup-main { flex: 1; padding: 16px; overflow: hidden; }
@@ -182,7 +186,7 @@
   padding: 10px 12px; margin-bottom: 8px;
   display: flex; align-items: center; gap: 10px;
 }
-.lp .activity-card.lp-selected { border-color: rgba(77,184,150,0.4); background: rgba(77,184,150,0.08); }
+.lp .activity-card.lp-selected { border-color: rgba(245,166,35,0.4); background: rgba(245,166,35,0.08); }
 .lp .activity-stripe { width: 3px; height: 36px; border-radius: 2px; flex-shrink: 0; }
 .lp .activity-info { flex: 1; min-width: 0; }
 .lp .activity-cat { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.4); }
@@ -226,7 +230,7 @@
 .lp .step-body p { font-size: 15px; color: var(--lp-ink2); }
 .lp .solution-visual {
   background: var(--lp-dark); border-radius: 16px; padding: 28px;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+  box-shadow: 0 16px 48px rgba(26,46,90,0.25);
 }
 .lp .routine-preview-title {
   font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
@@ -307,7 +311,7 @@
   display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px;
 }
 .lp .grade-chip {
-  background: rgba(77,184,150,0.12); border: 1px solid rgba(77,184,150,0.3);
+  background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.35);
   color: var(--lp-green); font-size: 14px; font-weight: 700;
   padding: 10px 22px; border-radius: 100px;
 }
@@ -319,7 +323,7 @@
 }
 .lp .who-check {
   width: 24px; height: 24px; border-radius: 50%;
-  background: rgba(77,184,150,0.15); color: var(--lp-green);
+  background: rgba(245,166,35,0.15); color: var(--lp-green);
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; flex-shrink: 0; margin-top: 2px;
 }
@@ -337,7 +341,7 @@
 }
 .lp .pricing-card.featured {
   border-color: var(--lp-teal);
-  box-shadow: 0 8px 32px rgba(45,122,106,0.2);
+  box-shadow: 0 8px 32px rgba(26,46,90,0.15);
 }
 .lp .pricing-badge {
   position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
@@ -364,7 +368,7 @@
   transition: all 0.15s;
 }
 .lp .pricing-cta-primary { background: var(--lp-teal); color: #fff; }
-.lp .pricing-cta-primary:hover { background: var(--lp-green2); }
+.lp .pricing-cta-primary:hover { background: var(--lp-dark2); }
 .lp .pricing-cta-outline { border: 2px solid var(--lp-border); color: var(--lp-ink); }
 .lp .pricing-cta-outline:hover { border-color: var(--lp-teal); color: var(--lp-teal); }
 
@@ -397,11 +401,11 @@
 }
 .lp .capture-form input:focus { box-shadow: 0 0 0 3px rgba(255,255,255,0.3); }
 .lp .capture-form button {
-  background: var(--lp-dark); color: #fff; border: none; border-radius: 8px;
+  background: var(--lp-green); color: #fff; border: none; border-radius: 8px;
   padding: 13px 22px; font-size: 15px; font-weight: 700; cursor: pointer;
   white-space: nowrap; font-family: inherit; transition: background 0.15s;
 }
-.lp .capture-form button:hover { background: #0d1520; }
+.lp .capture-form button:hover { background: var(--lp-green2); }
 .lp .capture-note { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 12px; }
 .lp .capture-success { color: #fff; font-size: 17px; font-weight: 600; padding: 14px; }
 
