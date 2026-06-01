@@ -820,7 +820,7 @@ function AuthScreen({ onAuthed }) {
   return (
     <div className="auth-page">
       <div className="auth-brand">
-        <img className="auth-logo-img" src="assets/oftheday-logo.png" alt="Of The Day logo"/>
+        <img className="auth-logo-img" src="/assets/oftheday-logo.png" alt="Of The Day logo"/>
         <div className="auth-kicker">The daily ritual for great teachers</div>
         <div className="auth-headline">Your daily classroom ritual is ready.</div>
         <div className="auth-copy">Build connection, calm, and momentum in minutes.</div>
@@ -2926,7 +2926,7 @@ function MainApp({ account, onSignOut }) {
       {/* ── SIDEBAR ── */}
       <div className="sidebar">
         <div className="sidebar-logo">
-          <img className="sidebar-logo-img" src="assets/oftheday-logo.png" alt="Of The Day logo"/>
+          <img className="sidebar-logo-img" src="/assets/oftheday-logo.png" alt="Of The Day logo"/>
           <div className="logo-sub">Good morning, {account?.name || tweaks.teacherName}</div>
         </div>
         <nav className="nav">
