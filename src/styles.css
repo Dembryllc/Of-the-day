@@ -92,7 +92,7 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, #root { height: 100%; }
-body { font-family: 'Outfit', sans-serif; background: #F5F1EA; color: #1C1C2E; -webkit-font-smoothing: antialiased; overflow: hidden; }
+body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing: antialiased; }
 
 /* ── tokens ── */
 :root {

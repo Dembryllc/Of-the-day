@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useTweaks, TweaksPanel, TweakSection, TweakSelect, TweakText } from './tweaks-panel';
+import LandingPage from './LandingPage';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -3396,11 +3398,33 @@ function App() {
     setAuthState({ loading: false, account: null });
   }, []);
 
-  if (isProjectorWindow) return <ProjectorReceiver/>;
-  if (authState.loading) return <div className="auth-loading">Loading…</div>;
-  return authState.account
-    ? <MainApp account={authState.account} onSignOut={signOut}/>
-    : <AuthScreen onAuthed={account => setAuthState({ loading: false, account })}/>;
+  if (isProjectorWindow) return <ProjectorReceiver />;
+
+  const loading = <div className="auth-loading">Loading…</div>;
+  const authed = authState.account;
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={
+          !authState.loading && authed
+            ? <Navigate to="/dashboard" replace />
+            : <LandingPage />
+        } />
+        <Route path="/login" element={
+          authState.loading ? loading :
+          authed ? <Navigate to="/dashboard" replace /> :
+          <AuthScreen onAuthed={account => setAuthState({ loading: false, account })} />
+        } />
+        <Route path="/dashboard" element={
+          authState.loading ? loading :
+          authed ? <MainApp account={authed} onSignOut={signOut} /> :
+          <Navigate to="/login" replace />
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
