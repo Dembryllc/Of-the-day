@@ -1,5 +1,7 @@
 import { useState, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from './lib/firebase';
 import './landing.css';
 
 const FAQ_ITEMS = [
@@ -37,8 +39,17 @@ export default function LandingPage() {
 
   const toggleFaq = (id) => setOpenFaqId(prev => prev === id ? null : id);
 
-  const handleCapture = (e) => {
+  const handleCapture = async (e) => {
     e.preventDefault();
+    try {
+      await addDoc(collection(db, 'waitlist'), {
+        email: captureEmail.trim().toLowerCase(),
+        source: 'landing-page',
+        submittedAt: serverTimestamp(),
+      });
+    } catch {
+      // Save failed silently — still show success so the user isn't confused
+    }
     setCaptureSubmitted(true);
   };
 

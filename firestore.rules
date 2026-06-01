@@ -19,6 +19,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Waitlist — anyone can submit an email, no one can read from the client.
+    match /waitlist/{docId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
     // Catch-all: deny everything else.
     match /{document=**} {
       allow read, write: if false;
