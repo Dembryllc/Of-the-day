@@ -870,6 +870,30 @@ button:focus-visible,
 
 
 /* ── auth ── */
+.auth-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  color: #6B7280;
+  background: #F5F1EA;
+}
+.auth-loading::after {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-left: 10px;
+  border: 2px solid #D1D5DB;
+  border-top-color: #2D7A6A;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .auth-page {
   min-height: 100vh;
   display: grid;
