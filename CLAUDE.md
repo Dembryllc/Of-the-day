@@ -83,6 +83,12 @@ firebase deploy                   # deploy everything
 ```
 `.env.local` must exist with real Firebase values before building. The values are baked into the bundle at build time.
 
+**Local machine path (Mac):** `/Users/mikeradicone/Desktop/of the day`
+Full deploy command to give the user:
+```bash
+cd "/Users/mikeradicone/Desktop/of the day" && git pull origin claude/activity-of-day-app-2JlTT && npm run build && firebase deploy --only hosting
+```
+
 ## Firestore schema
 ```
 users/{uid}
