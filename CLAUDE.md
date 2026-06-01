@@ -102,10 +102,21 @@ activities/{id}
 - `.app` class owns `height: 100vh; overflow: hidden` for the dashboard layout
 - `body` has no overflow or background set globally — each route manages its own via its root element or `useLayoutEffect`
 
-## Known pending work
+## Static assets
+Logo and images go in `public/assets/` — Vite copies everything in `public/` to `dist/` at build time. Reference them with an absolute path: `src="/assets/oftheday-logo.png"`. Never use a relative path (`assets/...`) — it breaks on any route other than `/`.
+
+## Live site status
+**oftheday.net is live and fully working as of 2026-06-01.**
+- `/` → marketing landing page ✓
+- `/login` → auth screen (sign in / create account) ✓
+- `/dashboard` → teacher app (protected) ✓
+- Logos display correctly on login and dashboard ✓
+- Firebase Auth and Firestore connected ✓
+
+## Pending work
 1. **Stripe integration** — Pro plan UI exists but payments not wired up
-2. **Email capture form** — shows success but doesn't persist email anywhere (Netlify Forms removed)
-3. **Seed script** — needs `scripts/service-account.json` from Firebase Console → Service Accounts
+2. **Email capture form** — shows success but doesn't persist email (Netlify Forms removed; needs Firestore or third-party service)
+3. **Seed script** — needs `scripts/service-account.json` from Firebase Console → Service Accounts → Generate new private key
 4. **Component extraction** — all app logic is in one 3400-line `App.jsx`
 5. **Merge to main** — active dev branch is `claude/activity-of-day-app-2JlTT`
 
