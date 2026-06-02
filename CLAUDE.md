@@ -40,7 +40,7 @@ functions/
 
 scripts/
   seed.js          — seeds Firestore activities collection (requires service-account.json)
-  activities-data.js — canonical activity pool (59 activities)
+  activities-data.js — canonical activity pool (60 activities)
 
 index.html         — React shell with SEO meta tags
 firebase.json      — hosting config, CSP headers, rewrites
@@ -112,19 +112,19 @@ activities/{id}
 Logo and images go in `public/assets/` — Vite copies everything in `public/` to `dist/` at build time. Reference them with an absolute path: `src="/assets/oftheday-logo.png"`. Never use a relative path (`assets/...`) — it breaks on any route other than `/`.
 
 ## Live site status
-**oftheday.net is live and fully working as of 2026-06-01.**
+**oftheday.net is live and fully working as of 2026-06-02.**
 - `/` → marketing landing page ✓
 - `/login` → auth screen (sign in / create account) ✓
 - `/dashboard` → teacher app (protected) ✓
 - Logos display correctly on login and dashboard ✓
 - Firebase Auth and Firestore connected ✓
+- Email capture saves to Firestore `waitlist` collection ✓
+- Firestore `activities` collection seeded with 60 activities ✓
 
 ## Pending work
 1. **Stripe integration** — Pro plan UI exists but payments not wired up
-2. **Email capture form** — shows success but doesn't persist email (Netlify Forms removed; needs Firestore or third-party service)
-3. **Seed script** — needs `scripts/service-account.json` from Firebase Console → Service Accounts → Generate new private key
-4. **Component extraction** — all app logic is in one 3400-line `App.jsx`
-5. **Merge to main** — active dev branch is `claude/activity-of-day-app-2JlTT`
+2. **Component extraction** — all app logic is in one 3400-line `App.jsx`
+3. **Merge to main** — active dev branch is `claude/activity-of-day-app-2JlTT`
 
 ## Git branch
 Active development: `claude/activity-of-day-app-2JlTT`
