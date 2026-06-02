@@ -3,7 +3,7 @@ import { db } from './firebase';
 
 export async function createUserDocument(uid, { name, email, grade }) {
   const ref = doc(db, 'users', uid);
-  await setDoc(ref, { name, email, grade, plan: 'free', createdAt: serverTimestamp() }, { merge: true });
+  await setDoc(ref, { name, email, grade, plan: 'trial', trialStartedAt: serverTimestamp(), createdAt: serverTimestamp() }, { merge: true });
 }
 
 export async function updateUserGrade(uid, grade) {

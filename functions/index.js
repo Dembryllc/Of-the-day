@@ -1,4 +1,6 @@
 const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+admin.initializeApp();
 
 const MONTHS = [
   "january", "february", "march", "april", "may", "june",
@@ -185,6 +187,17 @@ function prioritize(items) {
 
   return picked;
 }
+
+// Write trial plan when a new Firebase Auth user is created.
+// This is the authoritative source — client-side createUserDocument is a fallback.
+exports.onUserCreate = functions.auth.user().onCreate(async (user) => {
+  await admin.firestore().collection('users').doc(user.uid).set({
+    email: user.email || '',
+    plan: 'trial',
+    trialStartedAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+});
 
 exports.onthisday = functions.https.onRequest(async (req, res) => {
   const now = new Date();
