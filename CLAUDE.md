@@ -7,7 +7,8 @@ Morning meeting planner for K–12 teachers using Responsive Classroom. Teachers
 - **Frontend**: React 19, Vite 8, react-router-dom 7
 - **Auth + DB**: Firebase Auth + Firestore (`oftheday-c6490`)
 - **Hosting**: Firebase Hosting (serves `dist/`)
-- **Functions**: Firebase Cloud Functions mixed gen (`functions/index.js`) — `onthisday` is Gen 2, `onUserCreate` is Gen 1
+- **Functions**: Firebase Cloud Functions mixed gen (`functions/index.js`) — `onthisday` + `createCheckoutSession` + `stripeWebhook` are Gen 2; `onUserCreate` is Gen 1
+- **Payments**: Stripe (test mode) — checkout sessions, webhooks, subscription lifecycle
 - **Build output**: `dist/` (gitignored)
 
 ## Architecture
@@ -19,13 +20,14 @@ Single-page app. One `index.html` entry, one JS/CSS bundle, React Router handles
 | `/` | `LandingPage` | Public (redirects to `/dashboard` if authed) |
 | `/login` | `AuthScreen` | Public (redirects to `/dashboard` if authed) |
 | `/dashboard` | `MainApp` | Protected (redirects to `/login` if unauthed) |
+| `/upgrade` | `UpgradePage` | Protected (redirects to `/login` if unauthed) |
 | `?projector=1` | `ProjectorReceiver` | Public — checked before router |
 | `*` | Redirect to `/` | — |
 
 ## Key files
 ```
 src/
-  App.jsx          — all app logic (3400+ lines); Auth, MainApp, AuthScreen, projector, modals
+  App.jsx          — all app logic (3500+ lines); Auth, MainApp, AuthScreen, UpgradePage, projector, modals
   LandingPage.jsx  — marketing landing page (React component)
   landing.css      — landing page styles (scoped under .lp to avoid conflicts with app CSS)
   styles.css       — app styles (Outfit font, all component classes)
@@ -33,12 +35,15 @@ src/
   lib/
     firebase.js    — Firebase app init (throws if VITE_FIREBASE_* missing)
     firestore.js   — Firestore helpers: createUserDocument, saveDataSnapshot, fetchActivities, etc.
+    usePlan.js     — plan resolution hook: reads account.tier + account.plan + trialStartedAt → 'pro'|'free'
   tweaks-panel.jsx — dev tweaks UI
 
 functions/
-  index.js         — two Cloud Functions:
+  index.js         — four Cloud Functions:
                      • onthisday (Gen 2, onRequest) — fetches from onthisday.com, filters for classrooms
                      • onUserCreate (Gen 1, auth.user().onCreate) — writes plan:'trial' to Firestore on signup
+                     • createCheckoutSession (Gen 2, onCall) — creates Stripe customer + checkout session
+                     • stripeWebhook (Gen 2, onRequest) — handles subscription lifecycle events
 
 scripts/
   seed.js          — seeds Firestore activities collection (requires service-account.json)
@@ -95,6 +100,11 @@ cd "/Users/mikeradicone/Desktop/of the day" && git pull origin claude/activity-o
 ```
 users/{uid}
   name, email, grade, plan, createdAt
+  trialStartedAt          — set by onUserCreate on signup
+  tier                    — 'pro' | 'free'; written by stripeWebhook only
+  stripeCustomerId        — set on first checkout attempt
+  subscriptionId          — set by stripeWebhook on checkout.session.completed
+  currentPeriodEnd        — Unix timestamp; updated by subscription lifecycle events
 
 users/{uid}/data/main
   version, exportedAt, favorites[], customActivities[], savedRoutines[],
@@ -103,6 +113,33 @@ users/{uid}/data/main
 activities/{id}
   id, cat, title, meta, time, prompt, starter, directions, source, sourceUrl
 ```
+
+## Plan / tier resolution
+`src/lib/usePlan.js` is the single source of truth. Priority order:
+1. `account.tier === 'pro'` → Pro (Stripe subscriber)
+2. `account.plan === 'pro'` or `'school'` → Pro (manual override)
+3. `account.plan === 'trial'` + `trialStartedAt` within 14 days → Pro (trial)
+4. Everything else → Free
+
+`userTier` in `MainApp` is derived from `effectivePlan` (not a separate useState), so both activity gating and feature gating always agree.
+
+## Freemium gates
+| Feature | Free | Pro |
+|---------|------|-----|
+| Morning meeting activity categories | All | All |
+| Non-MM activity categories (Brain Teaser, SEL, Movement, Mindfulness) | First 3 per category | All |
+| Saved routines | 3 | Unlimited |
+| Custom activities | 1 | Unlimited |
+| Projector mode | Full access | Full access |
+
+Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger the upgrade modal which links to `/upgrade`.
+
+## Stripe notes
+- Test mode keys in `functions/.env` (gitignored — never commit)
+- `STRIPE_WEBHOOK_SECRET` must be added after registering the webhook endpoint in Stripe Dashboard
+- Webhook URL: `https://us-central1-oftheday-c6490.cloudfunctions.net/stripeWebhook`
+- Events to register: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+- Success URL: `https://oftheday.net/dashboard?upgraded=true` → shows 5-second "Welcome to Pro!" banner
 
 ## CSS notes
 - App CSS lives in `src/styles.css` — uses Outfit font (woff2 in `public/fonts/`)
@@ -126,22 +163,40 @@ Logo and images go in `public/assets/` — Vite copies everything in `public/` t
 - Wrapped in try-catch — never blocks signup; client-side `createUserDocument` is the fallback
 - **Why Gen 1:** `beforeUserCreated` (Gen 2 equivalent) requires Firebase Identity Platform (GCIP), which this project does not use
 
+### createCheckoutSession (Gen 2, callable)
+- Called from `UpgradePage` via `httpsCallable(getFunctions(), 'createCheckoutSession')`
+- Params: `{ priceId, userId }`
+- Creates Stripe customer if none exists, stores `stripeCustomerId` on user doc
+- Returns `{ url }` — client redirects to Stripe-hosted checkout
+
+### stripeWebhook (Gen 2, HTTP)
+- Verifies Stripe signature when `STRIPE_WEBHOOK_SECRET` is set
+- `checkout.session.completed` → sets `tier:'pro'`, `subscriptionId`, `currentPeriodEnd`
+- `customer.subscription.updated` → updates `tier` and `currentPeriodEnd`
+- `customer.subscription.deleted` → sets `tier:'free'`
+
 ## Live site status
-**oftheday.net is live and fully working as of 2026-06-02.**
+**oftheday.net is live and fully working as of 2026-06-03.**
 - `/` → marketing landing page ✓
 - `/login` → auth screen (sign in / create account) ✓
 - `/dashboard` → teacher app (protected) ✓
+- `/upgrade` → Stripe pricing page (protected) ✓
 - Logos display correctly on login and dashboard ✓
 - Firebase Auth and Firestore connected ✓
 - Email capture saves to Firestore `waitlist` collection ✓
 - Firestore `activities` collection seeded with 60 activities ✓
 - `onUserCreate` function deployed — auto-sets `plan: 'trial'` on signup ✓
 - `onthisday` function deployed as Gen 2 ✓
+- `createCheckoutSession` + `stripeWebhook` deployed ✓
+- Freemium gates active (activity library + saved routines + custom activities) ✓
+- Tier unification: `usePlan` checks `account.tier` first — paid Stripe users clear all caps ✓
 
 ## Pending work
-1. **Stripe integration** — Pro plan UI exists but payments not wired up
-2. **Component extraction** — all app logic is in one 3400-line `App.jsx`
-3. **Merge to main** — active dev branch is `claude/activity-of-day-app-2JlTT`
+1. **Stripe webhook secret** — register endpoint in Stripe Dashboard, add `STRIPE_WEBHOOK_SECRET` to `functions/.env`, redeploy functions
+2. **Trial status UI** — users don't know they're in a trial or how many days remain
+3. **Landing page pricing → /upgrade** — pricing cards link to `/login` instead of `/upgrade`
+4. **Component extraction** — App.jsx is 3500+ lines
+5. **Merge to main** — active dev branch is `claude/activity-of-day-app-2JlTT`
 
 ## Git branch
 Active development: `claude/activity-of-day-app-2JlTT`
