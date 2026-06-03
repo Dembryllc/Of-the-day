@@ -2338,7 +2338,7 @@ function MainApp({ account, onSignOut }) {
   const effectivePlan = usePlan(account);
   const isPlanFree = effectivePlan === 'free';
   const [upgradeModalFor, setUpgradeModalFor] = useState(null);
-  const [userTier, setUserTier] = useState(() => account?.tier === 'pro' ? 'pro' : 'free');
+  const userTier = effectivePlan === 'pro' ? 'pro' : 'free';
   const [showProBanner, setShowProBanner] = useState(() => new URLSearchParams(window.location.search).get('upgraded') === 'true');
   useEffect(() => {
     if (!showProBanner) return;
