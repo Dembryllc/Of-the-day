@@ -7,7 +7,7 @@ Morning meeting planner for K–12 teachers using Responsive Classroom. Teachers
 - **Frontend**: React 19, Vite 8, react-router-dom 7
 - **Auth + DB**: Firebase Auth + Firestore (`oftheday-c6490`)
 - **Hosting**: Firebase Hosting (serves `dist/`)
-- **Functions**: Firebase Cloud Functions gen1 (`functions/index.js`)
+- **Functions**: Firebase Cloud Functions mixed gen (`functions/index.js`) — `onthisday` is Gen 2, `onUserCreate` is Gen 1
 - **Build output**: `dist/` (gitignored)
 
 ## Architecture
@@ -36,7 +36,9 @@ src/
   tweaks-panel.jsx — dev tweaks UI
 
 functions/
-  index.js         — onthisday Cloud Function (fetches from onthisday.com, filters for classrooms)
+  index.js         — two Cloud Functions:
+                     • onthisday (Gen 2, onRequest) — fetches from onthisday.com, filters for classrooms
+                     • onUserCreate (Gen 1, auth.user().onCreate) — writes plan:'trial' to Firestore on signup
 
 scripts/
   seed.js          — seeds Firestore activities collection (requires service-account.json)
@@ -111,6 +113,19 @@ activities/{id}
 ## Static assets
 Logo and images go in `public/assets/` — Vite copies everything in `public/` to `dist/` at build time. Reference them with an absolute path: `src="/assets/oftheday-logo.png"`. Never use a relative path (`assets/...`) — it breaks on any route other than `/`.
 
+## Cloud Functions notes
+
+### onthisday (Gen 2)
+- URL: `https://onthisday-qznlc6fzoa-uc.a.run.app`
+- Fetches today's events from onthisday.com, filters for classroom-safe content, supplements with a curated kid-fact bank
+- Returns JSON: `{ date, source, sourceUrl, events[] }`
+
+### onUserCreate (Gen 1)
+- Fires on every new Firebase Auth user creation
+- Writes `{ email, plan: 'trial', trialStartedAt, createdAt }` to `users/{uid}` in Firestore
+- Wrapped in try-catch — never blocks signup; client-side `createUserDocument` is the fallback
+- **Why Gen 1:** `beforeUserCreated` (Gen 2 equivalent) requires Firebase Identity Platform (GCIP), which this project does not use
+
 ## Live site status
 **oftheday.net is live and fully working as of 2026-06-02.**
 - `/` → marketing landing page ✓
@@ -120,6 +135,8 @@ Logo and images go in `public/assets/` — Vite copies everything in `public/` t
 - Firebase Auth and Firestore connected ✓
 - Email capture saves to Firestore `waitlist` collection ✓
 - Firestore `activities` collection seeded with 60 activities ✓
+- `onUserCreate` function deployed — auto-sets `plan: 'trial'` on signup ✓
+- `onthisday` function deployed as Gen 2 ✓
 
 ## Pending work
 1. **Stripe integration** — Pro plan UI exists but payments not wired up
