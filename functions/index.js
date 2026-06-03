@@ -1,4 +1,5 @@
-const functions = require("firebase-functions");
+const { onRequest } = require("firebase-functions/v2/https");
+const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 admin.initializeApp();
 
@@ -189,17 +190,23 @@ function prioritize(items) {
 }
 
 // Write trial plan when a new Firebase Auth user is created.
-// This is the authoritative source — client-side createUserDocument is a fallback.
-exports.onUserCreate = functions.auth.user().onCreate(async (user) => {
-  await admin.firestore().collection('users').doc(user.uid).set({
-    email: user.email || '',
-    plan: 'trial',
-    trialStartedAt: admin.firestore.FieldValue.serverTimestamp(),
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
+// beforeUserCreated fires before signup completes. Wrapped in try-catch so a
+// Firestore failure never blocks sign-up — client-side createUserDocument is a fallback.
+// Gen 1 auth trigger — beforeUserCreated (v2) requires GCIP which this project doesn't use.
+exports.onUserCreate = functionsV1.auth.user().onCreate(async (user) => {
+  try {
+    await admin.firestore().collection('users').doc(user.uid).set({
+      email: user.email || '',
+      plan: 'trial',
+      trialStartedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  } catch (err) {
+    console.error('Failed to create user document on sign-up:', err);
+  }
 });
 
-exports.onthisday = functions.https.onRequest(async (req, res) => {
+exports.onthisday = onRequest(async (req, res) => {
   const now = new Date();
   const month = MONTHS[now.getUTCMonth()];
   const day = now.getUTCDate();
