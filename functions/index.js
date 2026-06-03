@@ -1,4 +1,4 @@
-const { onRequest } = require("firebase-functions/v2/https");
+const { onRequest, onCall } = require("firebase-functions/v2/https");
 const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 admin.initializeApp();
@@ -244,5 +244,105 @@ exports.onthisday = onRequest(async (req, res) => {
       events: classroomFactsForDate(now, 8),
       warning: error.message
     });
+  }
+});
+
+// ── Stripe: create Checkout Session ──────────────────────────────────────────
+exports.createCheckoutSession = onCall(async (request) => {
+  const { priceId, userId } = request.data;
+  if (!priceId || !userId) throw new Error('priceId and userId are required');
+
+  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  const db = admin.firestore();
+  const userRef = db.collection('users').doc(userId);
+  const userSnap = await userRef.get();
+  const userData = userSnap.data() || {};
+
+  let stripeCustomerId = userData.stripeCustomerId;
+  if (!stripeCustomerId) {
+    const customer = await stripe.customers.create({
+      email: userData.email || '',
+      metadata: { firebaseUserId: userId },
+    });
+    stripeCustomerId = customer.id;
+    await userRef.set({ stripeCustomerId }, { merge: true });
+  }
+
+  const session = await stripe.checkout.sessions.create({
+    customer: stripeCustomerId,
+    payment_method_types: ['card'],
+    line_items: [{ price: priceId, quantity: 1 }],
+    mode: 'subscription',
+    subscription_data: { trial_period_days: 14 },
+    success_url: 'https://oftheday.net/dashboard?upgraded=true',
+    cancel_url: 'https://oftheday.net/upgrade',
+  });
+
+  return { url: session.url };
+});
+
+// ── Stripe: webhook handler ───────────────────────────────────────────────────
+exports.stripeWebhook = onRequest(async (req, res) => {
+  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+  try {
+    if (webhookSecret) {
+      event = stripe.webhooks.constructEvent(req.rawBody, req.headers['stripe-signature'], webhookSecret);
+    } else {
+      console.warn('STRIPE_WEBHOOK_SECRET not set — skipping signature verification');
+      event = req.body;
+    }
+  } catch (err) {
+    console.error('Webhook signature error:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  const db = admin.firestore();
+
+  const userByCustomer = async (customerId) => {
+    const snap = await db.collection('users').where('stripeCustomerId', '==', customerId).limit(1).get();
+    return snap.empty ? null : snap.docs[0].ref;
+  };
+
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+        const ref = await userByCustomer(session.customer);
+        if (ref) {
+          const sub = await stripe.subscriptions.retrieve(session.subscription);
+          await ref.set({
+            tier: 'pro',
+            subscriptionId: session.subscription,
+            stripeCustomerId: session.customer,
+            currentPeriodEnd: sub.current_period_end,
+          }, { merge: true });
+        }
+        break;
+      }
+      case 'customer.subscription.updated': {
+        const sub = event.data.object;
+        const ref = await userByCustomer(sub.customer);
+        if (ref) {
+          await ref.set({
+            tier: sub.status === 'active' || sub.status === 'trialing' ? 'pro' : 'free',
+            currentPeriodEnd: sub.current_period_end,
+          }, { merge: true });
+        }
+        break;
+      }
+      case 'customer.subscription.deleted': {
+        const sub = event.data.object;
+        const ref = await userByCustomer(sub.customer);
+        if (ref) await ref.set({ tier: 'free' }, { merge: true });
+        break;
+      }
+    }
+    res.status(200).json({ received: true });
+  } catch (err) {
+    console.error('Webhook handler error:', err);
+    res.status(500).json({ error: err.message });
   }
 });

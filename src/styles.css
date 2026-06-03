@@ -1436,6 +1436,52 @@ button:focus-visible,
   .mobile-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; box-shadow: 0 -8px 24px rgba(28,28,46,0.08); }
 }
 
+/* ── pro success banner ── */
+.pro-success-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  background: #1a2e5a; color: #fff; text-align: center;
+  padding: 12px 48px; font-size: 15px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
+.pro-success-banner-close {
+  background: none; border: none; color: rgba(255,255,255,0.7);
+  cursor: pointer; font-size: 16px; line-height: 1; padding: 0; flex-shrink: 0;
+}
+.pro-success-banner-close:hover { color: #fff; }
+
+/* ── upgrade page ── */
+.upgrade-page {
+  min-height: 100dvh; background: #f8f8f6;
+  display: flex; align-items: center; justify-content: center; padding: 40px 20px;
+}
+.upgrade-page-inner { max-width: 520px; width: 100%; text-align: center; }
+.upgrade-page-logo { height: 44px; width: auto; margin-bottom: 28px; mix-blend-mode: multiply; }
+.upgrade-page-title { font-size: 28px; font-weight: 800; color: #1a2e5a; margin: 0 0 8px; }
+.upgrade-page-sub { font-size: 16px; color: #6B7280; margin: 0 0 36px; line-height: 1.5; }
+.upgrade-pricing-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.upgrade-pricing-card {
+  background: #fff; border: 1.5px solid #E5E1DA; border-radius: 16px;
+  padding: 24px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px;
+  position: relative;
+}
+.upgrade-pricing-card--featured { border-color: #1a2e5a; box-shadow: 0 4px 20px rgba(26,46,90,0.12); }
+.upgrade-pricing-badge {
+  position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+  background: #1a2e5a; color: #fff; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px; white-space: nowrap; letter-spacing: 0.04em;
+}
+.upgrade-pricing-label { font-size: 13px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.06em; }
+.upgrade-pricing-amount { font-size: 36px; font-weight: 800; color: #1a2e5a; line-height: 1; }
+.upgrade-pricing-period { font-size: 16px; font-weight: 500; color: #6B7280; }
+.upgrade-pricing-note { font-size: 12px; color: #6B7280; margin-top: -4px; }
+.upgrade-pricing-card .btn-primary { width: 100%; }
+.upgrade-page-error { color: #DC2626; font-size: 14px; margin-bottom: 16px; }
+.upgrade-page-back { font-size: 14px; color: #6B7280; text-decoration: none; }
+.upgrade-page-back:hover { color: #1a2e5a; }
+@media (max-width: 480px) {
+  .upgrade-pricing-cards { grid-template-columns: 1fr; }
+}
+
 /* ── upgrade modal ── */
 .upgrade-modal-sheet { max-width: 400px; }
 .upgrade-gate-reason { font-size: 15px; color: var(--ink); line-height: 1.5; margin: 0 0 16px; }

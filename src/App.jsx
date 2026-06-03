@@ -13,6 +13,7 @@ import {
 import { auth } from './lib/firebase';
 import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade } from './lib/firestore';
 import { usePlan, FREE_LIMITS } from './lib/usePlan';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const tsToMs = ts => ts?.toMillis?.() ?? (ts?.seconds != null ? ts.seconds * 1000 : null);
 
@@ -804,6 +805,7 @@ function AuthScreen({ onAuthed }) {
           grade: userDoc?.grade || "3–5",
           plan: userDoc?.plan || "free",
           trialStartedAt: tsToMs(userDoc?.trialStartedAt),
+          tier: userDoc?.tier || null,
         });
       }
     } catch (err) {
@@ -2289,7 +2291,7 @@ function UpgradeModal({ feature, onClose }) {
           <div className="upgrade-price">$9 / month &nbsp;·&nbsp; $99 / year</div>
         </div>
         <div className="sheet-footer">
-          <button className="btn-primary" type="button" onClick={onClose}>Upgrade to Pro — coming soon</button>
+          <button className="btn-primary" type="button" onClick={() => { onClose(); window.location.href = '/upgrade'; }}>Upgrade to Pro</button>
           <button className="btn-secondary" type="button" onClick={onClose}>Cancel</button>
         </div>
       </div>
@@ -2336,7 +2338,14 @@ function MainApp({ account, onSignOut }) {
   const effectivePlan = usePlan(account);
   const isPlanFree = effectivePlan === 'free';
   const [upgradeModalFor, setUpgradeModalFor] = useState(null);
-  const [userTier, setUserTier] = useState('free');
+  const [userTier, setUserTier] = useState(() => account?.tier === 'pro' ? 'pro' : 'free');
+  const [showProBanner, setShowProBanner] = useState(() => new URLSearchParams(window.location.search).get('upgraded') === 'true');
+  useEffect(() => {
+    if (!showProBanner) return;
+    window.history.replaceState({}, '', window.location.pathname);
+    const t = setTimeout(() => setShowProBanner(false), 5000);
+    return () => clearTimeout(t);
+  }, [showProBanner]);
   useEffect(() => {
     fetchActivities().then(remote => {
       if (remote.length > 0) setActivityPool(remote);
@@ -2992,6 +3001,12 @@ function MainApp({ account, onSignOut }) {
 
   return (
     <div className="app" style={{ "--home-accent": projectorStyle.homeAccent, "--home-soft": projectorStyle.homeSoft }}>
+      {showProBanner && (
+        <div className="pro-success-banner" role="status">
+          Welcome to Pro! 🌅
+          <button className="pro-success-banner-close" type="button" onClick={() => setShowProBanner(false)} aria-label="Dismiss">✕</button>
+        </div>
+      )}
       {/* ── SIDEBAR ── */}
       <div className="sidebar">
         <div className="sidebar-logo">
@@ -3434,6 +3449,54 @@ function MainApp({ account, onSignOut }) {
   );
 }
 
+function UpgradePage({ account }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const checkout = async (priceId) => {
+    setBusy(true);
+    setError('');
+    try {
+      const fn = httpsCallable(getFunctions(), 'createCheckoutSession');
+      const { data } = await fn({ priceId, userId: account.uid });
+      window.location.href = data.url;
+    } catch {
+      setError('Something went wrong. Please try again.');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="upgrade-page">
+      <div className="upgrade-page-inner">
+        <img src="/assets/oftheday-logo.png" alt="Of The Day" className="upgrade-page-logo" />
+        <h1 className="upgrade-page-title">Upgrade to Pro</h1>
+        <p className="upgrade-page-sub">Unlock all activities, every grade band, and projector mode.</p>
+        <div className="upgrade-pricing-cards">
+          <div className="upgrade-pricing-card">
+            <div className="upgrade-pricing-label">Monthly</div>
+            <div className="upgrade-pricing-amount">$9<span className="upgrade-pricing-period">/mo</span></div>
+            <button className="btn-primary" type="button" disabled={busy} onClick={() => checkout('price_1Te35JB2eRKsbhTpqJrBmNRE')}>
+              {busy ? 'Loading…' : 'Get Pro Monthly'}
+            </button>
+          </div>
+          <div className="upgrade-pricing-card upgrade-pricing-card--featured">
+            <div className="upgrade-pricing-badge">Best value</div>
+            <div className="upgrade-pricing-label">Annual</div>
+            <div className="upgrade-pricing-amount">$79<span className="upgrade-pricing-period">/yr</span></div>
+            <div className="upgrade-pricing-note">Save $29 vs monthly</div>
+            <button className="btn-primary" type="button" disabled={busy} onClick={() => checkout('price_1Te38IB2eRKsbhTp9GXJjxM0')}>
+              {busy ? 'Loading…' : 'Get Pro Annual'}
+            </button>
+          </div>
+        </div>
+        {error && <p className="upgrade-page-error">{error}</p>}
+        <Link to="/dashboard" className="upgrade-page-back">← Back to app</Link>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const isProjectorWindow = new URLSearchParams(window.location.search).get("projector") === "1";
   const [authState, setAuthState] = useState({ loading: true, account: null });
@@ -3457,6 +3520,7 @@ function App() {
           grade: userDoc?.grade || "3–5",
           plan: userDoc?.plan || "free",
           trialStartedAt: tsToMs(userDoc?.trialStartedAt),
+          tier: userDoc?.tier || null,
         };
         await migrateFromLocalStorage(user.uid);
         setAuthState({ loading: false, account });
@@ -3493,6 +3557,11 @@ function App() {
         <Route path="/dashboard" element={
           authState.loading ? loading :
           authed ? <MainApp account={authed} onSignOut={signOut} /> :
+          <Navigate to="/login" replace />
+        } />
+        <Route path="/upgrade" element={
+          authState.loading ? loading :
+          authed ? <UpgradePage account={authed} /> :
           <Navigate to="/login" replace />
         } />
         <Route path="*" element={<Navigate to="/" replace />} />
