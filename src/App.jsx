@@ -2339,6 +2339,23 @@ function MainApp({ account, onSignOut }) {
   const isPlanFree = effectivePlan === 'free';
   const [upgradeModalFor, setUpgradeModalFor] = useState(null);
   const userTier = effectivePlan === 'pro' ? 'pro' : 'free';
+
+  const trialDaysLeft = useMemo(() => {
+    if (account?.tier === 'pro') return null;
+    if (account?.plan !== 'trial') return null;
+    const started = account?.trialStartedAt;
+    if (!started) return 14;
+    const ms = 14 * 24 * 60 * 60 * 1000 - (Date.now() - started);
+    return ms > 0 ? Math.ceil(ms / (24 * 60 * 60 * 1000)) : 0;
+  }, [account]);
+  const [trialBannerDismissed, setTrialBannerDismissed] = useState(
+    () => sessionStorage.getItem('trial-banner-dismissed') === '1'
+  );
+  const showTrialBanner = trialDaysLeft !== null && !trialBannerDismissed;
+  function dismissTrialBanner() {
+    sessionStorage.setItem('trial-banner-dismissed', '1');
+    setTrialBannerDismissed(true);
+  }
   const [showProBanner, setShowProBanner] = useState(() => new URLSearchParams(window.location.search).get('upgraded') === 'true');
   useEffect(() => {
     if (!showProBanner) return;
@@ -3005,6 +3022,17 @@ function MainApp({ account, onSignOut }) {
         <div className="pro-success-banner" role="status">
           Welcome to Pro! 🌅
           <button className="pro-success-banner-close" type="button" onClick={() => setShowProBanner(false)} aria-label="Dismiss">✕</button>
+        </div>
+      )}
+      {showTrialBanner && (
+        <div className={`trial-banner${trialDaysLeft <= 3 ? ' trial-banner--urgent' : trialDaysLeft <= 7 ? ' trial-banner--warning' : ''}`} role="status">
+          <span>
+            {trialDaysLeft === 0
+              ? '⏰ Your free trial has ended — '
+              : `⭐ ${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left in your free trial — `}
+            <a href="/upgrade" className="trial-banner-link">Upgrade to Pro</a>
+          </span>
+          <button className="trial-banner-close" type="button" onClick={dismissTrialBanner} aria-label="Dismiss">✕</button>
         </div>
       )}
       {/* ── SIDEBAR ── */}

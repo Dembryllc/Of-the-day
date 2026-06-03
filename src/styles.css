@@ -1450,6 +1450,21 @@ button:focus-visible,
   cursor: pointer; font-size: 16px; line-height: 1; padding: 0; flex-shrink: 0;
 }
 .pro-success-banner-close:hover { color: #fff; }
+.trial-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 199;
+  background: #1e40af; color: #fff;
+  padding: 10px 48px; font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
+.trial-banner--warning { background: #92400e; }
+.trial-banner--urgent  { background: #991b1b; }
+.trial-banner-link { color: #fde68a; text-decoration: underline; white-space: nowrap; }
+.trial-banner-link:hover { color: #fff; }
+.trial-banner-close {
+  background: none; border: none; color: rgba(255,255,255,0.7);
+  cursor: pointer; font-size: 16px; line-height: 1; padding: 0; flex-shrink: 0;
+}
+.trial-banner-close:hover { color: #fff; }
 
 /* ── upgrade page ── */
 .upgrade-page {
