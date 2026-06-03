@@ -33,6 +33,13 @@ const CAT_META = {
   "Teacher Note":   { color: "#E7A6B1", dark: "#8A3045", emoji: "✎" },
   "Timer":          { color: "#A7B0BA", dark: "#475569", emoji: "⏱" },
 };
+const MORNING_MEETING_CATS = new Set(["Greeting", "Sharing", "Group Activity", "Morning Message"]);
+const FREE_ACTIVITY_LIMIT = 3;
+function getAvailableActivities(activities, type, userTier) {
+  const catActivities = activities.filter(a => a.cat === type);
+  if (userTier === 'pro' || MORNING_MEETING_CATS.has(type)) return catActivities;
+  return catActivities.slice(0, FREE_ACTIVITY_LIMIT);
+}
 
 const POOL = [
   { id:1,  cat:"Greeting",       title:"Would You Rather Welcome",      meta:"2 min · Low",    time:120, prompt:"Would you rather have the power to fly or be invisible? Share with someone near you!", starter:"I would rather… because…",          directions:"Students pair up and share with a reason. Give 60 sec, then hear 2–3 pairs." },
@@ -1610,7 +1617,7 @@ function DisplayMode({ routine, startIndex=0, onExit, projectorStyle=DEFAULT_PRO
   );
 }
 /* ── Browse Screen ── */
-function BrowseScreen({ activities, grade, favorites, builderCount, replacementTarget, onCancelReplacement, onFave, onCreate, onAdd, onBuild, onDisplay, onReviewRoutine, onOpenTool }) {
+function BrowseScreen({ activities, grade, favorites, builderCount, replacementTarget, onCancelReplacement, onFave, onCreate, onAdd, onBuild, onDisplay, onReviewRoutine, onOpenTool, userTier = 'pro', onUpgradeNeeded }) {
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {
     if (!q.trim()) return activities;
@@ -1626,6 +1633,16 @@ function BrowseScreen({ activities, grade, favorites, builderCount, replacementT
     filtered.forEach(a => { if (!map[a.cat]) map[a.cat] = []; map[a.cat].push(a); });
     return map;
   }, [filtered]);
+  const lockedIds = useMemo(() => {
+    if (userTier === 'pro') return new Set();
+    const locked = new Set();
+    const byCatAll = {};
+    activities.forEach(a => { if (!byCatAll[a.cat]) byCatAll[a.cat] = []; byCatAll[a.cat].push(a); });
+    Object.entries(byCatAll).forEach(([cat, items]) => {
+      if (!MORNING_MEETING_CATS.has(cat)) items.slice(FREE_ACTIVITY_LIMIT).forEach(a => locked.add(a.id));
+    });
+    return locked;
+  }, [activities, userTier]);
   return (
     <div className="routine-col" style={{ background: "var(--sand)" }}>
       <div className="browse-header">
@@ -1694,26 +1711,32 @@ function BrowseScreen({ activities, grade, favorites, builderCount, replacementT
                 {cm.emoji} {cat}
               </div>
               <div className="browse-grid">
-                {items.map(a => (
-                  <div key={a.id} className="browse-card" style={{ borderTop: `3px solid ${cm.color}` }}>
-                    <div style={{display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:8}}>
-                      <div className="browse-card-title">{a.title}</div>
-                      <button
-                        className={`browse-card-heart${favorites.has(a.id) ? ' saved' : ''}`}
-                        type="button"
-                        aria-label={favorites.has(a.id) ? `Remove ${a.title} from favorites` : `Save ${a.title} to favorites`}
-                        onClick={() => onFave(a)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,flexShrink:0}}>
-                        {favorites.has(a.id) ? "♥" : "♡"}
-                      </button>
+                {items.map(a => {
+                  const locked = lockedIds.has(a.id);
+                  return (
+                    <div key={a.id} className={`browse-card${locked ? ' browse-card--locked' : ''}`} style={{ borderTop: `3px solid ${cm.color}` }}>
+                      <div style={{display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:8}}>
+                        <div className="browse-card-title">{a.title}</div>
+                        {locked
+                          ? <span className="browse-card-pro-badge">Pro</span>
+                          : <button
+                              className={`browse-card-heart${favorites.has(a.id) ? ' saved' : ''}`}
+                              type="button"
+                              aria-label={favorites.has(a.id) ? `Remove ${a.title} from favorites` : `Save ${a.title} to favorites`}
+                              onClick={() => onFave(a)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,flexShrink:0}}>
+                              {favorites.has(a.id) ? "♥" : "♡"}
+                            </button>
+                        }
+                      </div>
+                      <div className="browse-card-meta">{a.meta}</div>
+                      <div className="browse-card-actions">
+                        <button className={replacementTarget ? "btn-primary btn-compact" : "btn-secondary btn-compact"} type="button" aria-label={replacementTarget ? `Replace ${replacementTarget.title} with ${a.title}` : `Use ${a.title} today`} onClick={() => locked ? onUpgradeNeeded?.() : onAdd(a)}>{replacementTarget ? "Replace" : "Use Today"}</button>
+                        <button className="btn-secondary btn-compact" type="button" aria-label={`Add ${a.title} to routine builder`} onClick={() => locked ? onUpgradeNeeded?.() : onBuild(a)}>Add to Routine</button>
+                        <button className="btn-secondary btn-compact" type="button" aria-label={`Project ${a.title}`} onClick={() => onDisplay(a)}>Project</button>
+                      </div>
                     </div>
-                    <div className="browse-card-meta">{a.meta}</div>
-                    <div className="browse-card-actions">
-                      <button className={replacementTarget ? "btn-primary btn-compact" : "btn-secondary btn-compact"} type="button" aria-label={replacementTarget ? `Replace ${replacementTarget.title} with ${a.title}` : `Use ${a.title} today`} onClick={() => onAdd(a)}>{replacementTarget ? "Replace" : "Use Today"}</button>
-                      <button className="btn-secondary btn-compact" type="button" aria-label={`Add ${a.title} to routine builder`} onClick={() => onBuild(a)}>Add to Routine</button>
-                      <button className="btn-secondary btn-compact" type="button" aria-label={`Project ${a.title}`} onClick={() => onDisplay(a)}>Project</button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           );
@@ -2313,6 +2336,7 @@ function MainApp({ account, onSignOut }) {
   const effectivePlan = usePlan(account);
   const isPlanFree = effectivePlan === 'free';
   const [upgradeModalFor, setUpgradeModalFor] = useState(null);
+  const [userTier, setUserTier] = useState('free');
   useEffect(() => {
     fetchActivities().then(remote => {
       if (remote.length > 0) setActivityPool(remote);
@@ -2355,10 +2379,6 @@ function MainApp({ account, onSignOut }) {
   const [presentationViewDefault, setPresentationViewDefault] = useState(() => readPresentationView());
 
   const projectToWindow = useCallback((items, startIndex = 0, presentationView = null) => {
-    if (isPlanFree) {
-      setUpgradeModalFor("Projector mode is available on the Pro plan.");
-      return;
-    }
     const list = Array.isArray(items) ? items.filter(Boolean) : [];
     if (!list.length) return;
     if (!presentationView) {
@@ -2392,7 +2412,7 @@ function MainApp({ account, onSignOut }) {
     setProjectorConnected(true);
     setPresentationViewDefault(safePresentationView);
     showToast(`${safePresentationView === "guided" ? "Guided View" : "Clean View"} projected`);
-  }, [isPlanFree, projectorStyle, showToast]);
+  }, [projectorStyle, showToast]);
 
   const choosePresentationView = useCallback(view => {
     if (!presentationChoice) return;
@@ -3177,6 +3197,8 @@ function MainApp({ account, onSignOut }) {
               onDisplay={displaySingle}
               onReviewRoutine={() => setActiveNav("Build")}
               onOpenTool={setActiveNav}
+              userTier={userTier}
+              onUpgradeNeeded={() => setUpgradeModalFor("Upgrade to Pro to unlock all activities.")}
             />
           )}
 
