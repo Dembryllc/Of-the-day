@@ -3030,6 +3030,9 @@ function MainApp({ account, onSignOut }) {
           ))}
         </nav>
         <div className="sidebar-actions">
+          {userTier !== 'pro' && (
+            <a href="/upgrade" className="sidebar-upgrade-btn">⭐ Go Pro</a>
+          )}
           {projectorConnected && (
             <div className="projector-live-card">
               <strong>Projector live</strong>

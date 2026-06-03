@@ -153,6 +153,8 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
 }
 .sidebar-footer:hover { color: rgba(255,255,255,0.55); }
 .sidebar-actions { border-top: 1px solid rgba(255,255,255,0.07); }
+.sidebar-upgrade-btn { display: flex; align-items: center; gap: 8px; margin: 10px 12px 4px; padding: 10px 14px; background: linear-gradient(135deg, #f5c842, #f0a500); color: #1a1a1a; font: 700 13px/1 'Outfit', sans-serif; border-radius: 10px; text-decoration: none; transition: opacity 0.14s; }
+.sidebar-upgrade-btn:hover { opacity: 0.88; }
 .sidebar-actions .sidebar-footer { border-top: 0; }
 .projector-live-card { margin: 0 12px 10px; padding: 11px 12px; border: 1px solid rgba(77,184,150,0.32); border-radius: 12px; background: rgba(77,184,150,0.1); color: rgba(255,255,255,0.86); font-size: 12px; line-height: 1.35; }
 .projector-live-card strong { display: block; color: #fff; font-size: 13px; margin-bottom: 2px; }
