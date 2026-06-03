@@ -12,6 +12,9 @@ import {
 } from 'firebase/auth';
 import { auth } from './lib/firebase';
 import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade } from './lib/firestore';
+import { usePlan, FREE_LIMITS } from './lib/usePlan';
+
+const tsToMs = ts => ts?.toMillis?.() ?? (ts?.seconds != null ? ts.seconds * 1000 : null);
 
 /* ── data ── */
 const CAT_META = {
@@ -783,7 +786,7 @@ function AuthScreen({ onAuthed }) {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await sendEmailVerification(cred.user);
         await createUserDocument(cred.user.uid, { name: form.name.trim(), email, grade: form.grade });
-        onAuthed({ uid: cred.user.uid, email, name: form.name.trim(), grade: form.grade, plan: "free" });
+        onAuthed({ uid: cred.user.uid, email, name: form.name.trim(), grade: form.grade, plan: "trial", trialStartedAt: Date.now() });
       } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
         const userDoc = await getUserDocument(cred.user.uid);
@@ -793,6 +796,7 @@ function AuthScreen({ onAuthed }) {
           name: userDoc?.name || cred.user.displayName || "",
           grade: userDoc?.grade || "3–5",
           plan: userDoc?.plan || "free",
+          trialStartedAt: tsToMs(userDoc?.trialStartedAt),
         });
       }
     } catch (err) {
@@ -2245,6 +2249,31 @@ function TutorialModal({ onClose }) {
   );
 }
 
+function UpgradeModal({ feature, onClose }) {
+  return (
+    <div className="overlay dialog-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="filter-sheet upgrade-modal-sheet" role="dialog" aria-modal="true">
+        <div className="sheet-handle" />
+        <div className="sheet-title">Upgrade to Pro</div>
+        <div className="sheet-body">
+          <p className="upgrade-gate-reason">{feature}</p>
+          <ul className="upgrade-perks">
+            <li>Unlimited saved routines &amp; custom activities</li>
+            <li>Projector &amp; fullscreen mode</li>
+            <li>All grade bands &amp; category filters</li>
+            <li>Custom vocabulary &amp; Do Now</li>
+          </ul>
+          <div className="upgrade-price">$9 / month &nbsp;·&nbsp; $99 / year</div>
+        </div>
+        <div className="sheet-footer">
+          <button className="btn-primary" type="button" onClick={onClose}>Upgrade to Pro — coming soon</button>
+          <button className="btn-secondary" type="button" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ════════════════════════════════
    MAIN APP
 ════════════════════════════════ */
@@ -2281,6 +2310,9 @@ function MainApp({ account, onSignOut }) {
   const [customVocab, setCustomVocab] = useState(() => readCustomVocab());
   const [customDoNow, setCustomDoNow] = useState(() => readCustomDoNow());
   const [activityPool, setActivityPool] = useState(POOL);
+  const effectivePlan = usePlan(account);
+  const isPlanFree = effectivePlan === 'free';
+  const [upgradeModalFor, setUpgradeModalFor] = useState(null);
   useEffect(() => {
     fetchActivities().then(remote => {
       if (remote.length > 0) setActivityPool(remote);
@@ -2323,6 +2355,10 @@ function MainApp({ account, onSignOut }) {
   const [presentationViewDefault, setPresentationViewDefault] = useState(() => readPresentationView());
 
   const projectToWindow = useCallback((items, startIndex = 0, presentationView = null) => {
+    if (isPlanFree) {
+      setUpgradeModalFor("Projector mode is available on the Pro plan.");
+      return;
+    }
     const list = Array.isArray(items) ? items.filter(Boolean) : [];
     if (!list.length) return;
     if (!presentationView) {
@@ -2356,7 +2392,7 @@ function MainApp({ account, onSignOut }) {
     setProjectorConnected(true);
     setPresentationViewDefault(safePresentationView);
     showToast(`${safePresentationView === "guided" ? "Guided View" : "Clean View"} projected`);
-  }, [projectorStyle, showToast]);
+  }, [isPlanFree, projectorStyle, showToast]);
 
   const choosePresentationView = useCallback(view => {
     if (!presentationChoice) return;
@@ -2639,6 +2675,11 @@ function MainApp({ account, onSignOut }) {
   };
 
   const saveCustomActivity = useCallback(activity => {
+    const isNew = !customActivities.some(a => a.id === activity.id);
+    if (isNew && isPlanFree && customActivities.length >= FREE_LIMITS.customActivities) {
+      setUpgradeModalFor(`You've used your ${FREE_LIMITS.customActivities} free custom activity. Upgrade for unlimited.`);
+      return;
+    }
     setCustomActivities(items => {
       const exists = items.some(a => a.id === activity.id);
       const next = exists ? items.map(a => a.id === activity.id ? activity : a) : [...items, activity];
@@ -2650,7 +2691,7 @@ function MainApp({ account, onSignOut }) {
     setEditingActivity(null);
     setActiveNav(activeNav === "Build" ? "Build" : "Today");
     showToast(editingActivity ? "Saved: Activity updated" : "Saved: Activity created");
-  }, [activeNav, editingActivity, showToast]);
+  }, [activeNav, customActivities, editingActivity, isPlanFree, showToast]);
 
   const deleteCustomActivity = useCallback(activity => {
     if (!confirm(`Delete "${activity.title}" from your activities?`)) return;
@@ -2682,6 +2723,10 @@ function MainApp({ account, onSignOut }) {
   }, [customActivities, favorites, routine, selected, showToast]);
 
   const saveBuiltRoutine = useCallback(({ name, items }) => {
+    if (!builderDraft.editingRoutineId && isPlanFree && savedRoutines.length >= FREE_LIMITS.savedRoutines) {
+      setUpgradeModalFor(`You've saved ${FREE_LIMITS.savedRoutines} routines — the free plan limit. Upgrade for unlimited.`);
+      return;
+    }
     if (builderDraft.editingRoutineId) {
       const updated = {
         id: builderDraft.editingRoutineId,
@@ -2713,7 +2758,7 @@ function MainApp({ account, onSignOut }) {
       return next;
     });
     showToast("Saved: Routine");
-  }, [builderDraft.editingRoutineId, builderDraft.savedAt, showToast]);
+  }, [builderDraft.editingRoutineId, builderDraft.savedAt, isPlanFree, savedRoutines, showToast]);
 
   const useBuiltRoutineToday = useCallback(items => {
     setRoutine(items);
@@ -2728,6 +2773,10 @@ function MainApp({ account, onSignOut }) {
   }, [projectToWindow]);
 
   const saveCurrentRoutine = useCallback(() => {
+    if (isPlanFree && savedRoutines.length >= FREE_LIMITS.savedRoutines) {
+      setUpgradeModalFor(`You've saved ${FREE_LIMITS.savedRoutines} routines — the free plan limit. Upgrade for unlimited.`);
+      return;
+    }
     const saved = {
       id: `routine-${Date.now()}`,
       name: `${formatToday()} Routine`,
@@ -2740,7 +2789,7 @@ function MainApp({ account, onSignOut }) {
       return next;
     });
     showToast("Saved: Routine");
-  }, [routine, showToast]);
+  }, [isPlanFree, routine, savedRoutines, showToast]);
 
   const loadSavedRoutine = useCallback(saved => {
     setRoutine(saved.items);
@@ -3346,6 +3395,8 @@ function MainApp({ account, onSignOut }) {
         ))}
       </div>
 
+      {upgradeModalFor && <UpgradeModal feature={upgradeModalFor} onClose={() => setUpgradeModalFor(null)} />}
+
       {/* TWEAKS */}
       <TweaksPanel>
         <TweakSection label="Teacher">
@@ -3383,6 +3434,7 @@ function App() {
           name: userDoc?.name || user.displayName || "",
           grade: userDoc?.grade || "3–5",
           plan: userDoc?.plan || "free",
+          trialStartedAt: tsToMs(userDoc?.trialStartedAt),
         };
         await migrateFromLocalStorage(user.uid);
         setAuthState({ loading: false, account });

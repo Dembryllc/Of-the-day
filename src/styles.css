@@ -1433,4 +1433,11 @@ button:focus-visible,
   .mobile-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; box-shadow: 0 -8px 24px rgba(28,28,46,0.08); }
 }
 
+/* ── upgrade modal ── */
+.upgrade-modal-sheet { max-width: 400px; }
+.upgrade-gate-reason { font-size: 15px; color: var(--ink); line-height: 1.5; margin: 0 0 16px; }
+.upgrade-perks { margin: 0 0 20px; padding: 0 0 0 18px; display: flex; flex-direction: column; gap: 6px; }
+.upgrade-perks li { font-size: 14px; color: var(--ink); line-height: 1.4; }
+.upgrade-price { font-size: 17px; font-weight: 700; color: var(--ink); text-align: center; padding: 14px 0 4px; border-top: 1px solid #F0EDE8; }
+
 
