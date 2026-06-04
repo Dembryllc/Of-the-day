@@ -441,7 +441,7 @@ export default function LandingPage() {
                 <li>On This Day historical facts</li>
                 <li>Cloud sync — all your devices</li>
               </ul>
-              <Link to="/dashboard" className="pricing-cta pricing-cta-primary">Start Pro Free Trial</Link>
+              <Link to="/upgrade" className="pricing-cta pricing-cta-primary">Start Pro Free Trial</Link>
             </div>
 
             <div className="pricing-card">
