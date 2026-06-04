@@ -10,6 +10,10 @@ export async function updateUserGrade(uid, grade) {
   await setDoc(doc(db, 'users', uid), { grade }, { merge: true });
 }
 
+export async function updateUserProfile(uid, { name, grade }) {
+  await setDoc(doc(db, 'users', uid), { name, grade }, { merge: true });
+}
+
 export async function getUserDocument(uid) {
   const snap = await getDoc(doc(db, 'users', uid));
   return snap.exists() ? snap.data() : null;

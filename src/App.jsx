@@ -11,7 +11,7 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 import { auth } from './lib/firebase';
-import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade } from './lib/firestore';
+import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade, updateUserProfile } from './lib/firestore';
 import { usePlan, FREE_LIMITS } from './lib/usePlan';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
@@ -1219,6 +1219,78 @@ function SettingsSheet({ onClose, onExport, onImport, onReset, projectorStyle, o
   );
 }
 
+/* ── Profile Sheet ── */
+function ProfileSheet({ account, displayName, trialDaysLeft, effectivePlan, onClose, onSignOut, onSave }) {
+  const [name, setName] = useState(displayName || account?.name || '');
+  const [grade, setGrade] = useState(account?.grade || '3–5');
+  const [saving, setSaving] = useState(false);
+
+  const initials = (name || account?.name || 'T')[0].toUpperCase();
+
+  const planLabel = account?.tier === 'pro'
+    ? 'Pro'
+    : trialDaysLeft !== null
+      ? `Trial · ${trialDaysLeft} day${trialDaysLeft !== 1 ? 's' : ''} left`
+      : 'Free';
+  const planClass = account?.tier === 'pro'
+    ? 'profile-plan-badge--pro'
+    : trialDaysLeft !== null
+      ? 'profile-plan-badge--trial'
+      : 'profile-plan-badge--free';
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (account?.uid) await updateUserProfile(account.uid, { name: name.trim(), grade });
+      onSave({ name: name.trim(), grade });
+      onClose();
+    } catch {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="filter-sheet profile-sheet">
+        <div className="sheet-handle"/>
+        <div className="sheet-title">Your Profile</div>
+        <div className="sheet-body">
+          <div className="profile-avatar-row">
+            <div className="profile-avatar-lg">{initials}</div>
+            <div className="profile-identity">
+              <div className="profile-email">{account?.email}</div>
+              <span className={`profile-plan-badge ${planClass}`}>{planLabel}</span>
+              {effectivePlan !== 'pro' && (
+                <a href="/upgrade" className="profile-upgrade-link">Upgrade to Pro →</a>
+              )}
+            </div>
+          </div>
+          <div className="form-grid">
+            <label className="form-field">
+              <span>Your Name</span>
+              <input value={name} onChange={e => setName(e.target.value)} maxLength={50} placeholder="Your name"/>
+            </label>
+            <label className="form-field">
+              <span>Default Grade</span>
+              <select value={grade} onChange={e => setGrade(e.target.value)}>
+                {["K–2","3–5","6–8","9–12"].map(g => <option key={g}>{g}</option>)}
+              </select>
+            </label>
+          </div>
+        </div>
+        <div className="sheet-footer" style={{flexDirection:'column', gap: 10}}>
+          <button className="btn-primary" type="button" style={{width:'100%'}} disabled={saving} onClick={handleSave}>
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+          <button className="btn-danger" type="button" style={{width:'100%'}} onClick={() => { onClose(); onSignOut(); }}>
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Filter Sheet ── */
 function FilterSheet({ filters, onApply, onClose }) {
   const [local, setLocal] = useState({ ...filters });
@@ -2315,6 +2387,8 @@ function MainApp({ account, onSignOut }) {
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [displayName, setDisplayName] = useState(account?.name || '');
   const [customOpen, setCustomOpen] = useState(false);
   const [favorites, setFavorites] = useState(() => readStoredFavorites());
   const [projectorStyle, setProjectorStyle] = useState(() => readProjectorStyle(account));
@@ -3029,7 +3103,7 @@ function MainApp({ account, onSignOut }) {
       <div className="sidebar">
         <div className="sidebar-logo">
           <img className="sidebar-logo-img" src="/assets/oftheday-logo.png" alt="Of The Day logo"/>
-          <div className="logo-sub">Good morning, {account?.name || tweaks.teacherName}</div>
+          <div className="logo-sub">Good morning, {displayName || tweaks.teacherName}</div>
         </div>
         <nav className="nav">
           {navItems.map(n => (
@@ -3067,7 +3141,16 @@ function MainApp({ account, onSignOut }) {
               <button type="button" onClick={stopProjector}>Stop Projecting</button>
             </div>
           )}
-          <button className="sidebar-footer" type="button" onClick={onSignOut}>↪ Sign out</button>
+          <button className="sidebar-profile" type="button" onClick={() => setProfileOpen(true)}>
+            <div className="sidebar-avatar">{(displayName || account?.name || 'T')[0].toUpperCase()}</div>
+            <div className="sidebar-profile-info">
+              <div className="sidebar-profile-name">{displayName || account?.name || 'Teacher'}</div>
+              <div className="sidebar-profile-plan">
+                {account?.tier === 'pro' ? 'Pro' : trialDaysLeft !== null ? 'Trial' : 'Free'} · Profile
+              </div>
+            </div>
+            <span className="sidebar-profile-chevron">›</span>
+          </button>
         </div>
       </div>
 
@@ -3416,6 +3499,22 @@ function MainApp({ account, onSignOut }) {
           cloudBusy={cloudBusy}
           cloudAutoSave={cloudAutoSave}
           onCloudAutoSaveChange={setCloudAutoSave}
+        />
+      )}
+
+      {/* PROFILE SHEET */}
+      {profileOpen && (
+        <ProfileSheet
+          account={account}
+          displayName={displayName}
+          trialDaysLeft={trialDaysLeft}
+          effectivePlan={effectivePlan}
+          onClose={() => setProfileOpen(false)}
+          onSignOut={onSignOut}
+          onSave={({ name, grade }) => {
+            setDisplayName(name);
+            handleGradeChange(grade);
+          }}
         />
       )}
 
