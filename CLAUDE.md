@@ -5,7 +5,7 @@ Morning meeting planner for K–12 teachers using Responsive Classroom. Teachers
 
 ## Tech stack
 - **Frontend**: React 19, Vite 8, react-router-dom 7
-- **Auth + DB**: Firebase Auth + Firestore (`oftheday-c6490`)
+- **Auth + DB**: Firebase Auth (email/password + Google) + Firestore (`oftheday-c6490`)
 - **Hosting**: Firebase Hosting (serves `dist/`)
 - **Functions**: Firebase Cloud Functions mixed gen (`functions/index.js`) — `onthisday` + `createCheckoutSession` + `stripeWebhook` are Gen 2; `onUserCreate` is Gen 1
 - **Payments**: Stripe (test mode) — checkout sessions, webhooks, subscription lifecycle
@@ -27,14 +27,16 @@ Single-page app. One `index.html` entry, one JS/CSS bundle, React Router handles
 ## Key files
 ```
 src/
-  App.jsx          — all app logic (3500+ lines); Auth, MainApp, AuthScreen, UpgradePage, projector, modals
+  App.jsx          — all app logic (4000+ lines); Auth, MainApp, AuthScreen, UpgradePage,
+                     ProfileSheet, projector/DisplayMode, modals
   LandingPage.jsx  — marketing landing page (React component)
   landing.css      — landing page styles (scoped under .lp to avoid conflicts with app CSS)
   styles.css       — app styles (Outfit font, all component classes)
   main.jsx         — React entry, ErrorBoundary
   lib/
     firebase.js    — Firebase app init (throws if VITE_FIREBASE_* missing)
-    firestore.js   — Firestore helpers: createUserDocument, saveDataSnapshot, fetchActivities, etc.
+    firestore.js   — Firestore helpers: createUserDocument, saveDataSnapshot, fetchActivities,
+                     updateUserGrade, updateUserProfile, etc.
     usePlan.js     — plan resolution hook: reads account.tier + account.plan + trialStartedAt → 'pro'|'free'
   tweaks-panel.jsx — dev tweaks UI
 
@@ -100,7 +102,7 @@ cd "/Users/mikeradicone/Desktop/of the day" && git pull origin claude/activity-o
 ```
 users/{uid}
   name, email, grade, plan, createdAt
-  trialStartedAt          — set by onUserCreate on signup
+  trialStartedAt          — set by onUserCreate on signup (or createUserDocument fallback)
   tier                    — 'pro' | 'free'; written by stripeWebhook only
   stripeCustomerId        — set on first checkout attempt
   subscriptionId          — set by stripeWebhook on checkout.session.completed
@@ -139,13 +141,91 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
 - `STRIPE_WEBHOOK_SECRET` must be added after registering the webhook endpoint in Stripe Dashboard
 - Webhook URL: `https://us-central1-oftheday-c6490.cloudfunctions.net/stripeWebhook`
 - Events to register: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
-- Success URL: `https://oftheday.net/dashboard?upgraded=true` → shows 5-second "Welcome to Pro!" banner
+- Success URL: `https://oftheday.net/dashboard?upgraded=true` → shows "Welcome to Pro!" banner
+
+## Auth notes
+- Email/password: `createUserWithEmailAndPassword` / `signInWithEmailAndPassword`
+- Google: `signInWithPopup(auth, new GoogleAuthProvider())` — first sign-in auto-creates user doc with trial plan via `resolveGoogleUser()` helper in `AuthScreen`
+- `onUserCreate` Cloud Function (Gen 1) fires on every new Firebase Auth user regardless of provider
+- `friendlyAuthError()` handles `auth/popup-closed-by-user` and `auth/cancelled-popup-request` silently (no error shown)
 
 ## CSS notes
 - App CSS lives in `src/styles.css` — uses Outfit font (woff2 in `public/fonts/`)
-- Landing page CSS in `src/landing.css` — all selectors scoped under `.lp` parent class to prevent conflicts with app class names (`.nav`, `.btn-primary`, etc. overlap)
-- `.app` class owns `height: 100vh; overflow: hidden` for the dashboard layout
-- `body` has no overflow or background set globally — each route manages its own via its root element or `useLayoutEffect`
+- Landing page CSS in `src/landing.css` — all selectors scoped under `.lp` parent class
+- `.app` is `display: flex; flex-direction: column; height: 100vh; overflow: hidden`
+- `.app-shell` is the inner flex row containing `.sidebar` + `.main` — `flex: 1; overflow: hidden`
+- Trial banner + pro success banner render in document flow (inside `.app`, above `.app-shell`) — NOT fixed position
+- `body` has no overflow or background set globally — each route manages its own
+
+### Color tokens
+| Token | Value | Usage |
+|-------|-------|-------|
+| Navy | `#1B2D5B` | Sidebar background, auth panel accents |
+| Gold | `#F5A623` | Active nav accent, upgrade CTAs, projector nav |
+| Sky Blue | `#4A90D9` | Secondary only |
+| Background | `#F8F9FC` | App background |
+| Teal | `#4DB896` (var --teal) | Primary action buttons |
+
+## Sidebar
+- Background: `#1B2D5B` (navy)
+- Active nav accent: `#F5A623` (gold) via `border-left-color`
+- Nav font: 15px, icons 16px (20px in collapsed mode)
+- Collapse toggle: `sidebarCollapsed` state in `MainApp`, persisted to `localStorage('ofd:sidebarCollapsed')`
+- Collapsed width: 60px — shows emoji icons only, hides text labels, trial card, upgrade btn, projector live card
+- Profile row at bottom: gold avatar circle (initials) + name + plan label → opens `ProfileSheet`
+
+## ProfileSheet
+- Component in `App.jsx`, opened via sidebar profile row
+- Editable: name, default grade
+- Read-only: email, plan badge (Pro / Trial · X days / Free)
+- Upgrade link shown for non-pro users
+- Save → calls `updateUserProfile(uid, { name, grade })` in `firestore.js`, updates `displayName` local state + `handleGradeChange`
+- Sign Out button inside the sheet
+
+## Trial status UI
+- `trialDaysLeft` useMemo in `MainApp`: null if paid/free, 0–14 for active trial
+- Top banner: blue → amber (≤7 days) → red (≤3 days); dismissed per-session via `sessionStorage`
+- Sidebar trial card: gold-bordered, shows countdown + "Upgrade to Pro →" link
+- Paid users (`account.tier === 'pro'`): see neither banner nor trial card
+
+## Library header
+- Replaced the 6-card `.library-quick-grid` with a horizontal scrollable `.library-pill-row`
+- Pills: Build a Routine (teal/filled), Word of the Day, Do Now, On This Day, My Activities, Favorites
+
+## DisplayMode (projector)
+The projector is a full-screen overlay component (`position: fixed; inset: 0; z-index: 300`).
+
+### Teacher control bar
+- Toggle button (top-right): "⚙ Controls" / "✕ Close"
+- When open: horizontal panel with controls for:
+  - **Theme**: Dark / Light / Warm / High Contrast (session-local color presets)
+  - **Font Size**: Small / Medium / Large / XLarge
+  - **Font Style**: Sans-Serif / Serif (Serif applies Georgia to prompt/starter/guidance)
+  - **Instructions**: Show / Hide (controls `showStarter` display)
+  - **Timer**: Show / Hide / Reset
+  - **View**: Clean / Guided (replaces old `disp-view-switch`)
+  - **End Projection** (red button)
+- All controls use navy/gold palette, min 34px touch targets
+- **Session-only** — changes do NOT mutate saved `projectorStyle`
+
+### Layout structure
+```
+.display-mode (fixed, flex column)
+  .disp-teacher-bar (absolute top-right, z-index 10)
+  .disp-top (class name, category, timer)
+  .disp-center (prompt, starter, guidance)
+  .disp-bottom (← Previous | counter + dots | Next →)
+```
+
+### Bottom nav
+- Previous ← (hidden via `visibility: hidden` when on first activity, not removed)
+- Center: "Activity X of Y" label + dot indicators (gold active dot)
+- Next → (navy background, gold border) / Done ✓ (gold tint) on last activity
+- Min-height 50px for SMART board touch targets
+
+### Timer
+- Pause / ▶ Start toggle button
+- ↺ Reset button (sets to full time, pauses)
 
 ## Static assets
 Logo and images go in `public/assets/` — Vite copies everything in `public/` to `dist/` at build time. Reference them with an absolute path: `src="/assets/oftheday-logo.png"`. Never use a relative path (`assets/...`) — it breaks on any route other than `/`.
@@ -158,7 +238,7 @@ Logo and images go in `public/assets/` — Vite copies everything in `public/` t
 - Returns JSON: `{ date, source, sourceUrl, events[] }`
 
 ### onUserCreate (Gen 1)
-- Fires on every new Firebase Auth user creation
+- Fires on every new Firebase Auth user creation (email/password AND Google)
 - Writes `{ email, plan: 'trial', trialStartedAt, createdAt }` to `users/{uid}` in Firestore
 - Wrapped in try-catch — never blocks signup; client-side `createUserDocument` is the fallback
 - **Why Gen 1:** `beforeUserCreated` (Gen 2 equivalent) requires Firebase Identity Platform (GCIP), which this project does not use
@@ -176,27 +256,29 @@ Logo and images go in `public/assets/` — Vite copies everything in `public/` t
 - `customer.subscription.deleted` → sets `tier:'free'`
 
 ## Live site status
-**oftheday.net is live and fully working as of 2026-06-03.**
+**oftheday.net is live and fully working as of 2026-06-04.**
 - `/` → marketing landing page ✓
-- `/login` → auth screen (sign in / create account) ✓
+- `/login` → auth screen (sign in / create account / Google) ✓
 - `/dashboard` → teacher app (protected) ✓
 - `/upgrade` → Stripe pricing page (protected) ✓
-- Logos display correctly on login and dashboard ✓
-- Firebase Auth and Firestore connected ✓
-- Email capture saves to Firestore `waitlist` collection ✓
-- Firestore `activities` collection seeded with 60 activities ✓
+- Landing page Pro CTA → `/upgrade` (not `/login`) ✓
+- Firebase Auth (email + Google) and Firestore connected ✓
 - `onUserCreate` function deployed — auto-sets `plan: 'trial'` on signup ✓
 - `onthisday` function deployed as Gen 2 ✓
 - `createCheckoutSession` + `stripeWebhook` deployed ✓
 - Freemium gates active (activity library + saved routines + custom activities) ✓
 - Tier unification: `usePlan` checks `account.tier` first — paid Stripe users clear all caps ✓
+- Trial status UI: top banner (color-coded urgency) + sidebar countdown card ✓
+- Profile section: sidebar profile row + ProfileSheet with editable name/grade ✓
+- Sidebar collapse/expand toggle (icon-only mode) ✓
+- Projector teacher control bar (theme, font, instructions, timer) ✓
+- Library header pill row ✓
 
 ## Pending work
 1. **Stripe webhook secret** — register endpoint in Stripe Dashboard, add `STRIPE_WEBHOOK_SECRET` to `functions/.env`, redeploy functions
-2. **Trial status UI** — users don't know they're in a trial or how many days remain
-3. **Landing page pricing → /upgrade** — pricing cards link to `/login` instead of `/upgrade`
-4. **Component extraction** — App.jsx is 3500+ lines
-5. **Merge to main** — active dev branch is `claude/activity-of-day-app-2JlTT`
+2. **Projector design section** — visual theme swatches + live preview in Settings Sheet (distinct from DisplayMode session controls)
+3. **Component extraction** — App.jsx is 4000+ lines; ProfileSheet, DisplayMode, AuthScreen are candidates
+4. **Merge to main** — active dev branch is `claude/activity-of-day-app-2JlTT`
 
 ## Git branch
 Active development: `claude/activity-of-day-app-2JlTT`
