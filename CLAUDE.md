@@ -191,7 +191,7 @@ CSS classes: `.trial-banner`, `.trial-banner--warning`, `.trial-banner--urgent`.
 `trialDaysLeft` is computed in `MainApp` from `account.trialStartedAt` (14-day window). A sidebar trial card (`.sidebar-trial-card`) also shows days remaining with an upgrade link for trial users. Non-pro users see an **⭐ Go Pro** button (`.sidebar-upgrade-btn`) once the trial card is not shown.
 
 ## Live site status
-**oftheday.net is live on `claude/activity-of-day-app-2JlTT` as of 2026-06-03.**
+**oftheday.net is live on `main` as of 2026-06-03.**
 - `/` → marketing landing page ✓
 - `/login` → auth screen ✓
 - `/dashboard` → teacher app (protected) ✓
@@ -212,8 +212,7 @@ CSS classes: `.trial-banner`, `.trial-banner--warning`, `.trial-banner--urgent`.
 
 ## Pending work
 1. **Switch Stripe to live mode** — swap test keys for live keys in `functions/.env`, redeploy functions
-2. **Merge feature branch to main** — active deploys are from `claude/activity-of-day-app-2JlTT`; merge to `main` when stable
-3. **Component extraction** — App.jsx is 3500+ lines
+2. **Component extraction** — App.jsx is 3500+ lines
 
 ## Git branch
-Active development: `main`
+Active development: `main` (feature branch `claude/activity-of-day-app-2JlTT` fully merged)
