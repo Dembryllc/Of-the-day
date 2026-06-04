@@ -3023,6 +3023,8 @@ function MainApp({ account, onSignOut }) {
           <button className="trial-banner-close" type="button" onClick={dismissTrialBanner} aria-label="Dismiss">✕</button>
         </div>
       )}
+      {/* ── APP SHELL (sidebar + main) ── */}
+      <div className="app-shell">
       {/* ── SIDEBAR ── */}
       <div className="sidebar">
         <div className="sidebar-logo">
@@ -3046,8 +3048,17 @@ function MainApp({ account, onSignOut }) {
           ))}
         </nav>
         <div className="sidebar-actions">
-          {userTier !== 'pro' && (
-            <a href="/upgrade" className="sidebar-upgrade-btn">⭐ Go Pro</a>
+          {account?.tier !== 'pro' && (
+            trialDaysLeft !== null ? (
+              <div className="sidebar-trial-card">
+                <div className="sidebar-trial-days">
+                  {trialDaysLeft === 0 ? 'Trial ended' : `${trialDaysLeft} day${trialDaysLeft !== 1 ? 's' : ''} left in trial`}
+                </div>
+                <a href="/upgrade" className="sidebar-trial-upgrade">Upgrade to Pro →</a>
+              </div>
+            ) : (
+              <a href="/upgrade" className="sidebar-upgrade-btn">⭐ Go Pro</a>
+            )
           )}
           {projectorConnected && (
             <div className="projector-live-card">
@@ -3364,6 +3375,7 @@ function MainApp({ account, onSignOut }) {
           </div>
         </div>
       </div>
+      </div>{/* end app-shell */}
 
       {/* MOBILE DETAIL SHEET */}
       {mobileDetailOpen && selected && (

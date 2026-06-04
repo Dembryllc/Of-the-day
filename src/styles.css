@@ -117,7 +117,8 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* ══════════ APP SHELL ══════════ */
-.app { display: flex; height: 100vh; overflow: hidden; background: var(--sand); }
+.app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--sand); }
+.app-shell { flex: 1; display: flex; overflow: hidden; min-height: 0; }
 
 /* ── sidebar (desktop) ── */
 .sidebar {
@@ -155,6 +156,10 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
 .sidebar-actions { border-top: 1px solid rgba(255,255,255,0.07); }
 .sidebar-upgrade-btn { display: flex; align-items: center; gap: 8px; margin: 10px 12px 4px; padding: 10px 14px; background: linear-gradient(135deg, #f5c842, #f0a500); color: #1a1a1a; font: 700 13px/1 'Outfit', sans-serif; border-radius: 10px; text-decoration: none; transition: opacity 0.14s; }
 .sidebar-upgrade-btn:hover { opacity: 0.88; }
+.sidebar-trial-card { margin: 10px 12px 4px; padding: 11px 12px; background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.3); border-radius: 10px; }
+.sidebar-trial-days { font-size: 11.5px; font-weight: 700; color: #F5A623; margin-bottom: 7px; letter-spacing: 0.01em; }
+.sidebar-trial-upgrade { display: block; padding: 8px 10px; background: linear-gradient(135deg, #f5c842, #f0a500); color: #1a1a1a; font: 700 12px/1 'Outfit', sans-serif; border-radius: 7px; text-decoration: none; text-align: center; transition: opacity 0.14s; }
+.sidebar-trial-upgrade:hover { opacity: 0.88; }
 .sidebar-actions .sidebar-footer { border-top: 0; }
 .projector-live-card { margin: 0 12px 10px; padding: 11px 12px; border: 1px solid rgba(77,184,150,0.32); border-radius: 12px; background: rgba(77,184,150,0.1); color: rgba(255,255,255,0.86); font-size: 12px; line-height: 1.35; }
 .projector-live-card strong { display: block; color: #fff; font-size: 13px; margin-bottom: 2px; }
@@ -1438,7 +1443,7 @@ button:focus-visible,
 
 /* ── pro success banner ── */
 .pro-success-banner {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  flex-shrink: 0;
   background: #1a2e5a; color: #fff; text-align: center;
   padding: 12px 48px; font-size: 15px; font-weight: 600;
   display: flex; align-items: center; justify-content: center; gap: 12px;
@@ -1449,9 +1454,9 @@ button:focus-visible,
 }
 .pro-success-banner-close:hover { color: #fff; }
 .trial-banner {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 199;
+  flex-shrink: 0;
   background: #1e40af; color: #fff;
-  padding: 10px 48px; font-size: 14px; font-weight: 600;
+  padding: 9px 48px; font-size: 13px; font-weight: 600;
   display: flex; align-items: center; justify-content: center; gap: 12px;
 }
 .trial-banner--warning { background: #92400e; }
