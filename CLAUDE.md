@@ -91,9 +91,9 @@ firebase deploy                   # deploy everything
 `.env.local` must exist with real Firebase values before building. The values are baked into the bundle at build time.
 
 **Local machine path (Mac):** `/Users/mikeradicone/Desktop/of the day`
-Full deploy command to give the user:
+Full deploy command:
 ```bash
-cd "/Users/mikeradicone/Desktop/of the day" && git pull origin claude/activity-of-day-app-2JlTT && npm run build && firebase deploy --only hosting
+cd "/Users/mikeradicone/Desktop/of the day" && git pull origin main && npm run build && firebase deploy --only hosting,functions
 ```
 
 ## Firestore schema
@@ -175,28 +175,45 @@ Logo and images go in `public/assets/` — Vite copies everything in `public/` t
 - `customer.subscription.updated` → updates `tier` and `currentPeriodEnd`
 - `customer.subscription.deleted` → sets `tier:'free'`
 
+## Trial banner
+
+Shown at the top of the dashboard for all users with `plan: 'trial'` who haven't paid (`tier !== 'pro'`). Dismissible once per session via `sessionStorage`.
+
+| Days left | Color |
+|-----------|-------|
+| 8–14 | Blue |
+| 4–7 | Amber |
+| 1–3 | Red |
+| 0 | Red — "Your free trial has ended" |
+
+CSS classes: `.trial-banner`, `.trial-banner--warning`, `.trial-banner--urgent`.
+
+`trialDaysLeft` is computed in `MainApp` from `account.trialStartedAt` (14-day window). A sidebar trial card (`.sidebar-trial-card`) also shows days remaining with an upgrade link for trial users. Non-pro users see an **⭐ Go Pro** button (`.sidebar-upgrade-btn`) once the trial card is not shown.
+
 ## Live site status
-**oftheday.net is live and fully working as of 2026-06-03.**
+**oftheday.net is live on `claude/activity-of-day-app-2JlTT` as of 2026-06-03.**
 - `/` → marketing landing page ✓
-- `/login` → auth screen (sign in / create account) ✓
+- `/login` → auth screen ✓
 - `/dashboard` → teacher app (protected) ✓
 - `/upgrade` → Stripe pricing page (protected) ✓
-- Logos display correctly on login and dashboard ✓
-- Firebase Auth and Firestore connected ✓
-- Email capture saves to Firestore `waitlist` collection ✓
+- Firebase Auth + Firestore connected ✓
 - Firestore `activities` collection seeded with 60 activities ✓
-- `onUserCreate` function deployed — auto-sets `plan: 'trial'` on signup ✓
-- `onthisday` function deployed as Gen 2 ✓
-- `createCheckoutSession` + `stripeWebhook` deployed ✓
-- Freemium gates active (activity library + saved routines + custom activities) ✓
-- Tier unification: `usePlan` checks `account.tier` first — paid Stripe users clear all caps ✓
+- `onUserCreate` auto-sets `plan: 'trial'` on signup ✓
+- `onthisday`, `createCheckoutSession`, `stripeWebhook` deployed ✓
+- Freemium gates active (activity library, saved routines, custom activities) ✓
+- Tier unification complete — `usePlan` checks `account.tier` first ✓
+- Trial countdown banner live ✓
+- Go Pro sidebar button live ✓
+- Sidebar navy rebrand + slim logo ✓
+- Landing page Pro CTA links to `/upgrade` ✓
+- Trial status UI: top banner + sidebar trial card with days remaining ✓
+- Profile section: sidebar profile row (avatar initials, name, plan badge) + ProfileSheet (edit name/grade, sign out, upgrade link) ✓
+- `updateUserProfile()` added to `firestore.js` ✓
 
 ## Pending work
-1. **Stripe webhook secret** — register endpoint in Stripe Dashboard, add `STRIPE_WEBHOOK_SECRET` to `functions/.env`, redeploy functions
-2. **Trial status UI** — users don't know they're in a trial or how many days remain
-3. **Landing page pricing → /upgrade** — pricing cards link to `/login` instead of `/upgrade`
-4. **Component extraction** — App.jsx is 3500+ lines
-5. **Merge to main** — active dev branch is `claude/activity-of-day-app-2JlTT`
+1. **Switch Stripe to live mode** — swap test keys for live keys in `functions/.env`, redeploy functions
+2. **Merge feature branch to main** — active deploys are from `claude/activity-of-day-app-2JlTT`; merge to `main` when stable
+3. **Component extraction** — App.jsx is 3500+ lines
 
 ## Git branch
-Active development: `claude/activity-of-day-app-2JlTT`
+Active development: `main`
