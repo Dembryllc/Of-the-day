@@ -45,8 +45,7 @@
   flex-shrink: 0;
 }
 .lp .nav-logo-img {
-  height: 36px; width: auto;
-  mix-blend-mode: multiply;
+  height: 48px; width: auto;
   display: block;
 }
 .lp .nav-links {

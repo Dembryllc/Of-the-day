@@ -1668,25 +1668,13 @@ function BrowseScreen({ activities, grade, favorites, builderCount, replacementT
             <button className="btn-secondary btn-compact" type="button" onClick={onCancelReplacement}>Cancel</button>
           </div>
         )}
-        {!replacementTarget && <div className="library-quick-grid" aria-label="Library shortcuts">
-          <button type="button" className="library-quick-card primary" onClick={() => onOpenTool("Build")}>
-            <strong>Build a Routine</strong><span>Choose anything from the library and arrange it your way.</span>
-          </button>
-          <button type="button" className="library-quick-card" onClick={() => onOpenTool("Word of the Day")}>
-            <strong>Word of the Day</strong><span>Browse, add, and project vocabulary.</span>
-          </button>
-          <button type="button" className="library-quick-card" onClick={() => onOpenTool("Do Now")}>
-            <strong>Do Now</strong><span>Math and writing starters by grade.</span>
-          </button>
-          <button type="button" className="library-quick-card" onClick={() => onOpenTool("On This Day")}>
-            <strong>On This Day</strong><span>Kid-friendly daily history moments.</span>
-          </button>
-          <button type="button" className="library-quick-card" onClick={() => onOpenTool("My Activities")}>
-            <strong>My Activities</strong><span>Create your own reusable classroom ideas.</span>
-          </button>
-          <button type="button" className="library-quick-card" onClick={() => onOpenTool("Favorites")}>
-            <strong>Favorites</strong><span>Everything you saved for quick reuse.</span>
-          </button>
+        {!replacementTarget && <div className="library-pill-row" aria-label="Library shortcuts">
+          <button type="button" className="library-pill-btn primary" onClick={() => onOpenTool("Build")}>Build a Routine</button>
+          <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Word of the Day")}>Word of the Day</button>
+          <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Do Now")}>Do Now</button>
+          <button type="button" className="library-pill-btn" onClick={() => onOpenTool("On This Day")}>On This Day</button>
+          <button type="button" className="library-pill-btn" onClick={() => onOpenTool("My Activities")}>My Activities</button>
+          <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Favorites")}>Favorites</button>
         </div>}
         {!replacementTarget && builderCount > 0 && (
           <div className="routine-tray">
