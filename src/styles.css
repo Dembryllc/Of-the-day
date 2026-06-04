@@ -109,6 +109,10 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
   --green: #4DB896;
   --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
   --shadow-card-hover: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+  --navy: #1B2D5B;
+  --gold: #F5A623;
+  --sky: #4A90D9;
+  --bg: #F8F9FC;
 }
 
 /* ── scrollbar ── */
@@ -1550,3 +1554,51 @@ button:focus-visible,
 .upgrade-price { font-size: 17px; font-weight: 700; color: var(--ink); text-align: center; padding: 14px 0 4px; border-top: 1px solid #F0EDE8; }
 
 
+
+/* ── sidebar collapse ── */
+.sidebar { position: relative; transition: width 0.2s ease; }
+.sidebar.collapsed { width: 60px; }
+.sidebar.collapsed .logo-sub { display: none; }
+.sidebar.collapsed .sidebar-logo-img { width: 28px; height: 28px; object-fit: contain; }
+.sidebar.collapsed .sidebar-actions .sidebar-profile-info,
+.sidebar.collapsed .sidebar-actions .sidebar-profile-chevron { display: none; }
+.sidebar-collapse-btn {
+  position: absolute; top: 12px; right: -12px; z-index: 10;
+  width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+  background: var(--navy, #1B2D5B); color: #fff; font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
+}
+.sidebar-collapse-btn:hover { background: #243b72; }
+
+/* ── auth redesign ── */
+.auth-card-wrap { display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; }
+.auth-panel-logo { text-align: center; margin-bottom: 16px; }
+.auth-panel-logo-img { height: 40px; width: auto; }
+.auth-tabs { display: flex; gap: 4px; background: #F0EDE8; border-radius: 8px; padding: 3px; margin-bottom: 16px; }
+.auth-tab { flex: 1; padding: 7px 12px; border: none; border-radius: 6px; background: transparent; font-size: 14px; font-weight: 600; color: #6B7280; cursor: pointer; transition: all 0.15s; }
+.auth-tab.active { background: #fff; color: var(--navy, #1B2D5B); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.auth-tab:hover:not(.active) { color: var(--navy, #1B2D5B); }
+.auth-google-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 10px 16px; border: 1.5px solid #D1D5DB; border-radius: 8px; background: #fff;
+  font-size: 14px; font-weight: 600; color: #374151; cursor: pointer; margin-bottom: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.auth-google-btn:hover { border-color: #9CA3AF; box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
+.auth-google-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.auth-divider { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; color: #9CA3AF; font-size: 12px; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: #E5E7EB; }
+
+/* ── projector teacher controls ── */
+.disp-teacher-bar { position: absolute; top: 12px; right: 16px; z-index: 10; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.disp-ctrl-toggle { padding: 8px 16px; background: var(--navy, #1B2D5B); color: #fff; border: 1.5px solid var(--gold, #F5A623); border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 40px; }
+.disp-ctrl-toggle:hover { background: #243b72; }
+.disp-ctrl-panel { background: var(--navy, #1B2D5B); border: 1.5px solid rgba(245,166,35,0.4); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 280px; }
+.disp-ctrl-group { display: flex; flex-direction: column; gap: 5px; }
+.disp-ctrl-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.06em; }
+.disp-seg { display: flex; gap: 3px; }
+.disp-seg-btn { flex: 1; padding: 7px 10px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.75); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; min-height: 36px; transition: all 0.12s; }
+.disp-seg-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.disp-seg-btn.active { background: var(--gold, #F5A623); color: var(--navy, #1B2D5B); border-color: var(--gold, #F5A623); }
+.disp-end-btn { margin-top: 4px; padding: 8px 14px; background: rgba(220,38,38,0.15); color: #FCA5A5; border: 1px solid rgba(220,38,38,0.3); border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.disp-end-btn:hover { background: rgba(220,38,38,0.25); }

@@ -9,6 +9,8 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
 } from 'firebase/auth';
 import { auth } from './lib/firebase';
 import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade, updateUserProfile } from './lib/firestore';
@@ -830,6 +832,36 @@ function AuthScreen({ onAuthed }) {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      let userDoc = await getUserDocument(user.uid);
+      if (!userDoc) {
+        await createUserDocument(user.uid, { name: user.displayName || "", email: user.email, grade: "3–5" });
+        userDoc = { name: user.displayName || "", email: user.email, grade: "3–5", plan: "trial", trialStartedAt: Date.now() };
+      }
+      onAuthed({
+        uid: user.uid,
+        email: user.email,
+        name: userDoc.name || user.displayName || "",
+        grade: userDoc.grade || "3–5",
+        plan: userDoc.plan || "trial",
+        trialStartedAt: tsToMs(userDoc.trialStartedAt) ?? Date.now(),
+        tier: userDoc.tier || null,
+      });
+    } catch (err) {
+      if (err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
+        setError(friendlyAuthError(err.code));
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="auth-page">
       <div className="auth-brand">
@@ -838,51 +870,64 @@ function AuthScreen({ onAuthed }) {
         <div className="auth-headline">Your daily classroom ritual is ready.</div>
         <div className="auth-copy">Build connection, calm, and momentum in minutes.</div>
       </div>
-      <form className="auth-panel" onSubmit={submit}>
-        <div className="auth-title">{mode === "signup" ? "Create your account" : "Welcome back"}</div>
-        <div className="auth-subtitle">
-          {mode === "signup" ? "Set up your teacher workspace with an email and password." : "Sign in to your teacher workspace."}
-        </div>
-        <div className="auth-note">Save routines, favorites, custom activities, words, Do Nows, and projector style for your classroom.</div>
-        {mode === "signup" && (
-          <>
-            <label className="auth-field">
-              <span>Name</span>
-              <input value={form.name} onChange={e => setField("name", e.target.value)} autoComplete="name"/>
-            </label>
-            <label className="auth-field">
-              <span>Grade Level</span>
-              <select value={form.grade} onChange={e => setField("grade", e.target.value)}>
-                <option value="K–2">K–2</option>
-                <option value="3–5">3–5</option>
-                <option value="6–8">6–8</option>
-                <option value="9–12">9–12</option>
-              </select>
-            </label>
-          </>
-        )}
-        <label className="auth-field">
-          <span>Email</span>
-          <input type="email" value={form.email} onChange={e => setField("email", e.target.value)} autoComplete="email"/>
-        </label>
-        <label className="auth-field">
-          <span>Password</span>
-          <input type="password" value={form.password} onChange={e => setField("password", e.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"}/>
-        </label>
-        {error && <div className="auth-error">{error}</div>}
-        {resetSent && <div className="auth-success">Password reset email sent. Check your inbox.</div>}
-        <button className="btn-primary auth-submit" type="submit" disabled={busy}>
-          {busy ? "Please wait…" : mode === "signup" ? "Create Account" : "Sign In"}
-        </button>
-        {mode === "login" && (
-          <button className="auth-switch" type="button" onClick={handlePasswordReset} disabled={busy}>
-            Forgot your password?
+      <div className="auth-card-wrap">
+        <div className="auth-panel">
+          <div className="auth-panel-logo">
+            <img src="/assets/oftheday-logo.png" alt="Of The Day" className="auth-panel-logo-img"/>
+          </div>
+          <div className="auth-tabs" role="tablist">
+            <button type="button" className={`auth-tab${mode === "login" ? " active" : ""}`} role="tab" aria-selected={mode === "login"} onClick={() => { setMode("login"); setError(""); setResetSent(false); }}>Sign In</button>
+            <button type="button" className={`auth-tab${mode === "signup" ? " active" : ""}`} role="tab" aria-selected={mode === "signup"} onClick={() => { setMode("signup"); setError(""); setResetSent(false); }}>Sign Up</button>
+          </div>
+          <button type="button" className="auth-google-btn" onClick={handleGoogleSignIn} disabled={busy}>
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+              <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/>
+              <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/>
+              <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/>
+              <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335"/>
+            </svg>
+            Continue with Google
           </button>
-        )}
-        <button className="auth-switch" type="button" onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setError(""); setResetSent(false); }}>
-          {mode === "signup" ? "Already have an account? Sign in" : "New to Of-The-Day? Create an account"}
-        </button>
-      </form>
+          <div className="auth-divider"><span>or with email</span></div>
+          <form onSubmit={submit}>
+            {mode === "signup" && (
+              <>
+                <label className="auth-field">
+                  <span>Your Name</span>
+                  <input value={form.name} onChange={e => setField("name", e.target.value)} autoComplete="name" placeholder="Ms. Johnson"/>
+                </label>
+                <label className="auth-field">
+                  <span>Grade Level</span>
+                  <select value={form.grade} onChange={e => setField("grade", e.target.value)}>
+                    <option value="K–2">K–2</option>
+                    <option value="3–5">3–5</option>
+                    <option value="6–8">6–8</option>
+                    <option value="9–12">9–12</option>
+                  </select>
+                </label>
+              </>
+            )}
+            <label className="auth-field">
+              <span>Email</span>
+              <input type="email" value={form.email} onChange={e => setField("email", e.target.value)} autoComplete="email" placeholder="you@school.edu"/>
+            </label>
+            <label className="auth-field">
+              <span>Password</span>
+              <input type="password" value={form.password} onChange={e => setField("password", e.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"} placeholder={mode === "signup" ? "At least 8 characters" : "Your password"}/>
+            </label>
+            {error && <div className="auth-error">{error}</div>}
+            {resetSent && <div className="auth-success">Password reset email sent. Check your inbox.</div>}
+            <button className="btn-primary auth-submit" type="submit" disabled={busy}>
+              {busy ? "Please wait…" : mode === "signup" ? "Create Account" : "Sign In"}
+            </button>
+            {mode === "login" && (
+              <button className="auth-switch" type="button" onClick={handlePasswordReset} disabled={busy}>
+                Forgot your password?
+              </button>
+            )}
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1589,6 +1634,11 @@ function DisplayMode({ routine, startIndex=0, onExit, projectorStyle=DEFAULT_PRO
   const totalTime = act ? act.time : 180;
   const [secs, setSecs] = useState(totalTime);
   const [running, setRunning] = useState(true);
+  const [ctrlOpen, setCtrlOpen] = useState(false);
+  const [ctrlTheme, setCtrlTheme] = useState(null);
+  const [ctrlFontSize, setCtrlFontSize] = useState(null);
+  const [ctrlFontStyle, setCtrlFontStyle] = useState("sans");
+  const [showInstructions, setShowInstructions] = useState(true);
   const style = normalizeProjectorStyle(projectorStyle);
   const theme = PROJECTOR_THEMES[style.theme] || PROJECTOR_THEMES.Calm;
   const sizeClass = style.textSize === "Extra Large" ? " xl" : style.textSize === "Normal" ? " normal" : "";
@@ -1626,12 +1676,59 @@ function DisplayMode({ routine, startIndex=0, onExit, projectorStyle=DEFAULT_PRO
     setPresentationView(safeView);
     try { localStorage.setItem(PRESENTATION_VIEW_KEY, safeView); } catch {}
   };
+  const fsMap = { S: "18px", M: "22px", L: "28px", XL: "36px" };
+  const fsStyle = ctrlFontSize ? { fontSize: fsMap[ctrlFontSize] } : {};
+  const ffStyle = ctrlFontStyle === "serif" ? { fontFamily: "Georgia, serif" } : {};
+  const themeOverride = ctrlTheme ? PROJECTOR_THEMES[ctrlTheme] || theme : theme;
+
   return (
-    <div className={"display-mode" + sizeClass + (isGuided ? " guided" : "")} style={{ ...displayBackground, "--display-accent": style.accentColor, "--display-surface": theme.surface, "--display-text": style.textColor }}>
-      <div className="disp-view-switch" aria-label="Presentation view">
-        <span className="disp-view-label">Projected view</span>
-        <button className={presentationView === "clean" ? "active" : ""} type="button" onClick={() => switchPresentationView("clean")}>Clean</button>
-        <button className={presentationView === "guided" ? "active" : ""} type="button" onClick={() => switchPresentationView("guided")}>Guided</button>
+    <div className={"display-mode" + sizeClass + (isGuided ? " guided" : "")} style={{ ...displayBackground, "--display-accent": style.accentColor, "--display-surface": themeOverride.surface, "--display-text": style.textColor, ...fsStyle, ...ffStyle }}>
+      <div className="disp-teacher-bar">
+        <button className="disp-ctrl-toggle" type="button" onClick={() => setCtrlOpen(o => !o)} aria-expanded={ctrlOpen} aria-label="Teacher controls">
+          {ctrlOpen ? "✕ Close" : "⚙ Controls"}
+        </button>
+        {ctrlOpen && (
+          <div className="disp-ctrl-panel" aria-label="Teacher controls panel">
+            <div className="disp-ctrl-group">
+              <span className="disp-ctrl-label">Theme</span>
+              <div className="disp-seg">
+                {["Calm","Bright","Minimal","High Contrast"].map(t => (
+                  <button key={t} type="button" className={`disp-seg-btn${ctrlTheme === t ? " active" : ""}`} onClick={() => setCtrlTheme(v => v === t ? null : t)}>{t}</button>
+                ))}
+              </div>
+            </div>
+            <div className="disp-ctrl-group">
+              <span className="disp-ctrl-label">Font Size</span>
+              <div className="disp-seg">
+                {["S","M","L","XL"].map(s => (
+                  <button key={s} type="button" className={`disp-seg-btn${ctrlFontSize === s ? " active" : ""}`} onClick={() => setCtrlFontSize(v => v === s ? null : s)}>{s}</button>
+                ))}
+              </div>
+            </div>
+            <div className="disp-ctrl-group">
+              <span className="disp-ctrl-label">Font Style</span>
+              <div className="disp-seg">
+                <button type="button" className={`disp-seg-btn${ctrlFontStyle === "sans" ? " active" : ""}`} onClick={() => setCtrlFontStyle("sans")}>Sans</button>
+                <button type="button" className={`disp-seg-btn${ctrlFontStyle === "serif" ? " active" : ""}`} onClick={() => setCtrlFontStyle("serif")}>Serif</button>
+              </div>
+            </div>
+            <div className="disp-ctrl-group">
+              <span className="disp-ctrl-label">Instructions</span>
+              <div className="disp-seg">
+                <button type="button" className={`disp-seg-btn${showInstructions ? " active" : ""}`} onClick={() => setShowInstructions(true)}>Show</button>
+                <button type="button" className={`disp-seg-btn${!showInstructions ? " active" : ""}`} onClick={() => setShowInstructions(false)}>Hide</button>
+              </div>
+            </div>
+            <div className="disp-ctrl-group">
+              <span className="disp-ctrl-label">View</span>
+              <div className="disp-seg">
+                <button type="button" className={`disp-seg-btn${presentationView === "clean" ? " active" : ""}`} onClick={() => switchPresentationView("clean")}>Clean</button>
+                <button type="button" className={`disp-seg-btn${presentationView === "guided" ? " active" : ""}`} onClick={() => switchPresentationView("guided")}>Guided</button>
+              </div>
+            </div>
+            <button className="disp-end-btn" type="button" onClick={onExit}>End Projection</button>
+          </div>
+        )}
       </div>
       <div className="disp-top" style={{ background: style.topColor || cm.dark }}>
         <div>
@@ -1653,7 +1750,7 @@ function DisplayMode({ routine, startIndex=0, onExit, projectorStyle=DEFAULT_PRO
       </div>
       <div className="disp-center">
         <div className="disp-prompt">{act?.prompt}</div>
-        {style.showStarter && act?.starter && (
+        {showInstructions && style.showStarter && act?.starter && (
           <div className="disp-starter-box">
             <div className="disp-starter-label">Sentence starter</div>
             <div className="disp-starter-text">"{act.starter}"</div>
@@ -1683,9 +1780,6 @@ function DisplayMode({ routine, startIndex=0, onExit, projectorStyle=DEFAULT_PRO
             : <button className="disp-btn next" type="button" onClick={onExit}>Done</button>
           }
         </div>
-      </div>
-      <div className="disp-teacher-controls" aria-label="Teacher projector controls">
-        <button className="disp-exit disp-end-projection" type="button" onClick={onExit}>End Projection</button>
       </div>
     </div>
   );
@@ -2410,6 +2504,14 @@ function MainApp({ account, onSignOut }) {
     const ms = 14 * 24 * 60 * 60 * 1000 - (Date.now() - started);
     return ms > 0 ? Math.ceil(ms / (24 * 60 * 60 * 1000)) : 0;
   }, [account]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => localStorage.getItem('ofd:sidebarCollapsed') === '1'
+  );
+  const toggleSidebar = () => setSidebarCollapsed(v => {
+    const next = !v;
+    try { localStorage.setItem('ofd:sidebarCollapsed', next ? '1' : '0'); } catch {}
+    return next;
+  });
   const [trialBannerDismissed, setTrialBannerDismissed] = useState(
     () => sessionStorage.getItem('trial-banner-dismissed') === '1'
   );
@@ -3100,29 +3202,32 @@ function MainApp({ account, onSignOut }) {
       {/* ── APP SHELL (sidebar + main) ── */}
       <div className="app-shell">
       {/* ── SIDEBAR ── */}
-      <div className="sidebar">
+      <div className={`sidebar${sidebarCollapsed ? ' collapsed' : ''}`}>
+        <button className="sidebar-collapse-btn" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+          {sidebarCollapsed ? '›' : '‹'}
+        </button>
         <div className="sidebar-logo">
           <img className="sidebar-logo-img" src="/assets/oftheday-logo.png" alt="Of The Day logo"/>
-          <div className="logo-sub">Good morning, {displayName || tweaks.teacherName}</div>
+          {!sidebarCollapsed && <div className="logo-sub">Good morning, {displayName || tweaks.teacherName}</div>}
         </div>
         <nav className="nav">
           {navItems.map(n => (
             <React.Fragment key={n.label}>
-              <button type="button" className={`nav-item${navActive(n.label)?' active':''}`} onClick={() => setActiveNav(n.label)}>
+              <button type="button" className={`nav-item${navActive(n.label)?' active':''}`} onClick={() => setActiveNav(n.label)} title={sidebarCollapsed ? n.label : undefined}>
                 <span className="nav-icon">{n.icon}</span>
-                <span>{n.label}</span>
+                {!sidebarCollapsed && <span className="nav-label">{n.label}</span>}
               </button>
-              {n.label === "Build" && (
+              {n.label === "Build" && !sidebarCollapsed && (
                 <button type="button" className="nav-item nav-item-sub" onClick={() => setSettingsOpen(true)}>
                   <span className="nav-icon">⚙</span>
-                  <span>Settings</span>
+                  <span className="nav-label">Settings</span>
                 </button>
               )}
             </React.Fragment>
           ))}
         </nav>
         <div className="sidebar-actions">
-          {account?.tier !== 'pro' && (
+          {!sidebarCollapsed && account?.tier !== 'pro' && (
             trialDaysLeft !== null ? (
               <div className="sidebar-trial-card">
                 <div className="sidebar-trial-days">
@@ -3134,22 +3239,24 @@ function MainApp({ account, onSignOut }) {
               <a href="/upgrade" className="sidebar-upgrade-btn">⭐ Go Pro</a>
             )
           )}
-          {projectorConnected && (
+          {!sidebarCollapsed && projectorConnected && (
             <div className="projector-live-card">
               <strong>Projector live</strong>
               Student view is open in a separate window.
               <button type="button" onClick={stopProjector}>Stop Projecting</button>
             </div>
           )}
-          <button className="sidebar-profile" type="button" onClick={() => setProfileOpen(true)}>
+          <button className="sidebar-profile" type="button" onClick={() => setProfileOpen(true)} title={sidebarCollapsed ? (displayName || account?.name || 'Profile') : undefined}>
             <div className="sidebar-avatar">{(displayName || account?.name || 'T')[0].toUpperCase()}</div>
-            <div className="sidebar-profile-info">
-              <div className="sidebar-profile-name">{displayName || account?.name || 'Teacher'}</div>
-              <div className="sidebar-profile-plan">
-                {account?.tier === 'pro' ? 'Pro' : trialDaysLeft !== null ? 'Trial' : 'Free'} · Profile
+            {!sidebarCollapsed && (
+              <div className="sidebar-profile-info">
+                <div className="sidebar-profile-name">{displayName || account?.name || 'Teacher'}</div>
+                <div className="sidebar-profile-plan">
+                  {account?.tier === 'pro' ? 'Pro' : trialDaysLeft !== null ? 'Trial' : 'Free'} · Profile
+                </div>
               </div>
-            </div>
-            <span className="sidebar-profile-chevron">›</span>
+            )}
+            {!sidebarCollapsed && <span className="sidebar-profile-chevron">›</span>}
           </button>
         </div>
       </div>
