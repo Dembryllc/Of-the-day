@@ -90,16 +90,28 @@ npm run seed         # seed Firestore activities (needs scripts/service-account.
 ```bash
 npm run build
 firebase deploy --only hosting   # deploy frontend
-firebase deploy --only functions  # deploy Cloud Function
+firebase deploy --only functions  # deploy Cloud Functions
 firebase deploy                   # deploy everything
 ```
 `.env.local` must exist with real Firebase values before building. The values are baked into the bundle at build time.
 
 **Local machine path (Mac):** `/Users/mikeradicone/Desktop/of the day`
-Full deploy command to give the user:
+Full deploy command (run on Mac, pulls from main):
 ```bash
-cd "/Users/mikeradicone/Desktop/of the day" && git pull origin claude/activity-of-day-app-2JlTT && npm run build && firebase deploy --only hosting
+cd "/Users/mikeradicone/Desktop/of the day" && git pull origin main && npm run build && firebase deploy --only hosting
 ```
+
+**Important:** `git push` to GitHub does NOT deploy the live site. Firebase Hosting requires
+running `firebase deploy` manually on the Mac. GitHub push and Firebase deploy are separate steps.
+
+## Firebase Console — required configuration
+These settings must be enabled in the Firebase Console or auth will not work:
+1. **Authentication → Sign-in method** → Enable **Email/Password** and **Google**
+2. **Authentication → Settings → Authorized domains** → Add `oftheday.net`
+   (Firebase only auto-adds localhost and the Firebase default domain)
+
+If sign-in shows "Something went wrong. Try again." → check these settings first.
+That error is `auth/operation-not-allowed` — thrown when a sign-in method is disabled.
 
 ## Firestore schema
 ```
@@ -141,23 +153,27 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
 
 ## Stripe notes
 - Test mode keys in `functions/.env` (gitignored — never commit)
-- `STRIPE_WEBHOOK_SECRET` must be added after registering the webhook endpoint in Stripe Dashboard
+- `STRIPE_WEBHOOK_SECRET` **must** be set — webhook handler now hard-rejects requests if missing
 - Webhook URL: `https://us-central1-oftheday-c6490.cloudfunctions.net/stripeWebhook`
 - Events to register: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
 - Success URL: `https://oftheday.net/dashboard?upgraded=true` → shows "Welcome to Pro!" banner
 
 ## Auth notes
 - Email/password: `createUserWithEmailAndPassword` / `signInWithEmailAndPassword`
-- Google: `signInWithPopup(auth, new GoogleAuthProvider())` — first sign-in auto-creates user doc with trial plan via `resolveGoogleUser()` helper in `AuthScreen`
+- Google: `signInWithPopup(auth, new GoogleAuthProvider())` — `onAuthStateChanged` in `App` handles
+  user doc creation for new Google users (creates doc with `plan:'trial'` if none exists)
 - `onUserCreate` Cloud Function (Gen 1) fires on every new Firebase Auth user regardless of provider
-- `friendlyAuthError()` handles `auth/popup-closed-by-user` and `auth/cancelled-popup-request` silently (no error shown)
+- `friendlyAuthError()` handles `auth/popup-closed-by-user` and `auth/cancelled-popup-request` silently;
+  handles `auth/popup-blocked` with a clear message to allow popups
+- New users: `emailVerified` tracked on account state; unverified email/password users see a dismissible
+  amber banner with a "Resend verification email" button
 
 ## CSS notes
 - App CSS lives in `src/styles.css` — uses Outfit font (woff2 in `public/fonts/`)
 - Landing page CSS in `src/landing.css` — all selectors scoped under `.lp` parent class
 - `.app` is `display: flex; flex-direction: column; height: 100vh; overflow: hidden`
 - `.app-shell` is the inner flex row containing `.sidebar` + `.main` — `flex: 1; overflow: hidden`
-- Trial banner + pro success banner render in document flow (inside `.app`, above `.app-shell`) — NOT fixed position
+- Trial banner + verify banner + pro success banner render in document flow (inside `.app`, above `.app-shell`) — NOT fixed position
 - `body` has no overflow or background set globally — each route manages its own
 
 ### Color tokens
@@ -191,8 +207,14 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
 - Sidebar trial card: gold-bordered, shows countdown + "Upgrade to Pro →" link
 - Paid users (`account.tier === 'pro'`): see neither banner nor trial card
 
+## Email verification banner
+- Shows for email/password users where `account.emailVerified === false`
+- Amber banner with email address + "Resend verification email" button
+- Dismissed per-session via `sessionStorage`; `verifySent` state prevents double-sends
+- Google users are always verified — banner never shows for them
+
 ## Library header
-- Replaced the 6-card `.library-quick-grid` with a horizontal scrollable `.library-pill-row`
+- Horizontal scrollable `.library-pill-row`
 - Pills: Build a Routine (teal/filled), Word of the Day, Do Now, On This Day, My Activities, Favorites
 
 ## DisplayMode (projector)
@@ -206,7 +228,7 @@ The projector is a full-screen overlay component (`position: fixed; inset: 0; z-
   - **Font Style**: Sans-Serif / Serif (Serif applies Georgia to prompt/starter/guidance)
   - **Instructions**: Show / Hide (controls `showStarter` display)
   - **Timer**: Show / Hide / Reset
-  - **View**: Clean / Guided (replaces old `disp-view-switch`)
+  - **View**: Clean / Guided
   - **End Projection** (red button)
 - All controls use navy/gold palette, min 34px touch targets
 - **Session-only** — changes do NOT mutate saved `projectorStyle`
@@ -253,40 +275,33 @@ Logo and images go in `public/assets/` — Vite copies everything in `public/` t
 - Returns `{ url }` — client redirects to Stripe-hosted checkout
 
 ### stripeWebhook (Gen 2, HTTP)
-- Verifies Stripe signature when `STRIPE_WEBHOOK_SECRET` is set
+- **Hard-rejects** requests if `STRIPE_WEBHOOK_SECRET` is not set (returns 400)
 - `checkout.session.completed` → sets `tier:'pro'`, `subscriptionId`, `currentPeriodEnd`
 - `customer.subscription.updated` → updates `tier` and `currentPeriodEnd`
 - `customer.subscription.deleted` → sets `tier:'free'`
 
 ## Live site status
-**oftheday.net is live and fully working as of 2026-06-05.**
-- `/` → marketing landing page ✓
-- `/login` → auth screen (sign in / create account / Google) ✓
-- `/dashboard` → teacher app (protected) ✓
-- `/upgrade` → Stripe pricing page (protected) ✓
-- Landing page Pro CTA → `/upgrade` (not `/login`) ✓
-- Firebase Auth (email + Google) and Firestore connected ✓
-- `onUserCreate` function deployed — auto-sets `plan: 'trial'` on signup ✓
-- `onthisday` function deployed as Gen 2 ✓
-- `createCheckoutSession` + `stripeWebhook` deployed ✓
-- Freemium gates active (activity library + saved routines + custom activities) ✓
-- Tier unification: `usePlan` checks `account.tier` first — paid Stripe users clear all caps ✓
-- Trial status UI: top banner (color-coded urgency) + sidebar countdown card ✓
-- Profile section: sidebar profile row + ProfileSheet with editable name/grade ✓
-- Sidebar collapse/expand toggle (icon-only mode) ✓
-- Projector teacher control bar (theme, font, instructions, timer) ✓
-- Library header pill row ✓
-- Claude Code auto-push hook — every `git commit` auto-pushes to `origin claude/activity-of-day-app-2JlTT` ✓
+**oftheday.net — code is current on main as of 2026-06-05. Firebase deploy required to go live.**
+- Code merged to `main` ✓
+- Firebase Hosting: requires manual `firebase deploy` from Mac to update live bundle
+- `/login` → "Something went wrong" error confirms Firebase Console sign-in methods need enabling
+- All UI features confirmed working in code: auth, dashboard, projector, freemium gates ✓
+- Netlify fully removed from codebase (no netlify.toml, no netlify/ directory) ✓
+- Email verification banner ✓
+- Stripe webhook now hard-rejects if secret missing ✓
+- Sidebar collapse, profile sheet, trial banner all wired up ✓
 
-## Pending work
-1. **Stripe webhook secret** — register endpoint in Stripe Dashboard, add `STRIPE_WEBHOOK_SECRET` to `functions/.env`, redeploy functions
-2. **Projector design section** — visual theme swatches + live preview in Settings Sheet (distinct from DisplayMode session controls)
-3. **Component extraction** — App.jsx is 4000+ lines; ProfileSheet, DisplayMode, AuthScreen are candidates
-4. **Merge to main** — active dev branch is `claude/activity-of-day-app-2JlTT`
+## Pending work — in priority order
+1. **Firebase Console** — Enable Email/Password + Google sign-in methods; add `oftheday.net` to Authorized Domains
+2. **Firebase deploy** — Run deploy command on Mac after Console fix to push latest build live
+3. **Stripe webhook secret** — Register endpoint in Stripe Dashboard, add `STRIPE_WEBHOOK_SECRET` to `functions/.env`, redeploy functions
+4. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
+5. **Component extraction** — App.jsx is 4000+ lines; ProfileSheet, DisplayMode, AuthScreen are candidates
+6. **Merge Netlify DNS → Firebase DNS** — Update A records in Netlify DNS panel to point at Firebase servers
 
 ## Git branch
-Active development: `claude/activity-of-day-app-2JlTT`
+Active development: `main` (dev branch `claude/activity-of-day-app-2JlTT` merged)
 
 ## Claude Code settings
 `.claude/settings.json` is committed to the repo. It configures:
-- **PostToolUse hook (Bash)** — detects `git commit` commands and automatically runs `git push -u origin claude/activity-of-day-app-2JlTT` so every commit goes straight to GitHub
+- **PostToolUse hook (Bash)** — detects `git commit` commands and automatically runs `git push -u origin main` so every commit goes straight to GitHub
