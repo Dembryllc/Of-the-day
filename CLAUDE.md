@@ -51,6 +51,9 @@ scripts/
   seed.js          — seeds Firestore activities collection (requires service-account.json)
   activities-data.js — canonical activity pool (60 activities)
 
+.claude/
+  settings.json    — Claude Code project config; PostToolUse hook auto-pushes to origin after every git commit
+
 index.html         — React shell with SEO meta tags
 firebase.json      — hosting config, CSP headers, rewrites
 firestore.rules    — owner-only user docs, read-only activities for authed users
@@ -256,7 +259,7 @@ Logo and images go in `public/assets/` — Vite copies everything in `public/` t
 - `customer.subscription.deleted` → sets `tier:'free'`
 
 ## Live site status
-**oftheday.net is live and fully working as of 2026-06-04.**
+**oftheday.net is live and fully working as of 2026-06-05.**
 - `/` → marketing landing page ✓
 - `/login` → auth screen (sign in / create account / Google) ✓
 - `/dashboard` → teacher app (protected) ✓
@@ -273,6 +276,7 @@ Logo and images go in `public/assets/` — Vite copies everything in `public/` t
 - Sidebar collapse/expand toggle (icon-only mode) ✓
 - Projector teacher control bar (theme, font, instructions, timer) ✓
 - Library header pill row ✓
+- Claude Code auto-push hook — every `git commit` auto-pushes to `origin claude/activity-of-day-app-2JlTT` ✓
 
 ## Pending work
 1. **Stripe webhook secret** — register endpoint in Stripe Dashboard, add `STRIPE_WEBHOOK_SECRET` to `functions/.env`, redeploy functions
@@ -282,3 +286,7 @@ Logo and images go in `public/assets/` — Vite copies everything in `public/` t
 
 ## Git branch
 Active development: `claude/activity-of-day-app-2JlTT`
+
+## Claude Code settings
+`.claude/settings.json` is committed to the repo. It configures:
+- **PostToolUse hook (Bash)** — detects `git commit` commands and automatically runs `git push -u origin claude/activity-of-day-app-2JlTT` so every commit goes straight to GitHub
