@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command' | grep -q 'git commit' && git -C /home/user/Of-the-day push -u origin claude/activity-of-day-app-2JlTT 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

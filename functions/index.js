@@ -286,14 +286,14 @@ exports.stripeWebhook = onRequest(async (req, res) => {
   const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+  if (!webhookSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET is not configured — rejecting webhook');
+    return res.status(400).send('Webhook secret not configured');
+  }
+
   let event;
   try {
-    if (webhookSecret) {
-      event = stripe.webhooks.constructEvent(req.rawBody, req.headers['stripe-signature'], webhookSecret);
-    } else {
-      console.warn('STRIPE_WEBHOOK_SECRET not set — skipping signature verification');
-      event = req.body;
-    }
+    event = stripe.webhooks.constructEvent(req.rawBody, req.headers['stripe-signature'], webhookSecret);
   } catch (err) {
     console.error('Webhook signature error:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);

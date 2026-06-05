@@ -9,8 +9,8 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   onAuthStateChanged,
-  signInWithPopup,
   GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 import { auth } from './lib/firebase';
 import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade, updateUserProfile } from './lib/firestore';
@@ -761,6 +761,10 @@ function friendlyAuthError(code) {
     case 'auth/invalid-credential': return 'Invalid email or password.';
     case 'auth/too-many-requests': return 'Too many attempts. Try again later.';
     case 'auth/network-request-failed': return 'Network error. Check your connection.';
+    case 'auth/popup-closed-by-user': return '';
+    case 'auth/cancelled-popup-request': return '';
+    case 'auth/popup-blocked': return 'Pop-ups are blocked. Please allow pop-ups for this site and try again.';
+    case 'auth/account-exists-with-different-credential': return 'An account already exists with this email. Try signing in with email and password.';
     default: return 'Something went wrong. Try again.';
   }
 }
@@ -772,9 +776,23 @@ function AuthScreen({ onAuthed }) {
   const [busy, setBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
-  const setField = (key, value) => {
-    setForm(f => ({ ...f, [key]: value }));
+  const setField = (key, value) => { setForm(f => ({ ...f, [key]: value })); setError(""); };
+  const switchMode = m => { setMode(m); setError(""); setResetSent(false); };
+
+  const handleGoogleSignIn = async () => {
+    setBusy(true);
     setError("");
+    try {
+      const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+      // onAuthStateChanged in App handles the rest; just need to signal success
+      // by letting the auth state update propagate
+      if (!cred.user) throw new Error('No user returned');
+    } catch (err) {
+      const msg = friendlyAuthError(err.code);
+      if (msg) setError(msg);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const submit = async e => {
@@ -796,13 +814,14 @@ function AuthScreen({ onAuthed }) {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await sendEmailVerification(cred.user);
         await createUserDocument(cred.user.uid, { name: form.name.trim(), email, grade: form.grade });
-        onAuthed({ uid: cred.user.uid, email, name: form.name.trim(), grade: form.grade, plan: "trial", trialStartedAt: Date.now() });
+        onAuthed({ uid: cred.user.uid, email, emailVerified: false, name: form.name.trim(), grade: form.grade, plan: "trial", trialStartedAt: Date.now() });
       } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
         const userDoc = await getUserDocument(cred.user.uid);
         onAuthed({
           uid: cred.user.uid,
           email: cred.user.email,
+          emailVerified: cred.user.emailVerified,
           name: userDoc?.name || cred.user.displayName || "",
           grade: userDoc?.grade || "3–5",
           plan: userDoc?.plan || "free",
@@ -832,36 +851,6 @@ function AuthScreen({ onAuthed }) {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setBusy(true);
-    setError("");
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      let userDoc = await getUserDocument(user.uid);
-      if (!userDoc) {
-        await createUserDocument(user.uid, { name: user.displayName || "", email: user.email, grade: "3–5" });
-        userDoc = { name: user.displayName || "", email: user.email, grade: "3–5", plan: "trial", trialStartedAt: Date.now() };
-      }
-      onAuthed({
-        uid: user.uid,
-        email: user.email,
-        name: userDoc.name || user.displayName || "",
-        grade: userDoc.grade || "3–5",
-        plan: userDoc.plan || "trial",
-        trialStartedAt: tsToMs(userDoc.trialStartedAt) ?? Date.now(),
-        tier: userDoc.tier || null,
-      });
-    } catch (err) {
-      if (err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
-        setError(friendlyAuthError(err.code));
-      }
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <div className="auth-page">
       <div className="auth-brand">
@@ -875,9 +864,9 @@ function AuthScreen({ onAuthed }) {
           <div className="auth-panel-logo">
             <img src="/assets/oftheday-logo.png" alt="Of The Day" className="auth-panel-logo-img"/>
           </div>
-          <div className="auth-tabs" role="tablist">
-            <button type="button" className={`auth-tab${mode === "login" ? " active" : ""}`} role="tab" aria-selected={mode === "login"} onClick={() => { setMode("login"); setError(""); setResetSent(false); }}>Sign In</button>
-            <button type="button" className={`auth-tab${mode === "signup" ? " active" : ""}`} role="tab" aria-selected={mode === "signup"} onClick={() => { setMode("signup"); setError(""); setResetSent(false); }}>Sign Up</button>
+          <div className="auth-tabs">
+            <button type="button" className={`auth-tab${mode === "login" ? " active" : ""}`} onClick={() => switchMode("login")}>Sign In</button>
+            <button type="button" className={`auth-tab${mode === "signup" ? " active" : ""}`} onClick={() => switchMode("signup")}>Sign Up</button>
           </div>
           <button type="button" className="auth-google-btn" onClick={handleGoogleSignIn} disabled={busy}>
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
@@ -1630,25 +1619,45 @@ function ProjectorReceiver() {
 function DisplayMode({ routine, startIndex=0, onExit, projectorStyle=DEFAULT_PROJECTOR_STYLE, initialView="clean" }) {
   const [idx, setIdx] = useState(startIndex);
   const [presentationView, setPresentationView] = useState(initialView === "guided" ? "guided" : "clean");
+  const baseStyle = normalizeProjectorStyle(projectorStyle);
+
+  // Local teacher overrides — session-only, don't mutate saved projectorStyle
+  const [localTheme, setLocalTheme] = useState(baseStyle.theme);
+  const [localFontSize, setLocalFontSize] = useState(baseStyle.textSize || "Large");
+  const [localFontStyle, setLocalFontStyle] = useState("sans");
+  const [localShowInstructions, setLocalShowInstructions] = useState(baseStyle.showStarter);
+  const [localShowTimer, setLocalShowTimer] = useState(baseStyle.showTimer);
+  const [showTeacherBar, setShowTeacherBar] = useState(false);
+
+  const themePresets = {
+    Dark:  { background: "#0A0A18", topColor: "#1B2D5B", accentColor: "#F5A623", textColor: "#FFFFFF" },
+    Light: { background: "#F8F9FC", topColor: "#1B2D5B", accentColor: "#F5A623", textColor: "#1B2D5B" },
+    Warm:  { background: "#2C1A0E", topColor: "#5C3317", accentColor: "#F5A623", textColor: "#FFF8F0" },
+    "High Contrast": { background: "#000000", topColor: "#000000", accentColor: "#FFFF00", textColor: "#FFFFFF" },
+  };
+  const themePresetNames = Object.keys(themePresets);
+
+  const style = {
+    ...baseStyle,
+    ...(themePresets[localTheme] || {}),
+    textSize: localFontSize,
+    showStarter: localShowInstructions,
+    showTimer: localShowTimer,
+  };
+  const theme = PROJECTOR_THEMES[baseStyle.theme] || PROJECTOR_THEMES.Calm;
+
+  const sizeClass = localFontSize === "XLarge" ? " xl" : localFontSize === "Small" ? " normal" : "";
+  const fontClass = localFontStyle === "serif" ? " disp-serif" : "";
+  const backgroundImage = getProjectorBackgroundImage({ ...baseStyle, backgroundColor: style.background || style.backgroundColor });
+  const displayBackground = backgroundImage !== "none" ? {
+    backgroundColor: style.background || style.backgroundColor,
+    backgroundImage, backgroundSize: "cover", backgroundPosition: "center"
+  } : { background: style.background || style.backgroundColor };
+
   const act = routine[idx];
   const totalTime = act ? act.time : 180;
   const [secs, setSecs] = useState(totalTime);
   const [running, setRunning] = useState(true);
-  const [ctrlOpen, setCtrlOpen] = useState(false);
-  const [ctrlTheme, setCtrlTheme] = useState(null);
-  const [ctrlFontSize, setCtrlFontSize] = useState(null);
-  const [ctrlFontStyle, setCtrlFontStyle] = useState("sans");
-  const [showInstructions, setShowInstructions] = useState(true);
-  const style = normalizeProjectorStyle(projectorStyle);
-  const theme = PROJECTOR_THEMES[style.theme] || PROJECTOR_THEMES.Calm;
-  const sizeClass = style.textSize === "Extra Large" ? " xl" : style.textSize === "Normal" ? " normal" : "";
-  const backgroundImage = getProjectorBackgroundImage(style);
-  const displayBackground = backgroundImage !== "none" ? {
-    backgroundColor: style.backgroundColor,
-    backgroundImage,
-    backgroundSize: "cover",
-    backgroundPosition: "center"
-  } : { background: style.backgroundColor };
 
   useEffect(() => { setSecs(totalTime); setRunning(true); }, [idx, totalTime]);
   useEffect(() => { setPresentationView(initialView === "guided" ? "guided" : "clean"); }, [initialView]);
@@ -1676,81 +1685,94 @@ function DisplayMode({ routine, startIndex=0, onExit, projectorStyle=DEFAULT_PRO
     setPresentationView(safeView);
     try { localStorage.setItem(PRESENTATION_VIEW_KEY, safeView); } catch {}
   };
-  const fsMap = { S: "18px", M: "22px", L: "28px", XL: "36px" };
-  const fsStyle = ctrlFontSize ? { fontSize: fsMap[ctrlFontSize] } : {};
-  const ffStyle = ctrlFontStyle === "serif" ? { fontFamily: "Georgia, serif" } : {};
-  const themeOverride = ctrlTheme ? PROJECTOR_THEMES[ctrlTheme] || theme : theme;
+  const resetTimer = () => { setSecs(totalTime); setRunning(false); };
 
   return (
-    <div className={"display-mode" + sizeClass + (isGuided ? " guided" : "")} style={{ ...displayBackground, "--display-accent": style.accentColor, "--display-surface": themeOverride.surface, "--display-text": style.textColor, ...fsStyle, ...ffStyle }}>
-      <div className="disp-teacher-bar">
-        <button className="disp-ctrl-toggle" type="button" onClick={() => setCtrlOpen(o => !o)} aria-expanded={ctrlOpen} aria-label="Teacher controls">
-          {ctrlOpen ? "✕ Close" : "⚙ Controls"}
+    <div className={"display-mode" + sizeClass + fontClass + (isGuided ? " guided" : "")} style={{ ...displayBackground, "--display-accent": style.accentColor, "--display-surface": theme.surface, "--display-text": style.textColor }}>
+
+      {/* ── TEACHER CONTROL BAR ── */}
+      <div className={`disp-teacher-bar${showTeacherBar ? ' open' : ''}`}>
+        <button className="disp-teacher-bar-toggle" type="button" onClick={() => setShowTeacherBar(v => !v)} aria-label="Toggle teacher controls">
+          {showTeacherBar ? '✕ Close' : '⚙ Controls'}
         </button>
-        {ctrlOpen && (
-          <div className="disp-ctrl-panel" aria-label="Teacher controls panel">
+        {showTeacherBar && (
+          <div className="disp-teacher-bar-inner">
             <div className="disp-ctrl-group">
-              <span className="disp-ctrl-label">Theme</span>
-              <div className="disp-seg">
-                {["Calm","Bright","Minimal","High Contrast"].map(t => (
-                  <button key={t} type="button" className={`disp-seg-btn${ctrlTheme === t ? " active" : ""}`} onClick={() => setCtrlTheme(v => v === t ? null : t)}>{t}</button>
+              <div className="disp-ctrl-label">Theme</div>
+              <div className="disp-ctrl-pills">
+                {themePresetNames.map(t => (
+                  <button key={t} type="button" className={`disp-ctrl-pill${localTheme === t ? ' active' : ''}`} onClick={() => setLocalTheme(t)}>{t}</button>
                 ))}
               </div>
             </div>
             <div className="disp-ctrl-group">
-              <span className="disp-ctrl-label">Font Size</span>
-              <div className="disp-seg">
-                {["S","M","L","XL"].map(s => (
-                  <button key={s} type="button" className={`disp-seg-btn${ctrlFontSize === s ? " active" : ""}`} onClick={() => setCtrlFontSize(v => v === s ? null : s)}>{s}</button>
+              <div className="disp-ctrl-label">Font Size</div>
+              <div className="disp-ctrl-pills">
+                {["Small","Medium","Large","XLarge"].map(s => (
+                  <button key={s} type="button" className={`disp-ctrl-pill${localFontSize === s ? ' active' : ''}`} onClick={() => setLocalFontSize(s)}>{s}</button>
                 ))}
               </div>
             </div>
             <div className="disp-ctrl-group">
-              <span className="disp-ctrl-label">Font Style</span>
-              <div className="disp-seg">
-                <button type="button" className={`disp-seg-btn${ctrlFontStyle === "sans" ? " active" : ""}`} onClick={() => setCtrlFontStyle("sans")}>Sans</button>
-                <button type="button" className={`disp-seg-btn${ctrlFontStyle === "serif" ? " active" : ""}`} onClick={() => setCtrlFontStyle("serif")}>Serif</button>
+              <div className="disp-ctrl-label">Font Style</div>
+              <div className="disp-ctrl-pills">
+                <button type="button" className={`disp-ctrl-pill${localFontStyle === 'sans' ? ' active' : ''}`} onClick={() => setLocalFontStyle('sans')}>Sans-Serif</button>
+                <button type="button" className={`disp-ctrl-pill${localFontStyle === 'serif' ? ' active' : ''}`} onClick={() => setLocalFontStyle('serif')}>Serif</button>
               </div>
             </div>
             <div className="disp-ctrl-group">
-              <span className="disp-ctrl-label">Instructions</span>
-              <div className="disp-seg">
-                <button type="button" className={`disp-seg-btn${showInstructions ? " active" : ""}`} onClick={() => setShowInstructions(true)}>Show</button>
-                <button type="button" className={`disp-seg-btn${!showInstructions ? " active" : ""}`} onClick={() => setShowInstructions(false)}>Hide</button>
+              <div className="disp-ctrl-label">Instructions</div>
+              <div className="disp-ctrl-pills">
+                <button type="button" className={`disp-ctrl-pill${localShowInstructions ? ' active' : ''}`} onClick={() => setLocalShowInstructions(true)}>Show</button>
+                <button type="button" className={`disp-ctrl-pill${!localShowInstructions ? ' active' : ''}`} onClick={() => setLocalShowInstructions(false)}>Hide</button>
               </div>
             </div>
             <div className="disp-ctrl-group">
-              <span className="disp-ctrl-label">View</span>
-              <div className="disp-seg">
-                <button type="button" className={`disp-seg-btn${presentationView === "clean" ? " active" : ""}`} onClick={() => switchPresentationView("clean")}>Clean</button>
-                <button type="button" className={`disp-seg-btn${presentationView === "guided" ? " active" : ""}`} onClick={() => switchPresentationView("guided")}>Guided</button>
+              <div className="disp-ctrl-label">Timer</div>
+              <div className="disp-ctrl-pills">
+                <button type="button" className={`disp-ctrl-pill${localShowTimer ? ' active' : ''}`} onClick={() => setLocalShowTimer(true)}>Show</button>
+                <button type="button" className={`disp-ctrl-pill${!localShowTimer ? ' active' : ''}`} onClick={() => setLocalShowTimer(false)}>Hide</button>
+                {localShowTimer && <button type="button" className="disp-ctrl-pill" onClick={resetTimer}>Reset</button>}
               </div>
             </div>
-            <button className="disp-end-btn" type="button" onClick={onExit}>End Projection</button>
+            <div className="disp-ctrl-group disp-ctrl-group--view">
+              <div className="disp-ctrl-label">View</div>
+              <div className="disp-ctrl-pills">
+                <button type="button" className={`disp-ctrl-pill${!isGuided ? ' active' : ''}`} onClick={() => switchPresentationView('clean')}>Clean</button>
+                <button type="button" className={`disp-ctrl-pill${isGuided ? ' active' : ''}`} onClick={() => switchPresentationView('guided')}>Guided</button>
+              </div>
+            </div>
+            <button className="disp-ctrl-end" type="button" onClick={onExit}>End Projection</button>
           </div>
         )}
       </div>
+
+      {/* ── TOP BAR ── */}
       <div className="disp-top" style={{ background: style.topColor || cm.dark }}>
         <div>
           <div className="disp-class-name">{style.className}</div>
           <div className="disp-cat-label">{cm.emoji} {act?.cat}</div>
-          <div className="disp-prog-label">Activity {idx+1} of {routine.length}</div>
         </div>
-        {style.showTimer && (
+        {localShowTimer && (
           <div className="disp-timer-group">
             <div className="disp-bar-wrap">
               <div className="disp-bar" style={{ width: pct+"%", background: style.accentColor }}/>
             </div>
-            <button className="disp-timer-button" type="button" onClick={() => setRunning(r=>!r)} aria-label={running ? "Pause timer" : "Resume timer"}>
-              <span className="disp-timer-num">{fmt(secs)}</span>
-              <span className="disp-timer-action">{running ? "Pause" : "Resume"}</span>
-            </button>
+            <div className="disp-timer-controls">
+              <button className="disp-timer-button" type="button" onClick={() => setRunning(r=>!r)} aria-label={running ? "Pause timer" : "Resume timer"}>
+                <span className="disp-timer-num">{fmt(secs)}</span>
+                <span className="disp-timer-action">{running ? "⏸ Pause" : "▶ Start"}</span>
+              </button>
+              <button className="disp-timer-reset" type="button" onClick={resetTimer} aria-label="Reset timer">↺</button>
+            </div>
           </div>
         )}
       </div>
+
+      {/* ── CONTENT ── */}
       <div className="disp-center">
         <div className="disp-prompt">{act?.prompt}</div>
-        {showInstructions && style.showStarter && act?.starter && (
+        {localShowInstructions && act?.starter && (
           <div className="disp-starter-box">
             <div className="disp-starter-label">Sentence starter</div>
             <div className="disp-starter-text">"{act.starter}"</div>
@@ -1769,17 +1791,22 @@ function DisplayMode({ routine, startIndex=0, onExit, projectorStyle=DEFAULT_PRO
           </div>
         )}
       </div>
+
+      {/* ── BOTTOM NAV ── */}
       <div className="disp-bottom">
-        <div className="disp-dots">
-          {routine.map((_,i) => <div key={i} className={"disp-dot" + (i===idx ? " curr" : "")}/>)}
+        <button className={`disp-nav-btn disp-nav-prev${idx === 0 ? ' disp-nav-btn--hidden' : ''}`} type="button" onClick={() => setIdx(i=>i-1)} disabled={idx === 0}>
+          ← Previous
+        </button>
+        <div className="disp-bottom-center">
+          <div className="disp-activity-counter">Activity {idx+1} of {routine.length}</div>
+          <div className="disp-dots">
+            {routine.map((_,i) => <div key={i} className={"disp-dot" + (i===idx ? " curr" : "")}/>)}
+          </div>
         </div>
-        <div className="disp-navs">
-          {idx > 0 && <button className="disp-btn" type="button" onClick={() => setIdx(i=>i-1)}>Previous</button>}
-          {idx < routine.length-1
-            ? <button className="disp-btn next" type="button" onClick={() => setIdx(i=>i+1)}>Next</button>
-            : <button className="disp-btn next" type="button" onClick={onExit}>Done</button>
-          }
-        </div>
+        {idx < routine.length-1
+          ? <button className="disp-nav-btn disp-nav-next" type="button" onClick={() => setIdx(i=>i+1)}>Next →</button>
+          : <button className="disp-nav-btn disp-nav-next disp-nav-done" type="button" onClick={onExit}>Done ✓</button>
+        }
       </div>
     </div>
   );
@@ -2483,6 +2510,9 @@ function MainApp({ account, onSignOut }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [displayName, setDisplayName] = useState(account?.name || '');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem('ofd:sidebarCollapsed') === '1'; } catch { return false; }
+  });
   const [customOpen, setCustomOpen] = useState(false);
   const [favorites, setFavorites] = useState(() => readStoredFavorites());
   const [projectorStyle, setProjectorStyle] = useState(() => readProjectorStyle(account));
@@ -2504,14 +2534,6 @@ function MainApp({ account, onSignOut }) {
     const ms = 14 * 24 * 60 * 60 * 1000 - (Date.now() - started);
     return ms > 0 ? Math.ceil(ms / (24 * 60 * 60 * 1000)) : 0;
   }, [account]);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    () => localStorage.getItem('ofd:sidebarCollapsed') === '1'
-  );
-  const toggleSidebar = () => setSidebarCollapsed(v => {
-    const next = !v;
-    try { localStorage.setItem('ofd:sidebarCollapsed', next ? '1' : '0'); } catch {}
-    return next;
-  });
   const [trialBannerDismissed, setTrialBannerDismissed] = useState(
     () => sessionStorage.getItem('trial-banner-dismissed') === '1'
   );
@@ -2527,6 +2549,19 @@ function MainApp({ account, onSignOut }) {
     const t = setTimeout(() => setShowProBanner(false), 5000);
     return () => clearTimeout(t);
   }, [showProBanner]);
+  const [verifyBannerDismissed, setVerifyBannerDismissed] = useState(() => sessionStorage.getItem('verify-banner-dismissed') === '1');
+  const showVerifyBanner = account?.emailVerified === false && !verifyBannerDismissed;
+  const [verifySent, setVerifySent] = useState(false);
+  const resendVerification = useCallback(async () => {
+    try {
+      if (auth.currentUser) await sendEmailVerification(auth.currentUser);
+      setVerifySent(true);
+    } catch {}
+  }, []);
+  function dismissVerifyBanner() {
+    sessionStorage.setItem('verify-banner-dismissed', '1');
+    setVerifyBannerDismissed(true);
+  }
   useEffect(() => {
     fetchActivities().then(remote => {
       if (remote.length > 0) setActivityPool(remote);
@@ -3199,28 +3234,51 @@ function MainApp({ account, onSignOut }) {
           <button className="trial-banner-close" type="button" onClick={dismissTrialBanner} aria-label="Dismiss">✕</button>
         </div>
       )}
+      {!verifyBannerDismissed && showVerifyBanner && (
+        <div className="verify-banner" role="status">
+          <span>
+            Please verify your email address ({account.email}).{' '}
+            {verifySent
+              ? 'Verification email sent!'
+              : <button type="button" className="verify-banner-resend" onClick={resendVerification}>Resend verification email</button>}
+          </span>
+          <button className="trial-banner-close" type="button" onClick={dismissVerifyBanner} aria-label="Dismiss">✕</button>
+        </div>
+      )}
       {/* ── APP SHELL (sidebar + main) ── */}
       <div className="app-shell">
       {/* ── SIDEBAR ── */}
-      <div className={`sidebar${sidebarCollapsed ? ' collapsed' : ''}`}>
-        <button className="sidebar-collapse-btn" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
-          {sidebarCollapsed ? '›' : '‹'}
-        </button>
+      <div className={`sidebar${sidebarCollapsed ? ' sidebar--collapsed' : ''}`}>
         <div className="sidebar-logo">
-          <img className="sidebar-logo-img" src="/assets/oftheday-logo.png" alt="Of The Day logo"/>
+          {sidebarCollapsed
+            ? <span className="sidebar-logo-mark">☀️</span>
+            : <img className="sidebar-logo-img" src="/assets/oftheday-logo.png" alt="Of The Day logo"/>
+          }
           {!sidebarCollapsed && <div className="logo-sub">Good morning, {displayName || tweaks.teacherName}</div>}
         </div>
+        <button
+          type="button"
+          className="sidebar-collapse-btn"
+          onClick={() => {
+            const next = !sidebarCollapsed;
+            setSidebarCollapsed(next);
+            try { localStorage.setItem('ofd:sidebarCollapsed', next ? '1' : '0'); } catch {}
+          }}
+          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {sidebarCollapsed ? '›' : '‹'}
+        </button>
         <nav className="nav">
           {navItems.map(n => (
             <React.Fragment key={n.label}>
               <button type="button" className={`nav-item${navActive(n.label)?' active':''}`} onClick={() => setActiveNav(n.label)} title={sidebarCollapsed ? n.label : undefined}>
                 <span className="nav-icon">{n.icon}</span>
-                {!sidebarCollapsed && <span className="nav-label">{n.label}</span>}
+                {!sidebarCollapsed && <span>{n.label}</span>}
               </button>
-              {n.label === "Build" && !sidebarCollapsed && (
-                <button type="button" className="nav-item nav-item-sub" onClick={() => setSettingsOpen(true)}>
+              {n.label === "Build" && (
+                <button type="button" className="nav-item nav-item-sub" onClick={() => setSettingsOpen(true)} title={sidebarCollapsed ? 'Settings' : undefined}>
                   <span className="nav-icon">⚙</span>
-                  <span className="nav-label">Settings</span>
+                  {!sidebarCollapsed && <span>Settings</span>}
                 </button>
               )}
             </React.Fragment>
@@ -3749,13 +3807,23 @@ function App() {
         return;
       }
       try {
-        const userDoc = await getUserDocument(user.uid);
+        let userDoc = await getUserDocument(user.uid);
+        if (!userDoc) {
+          // New Google user returning from redirect — Cloud Function may not have run yet
+          await createUserDocument(user.uid, {
+            name: user.displayName || "",
+            email: user.email || "",
+            grade: "3–5",
+          });
+          userDoc = await getUserDocument(user.uid);
+        }
         const account = {
           uid: user.uid,
           email: user.email,
+          emailVerified: user.emailVerified,
           name: userDoc?.name || user.displayName || "",
           grade: userDoc?.grade || "3–5",
-          plan: userDoc?.plan || "free",
+          plan: userDoc?.plan || "trial",
           trialStartedAt: tsToMs(userDoc?.trialStartedAt),
           tier: userDoc?.tier || null,
         };
