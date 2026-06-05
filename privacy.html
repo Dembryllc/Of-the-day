@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Of-The-Day Teacher Workspace Notes</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #1c1c2e;
+        --muted: #5f6878;
+        --line: #e7e2da;
+        --teal: #2d7a6a;
+        --paper: #fffdf8;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f5f1ea;
+        color: var(--ink);
+        line-height: 1.6;
+      }
+      main {
+        width: min(860px, calc(100% - 32px));
+        margin: 40px auto;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: clamp(24px, 5vw, 46px);
+        box-shadow: 0 16px 50px rgba(15, 23, 42, 0.08);
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(30px, 5vw, 48px);
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+      }
+      h2 { margin: 30px 0 8px; font-size: 18px; }
+      p, li { color: var(--muted); font-size: 16px; }
+      strong { color: var(--ink); }
+      .badge {
+        display: inline-flex;
+        margin-bottom: 18px;
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: #e8f5f1;
+        color: var(--teal);
+        font-weight: 800;
+        font-size: 13px;
+      }
+      .note {
+        margin-top: 24px;
+        padding: 16px 18px;
+        border: 1px solid #cfe8df;
+        border-radius: 14px;
+        background: #f4fbf8;
+      }
+      ul { padding-left: 22px; }
+      a { color: var(--teal); font-weight: 800; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="badge">Pre-Firebase demo version</div>
+      <h1>Teacher Workspace Notes</h1>
+      <p>
+        Of-The-Day is designed as a teacher classroom-routine tool. Teachers use it to build, save,
+        and project classroom routines, activities, words, Do Nows, and display preferences.
+      </p>
+
+      <h2>What this version is for</h2>
+      <ul>
+        <li>Planning and projecting teacher-led classroom routines.</li>
+        <li>Saving teacher favorites, custom activities, routines, words, Do Nows, and display style.</li>
+        <li>Helping teachers start class quickly with ready-to-use classroom prompts.</li>
+      </ul>
+
+      <h2>What this version is not for</h2>
+      <ul>
+        <li>It is not a roster system.</li>
+        <li>It is not a gradebook.</li>
+        <li>It is not a student account or assignment platform.</li>
+        <li>It is not an AI tool.</li>
+      </ul>
+
+      <h2>Workspace backup</h2>
+      <p>
+        The optional workspace backup saves teacher workspace content such as routines, favorites,
+        custom activities, words, Do Nows, and projector style.
+      </p>
+
+      <h2>Before paid or district use</h2>
+      <p>
+        Before a production district rollout, Of-The-Day should move to Firebase Auth and Firestore
+        security rules, add account deletion/export controls, and publish a formal privacy policy and
+        terms of service.
+      </p>
+
+      <div class="note">
+        <strong>Current product principle:</strong> Of-The-Day is a teacher workspace for classroom routines.
+      </div>
+    </main>
+  </body>
+</html>
