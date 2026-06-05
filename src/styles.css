@@ -1615,6 +1615,17 @@ button:focus-visible,
   cursor: pointer; font-size: 16px; line-height: 1; padding: 0; flex-shrink: 0;
 }
 .trial-banner-close:hover { color: #fff; }
+.verify-banner {
+  flex-shrink: 0;
+  background: #854d0e; color: #fff;
+  padding: 9px 48px; font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
+.verify-banner-resend {
+  background: none; border: none; color: #fde68a; font-size: 13px; font-weight: 600;
+  cursor: pointer; padding: 0; text-decoration: underline;
+}
+.verify-banner-resend:hover { color: #fff; }
 
 /* ── upgrade page ── */
 .upgrade-page {

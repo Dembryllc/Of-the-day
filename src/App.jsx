@@ -811,13 +811,14 @@ function AuthScreen({ onAuthed, googleError }) {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await sendEmailVerification(cred.user);
         await createUserDocument(cred.user.uid, { name: form.name.trim(), email, grade: form.grade });
-        onAuthed({ uid: cred.user.uid, email, name: form.name.trim(), grade: form.grade, plan: "trial", trialStartedAt: Date.now() });
+        onAuthed({ uid: cred.user.uid, email, emailVerified: false, name: form.name.trim(), grade: form.grade, plan: "trial", trialStartedAt: Date.now() });
       } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
         const userDoc = await getUserDocument(cred.user.uid);
         onAuthed({
           uid: cred.user.uid,
           email: cred.user.email,
+          emailVerified: cred.user.emailVerified,
           name: userDoc?.name || cred.user.displayName || "",
           grade: userDoc?.grade || "3–5",
           plan: userDoc?.plan || "free",
@@ -2545,6 +2546,19 @@ function MainApp({ account, onSignOut }) {
     const t = setTimeout(() => setShowProBanner(false), 5000);
     return () => clearTimeout(t);
   }, [showProBanner]);
+  const [verifyBannerDismissed, setVerifyBannerDismissed] = useState(() => sessionStorage.getItem('verify-banner-dismissed') === '1');
+  const showVerifyBanner = account?.emailVerified === false && !verifyBannerDismissed;
+  const [verifySent, setVerifySent] = useState(false);
+  const resendVerification = useCallback(async () => {
+    try {
+      if (auth.currentUser) await sendEmailVerification(auth.currentUser);
+      setVerifySent(true);
+    } catch {}
+  }, []);
+  function dismissVerifyBanner() {
+    sessionStorage.setItem('verify-banner-dismissed', '1');
+    setVerifyBannerDismissed(true);
+  }
   useEffect(() => {
     fetchActivities().then(remote => {
       if (remote.length > 0) setActivityPool(remote);
@@ -3217,6 +3231,17 @@ function MainApp({ account, onSignOut }) {
           <button className="trial-banner-close" type="button" onClick={dismissTrialBanner} aria-label="Dismiss">✕</button>
         </div>
       )}
+      {!verifyBannerDismissed && showVerifyBanner && (
+        <div className="verify-banner" role="status">
+          <span>
+            Please verify your email address ({account.email}).{' '}
+            {verifySent
+              ? 'Verification email sent!'
+              : <button type="button" className="verify-banner-resend" onClick={resendVerification}>Resend verification email</button>}
+          </span>
+          <button className="trial-banner-close" type="button" onClick={dismissVerifyBanner} aria-label="Dismiss">✕</button>
+        </div>
+      )}
       {/* ── APP SHELL (sidebar + main) ── */}
       <div className="app-shell">
       {/* ── SIDEBAR ── */}
@@ -3799,6 +3824,7 @@ function App() {
         const account = {
           uid: user.uid,
           email: user.email,
+          emailVerified: user.emailVerified,
           name: userDoc?.name || user.displayName || "",
           grade: userDoc?.grade || "3–5",
           plan: userDoc?.plan || "trial",
