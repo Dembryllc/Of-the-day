@@ -10,7 +10,8 @@ import {
   sendPasswordResetEmail,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from 'firebase/auth';
 import { auth } from './lib/firebase';
 import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade, updateUserProfile } from './lib/firestore';
@@ -768,43 +769,25 @@ function friendlyAuthError(code) {
   }
 }
 
-function AuthScreen({ onAuthed }) {
+function AuthScreen({ onAuthed, googleError }) {
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ name: "", email: "", password: "", grade: "3–5" });
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => googleError ? friendlyAuthError(googleError) || "Google sign-in failed. Try again." : "");
   const [busy, setBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
   const setField = (key, value) => { setForm(f => ({ ...f, [key]: value })); setError(""); };
   const switchMode = m => { setMode(m); setError(""); setResetSent(false); };
 
-  const resolveGoogleUser = async (user) => {
-    let userDoc = await getUserDocument(user.uid);
-    if (!userDoc) {
-      await createUserDocument(user.uid, { name: user.displayName || "", email: user.email || "", grade: "3–5" });
-      userDoc = await getUserDocument(user.uid);
-    }
-    onAuthed({
-      uid: user.uid,
-      email: user.email,
-      name: userDoc?.name || user.displayName || "",
-      grade: userDoc?.grade || "3–5",
-      plan: userDoc?.plan || "trial",
-      trialStartedAt: tsToMs(userDoc?.trialStartedAt),
-      tier: userDoc?.tier || null,
-    });
-  };
-
   const handleGoogleSignIn = async () => {
     setBusy(true);
     setError("");
     try {
-      const cred = await signInWithPopup(auth, new GoogleAuthProvider());
-      await resolveGoogleUser(cred.user);
+      await signInWithRedirect(auth, new GoogleAuthProvider());
+      // Page will redirect — remaining code won't execute
     } catch (err) {
       const msg = friendlyAuthError(err.code);
-      if (msg) setError(msg);
-    } finally {
+      setError(msg || "Something went wrong. Try again.");
       setBusy(false);
     }
   };
@@ -3790,19 +3773,35 @@ function App() {
       setAuthState({ loading: false, account: null });
       return;
     }
+    // Consume any pending Google redirect result and surface errors
+    getRedirectResult(auth).catch(err => {
+      const code = err?.code || '';
+      if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
+        setAuthState(s => ({ ...s, googleError: err.code }));
+      }
+    });
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         setAuthState({ loading: false, account: null });
         return;
       }
       try {
-        const userDoc = await getUserDocument(user.uid);
+        let userDoc = await getUserDocument(user.uid);
+        if (!userDoc) {
+          // New Google user returning from redirect — Cloud Function may not have run yet
+          await createUserDocument(user.uid, {
+            name: user.displayName || "",
+            email: user.email || "",
+            grade: "3–5",
+          });
+          userDoc = await getUserDocument(user.uid);
+        }
         const account = {
           uid: user.uid,
           email: user.email,
           name: userDoc?.name || user.displayName || "",
           grade: userDoc?.grade || "3–5",
-          plan: userDoc?.plan || "free",
+          plan: userDoc?.plan || "trial",
           trialStartedAt: tsToMs(userDoc?.trialStartedAt),
           tier: userDoc?.tier || null,
         };
@@ -3836,7 +3835,7 @@ function App() {
         <Route path="/login" element={
           authState.loading ? loading :
           authed ? <Navigate to="/dashboard" replace /> :
-          <AuthScreen onAuthed={account => setAuthState({ loading: false, account })} />
+          <AuthScreen onAuthed={account => setAuthState({ loading: false, account })} googleError={authState.googleError} />
         } />
         <Route path="/dashboard" element={
           authState.loading ? loading :
