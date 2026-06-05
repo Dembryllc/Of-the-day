@@ -33,11 +33,12 @@
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--lp-border);
   padding: 0 24px;
+  overflow: hidden;
 }
 .lp .nav-inner {
   max-width: 1100px; margin: 0 auto;
   display: flex; align-items: center; justify-content: space-between;
-  height: 64px; gap: 32px;
+  height: 72px; gap: 32px;
 }
 .lp .nav-logo {
   display: flex; align-items: center;
@@ -45,7 +46,7 @@
   flex-shrink: 0;
 }
 .lp .nav-logo-img {
-  height: 56px; width: auto;
+  height: 200px; width: auto;
   display: block;
 }
 .lp .nav-links {
