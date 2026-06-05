@@ -765,7 +765,9 @@ function friendlyAuthError(code) {
     case 'auth/cancelled-popup-request': return '';
     case 'auth/popup-blocked': return 'Pop-ups are blocked. Please allow pop-ups for this site and try again.';
     case 'auth/account-exists-with-different-credential': return 'An account already exists with this email. Try signing in with email and password.';
-    default: return 'Something went wrong. Try again.';
+    case 'auth/operation-not-allowed': return 'This sign-in method is not enabled. Go to Firebase Console → Authentication → Sign-in method and enable Email/Password and Google.';
+    case 'auth/unauthorized-domain': return 'This domain is not authorized for sign-in. Go to Firebase Console → Authentication → Settings → Authorized domains and add this domain.';
+    default: return `Something went wrong (${code || 'unknown'}). Try again.`;
   }
 }
 
