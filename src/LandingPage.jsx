@@ -60,7 +60,7 @@ export default function LandingPage() {
       <nav className="lp-nav">
         <div className="nav-inner">
           <a href="/" className="nav-logo">
-            <img src="/assets/oftheday-logo.png" alt="OfTheDay" className="nav-logo-img" />
+            <img src="/assets/ofthedaylogi.png" alt="OfTheDay" className="nav-logo-img" />
           </a>
           <ul className={`nav-links${navOpen ? ' open' : ''}`} id="nav-links">
             <li><a href="#features" onClick={() => setNavOpen(false)}>Features</a></li>

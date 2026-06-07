@@ -40,20 +40,14 @@
   height: 72px; gap: 32px;
 }
 .lp .nav-logo {
-  display: block;
-  height: 50px;
-  overflow: hidden;
-  flex-shrink: 0;
+  display: flex; align-items: center;
   text-decoration: none;
+  flex-shrink: 0;
 }
-/* PNG is 1200x800. Logo content is at rows 295–493 (198px tall, centered).
-   Display at 202px height so the 198px content = 50px visible.
-   Offset -74px so the content rows start at the top of the 50px container. */
 .lp .nav-logo-img {
-  height: 202px;
+  height: 44px;
   width: auto;
   display: block;
-  margin-top: -74px;
 }
 .lp .nav-links {
   display: flex; align-items: center; gap: 28px;
