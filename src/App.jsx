@@ -767,6 +767,7 @@ function friendlyAuthError(code) {
     case 'auth/account-exists-with-different-credential': return 'An account already exists with this email. Try signing in with email and password.';
     case 'auth/operation-not-allowed': return 'This sign-in method is not enabled. Go to Firebase Console → Authentication → Sign-in method and enable Email/Password and Google.';
     case 'auth/unauthorized-domain': return 'This domain is not authorized for sign-in. Go to Firebase Console → Authentication → Settings → Authorized domains and add this domain.';
+    case 'auth/internal-error': return 'Google sign-in is not fully configured. In Firebase Console → Authentication → Sign-in method → Google, make sure you have set a Support Email and saved. If the problem continues, check Google Cloud Console → APIs & Services → OAuth consent screen.';
     default: return `Something went wrong (${code || 'unknown'}). Try again.`;
   }
 }
