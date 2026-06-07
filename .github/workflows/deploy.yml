@@ -18,6 +18,29 @@ jobs:
 
       - run: npm ci
 
+      - name: Verify required secrets are present
+        run: |
+          MISSING=0
+          [ -z "$VITE_FIREBASE_API_KEY" ]            && echo "MISSING: VITE_FIREBASE_API_KEY"            && MISSING=1
+          [ -z "$VITE_FIREBASE_AUTH_DOMAIN" ]        && echo "MISSING: VITE_FIREBASE_AUTH_DOMAIN"        && MISSING=1
+          [ -z "$VITE_FIREBASE_PROJECT_ID" ]         && echo "MISSING: VITE_FIREBASE_PROJECT_ID"         && MISSING=1
+          [ -z "$VITE_FIREBASE_STORAGE_BUCKET" ]     && echo "MISSING: VITE_FIREBASE_STORAGE_BUCKET"     && MISSING=1
+          [ -z "$VITE_FIREBASE_MESSAGING_SENDER_ID" ] && echo "MISSING: VITE_FIREBASE_MESSAGING_SENDER_ID" && MISSING=1
+          [ -z "$VITE_FIREBASE_APP_ID" ]             && echo "MISSING: VITE_FIREBASE_APP_ID"             && MISSING=1
+          if [ $MISSING -eq 1 ]; then
+            echo "ERROR: One or more required Firebase secrets are not set in GitHub Actions."
+            echo "Go to: GitHub repo → Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          echo "All required secrets are present."
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
       - name: Build
         run: npm run build
         env:

@@ -1,71 +1,80 @@
 # Root Cause Report
-Date: 2026-06-05
+Date: 2026-06-07
 
 ---
 
-## Cause 1: Sign-in methods not enabled in Firebase Console
-- **Classification**: Firebase Console configuration (not a code bug)
-- **Confidence**: 90%
-- **Risk**: CRITICAL — app is completely unusable without this
-- **Evidence**: Screenshot shows "Something went wrong. Try again." which is the exact
-  string returned by `friendlyAuthError()`'s default case. The only errors that trigger
-  the default case are unhandled codes. `auth/operation-not-allowed` — thrown when a
-  sign-in provider is disabled in Firebase Console — is not in the switch statement.
-- **Files involved**: Firebase Console only (no code file)
-- **System**: Firebase Authentication → Sign-in method settings
-- **Fix location**: Firebase Console → Authentication → Sign-in method
-  → Enable "Email/Password" AND "Google"
+## Cause 1 — CONFIRMED: GitHub Secrets Not Added (App Cannot Load)
+- **Classification**: Missing environment variables in CI/CD pipeline
+- **Confidence**: 100% — proven by build logs
+- **Risk**: CRITICAL — app is completely non-functional
+- **Evidence**: Build log for run #2, job 79888302642, timestamp 15:40:23:
+  ```
+  VITE_FIREBASE_API_KEY:
+  VITE_FIREBASE_AUTH_DOMAIN:
+  VITE_FIREBASE_PROJECT_ID:
+  VITE_FIREBASE_STORAGE_BUCKET:
+  VITE_FIREBASE_MESSAGING_SENDER_ID:
+  VITE_FIREBASE_APP_ID:
+  ```
+  All 6 values are blank. GitHub substitutes empty string for missing secrets silently.
+  Vite baked empty strings into the production JS bundle.
+  At runtime: `src/lib/firebase.js:14` throws because `apiKey === ""` (falsy).
+  React never mounts. Page is blank.
+- **Files involved**: `.github/workflows/deploy.yml`, `src/lib/firebase.js`
+- **System**: GitHub Actions Secrets, Vite build, Firebase SDK initialization
+- **Fix**: Add all 6 secrets to GitHub → repo Settings → Secrets and variables → Actions:
+  - `VITE_FIREBASE_API_KEY` = `AIzaSyD77FabrJ77AUj3yAf722ctseHLSFIRSyw`
+  - `VITE_FIREBASE_AUTH_DOMAIN` = `oftheday-c6490.firebaseapp.com`
+  - `VITE_FIREBASE_PROJECT_ID` = `oftheday-c6490`
+  - `VITE_FIREBASE_STORAGE_BUCKET` = `oftheday-c6490.firebasestorage.app`
+  - `VITE_FIREBASE_MESSAGING_SENDER_ID` = `984386798513`
+  - `VITE_FIREBASE_APP_ID` = `1:984386798513:web:946e156afbade9dfd7b390`
+  Then re-run the workflow (or push a commit).
 
 ---
 
-## Cause 2: oftheday.net not in Firebase Authorized Domains
+## Cause 2 — CONFIRMED: DNS for oftheday.net Points to Netlify, Not Firebase
+- **Classification**: DNS misconfiguration
+- **Confidence**: 100% — confirmed by user ("I own the domain through Netlify")
+- **Risk**: CRITICAL — even a correctly built app cannot be reached at oftheday.net
+- **Evidence**: Domain is registered and DNS-managed through Netlify. No changes to DNS
+  have been made. Firebase Hosting serves at `oftheday-c6490.web.app` only.
+  Custom domain has not been added in Firebase Console → Hosting.
+- **Files involved**: None (DNS and Firebase Console, no code files)
+- **System**: Netlify DNS, Firebase Hosting custom domain setup
+- **Fix**:
+  1. Firebase Console → Hosting → Add custom domain → `oftheday.net` → get Firebase IPs
+  2. Netlify DNS → delete existing A records for `@` → add Firebase A records
+  3. Add CNAME: `www` → `oftheday-c6490.web.app`
+
+---
+
+## Cause 3: Firebase Auth Sign-in Methods Not Enabled
 - **Classification**: Firebase Console configuration
-- **Confidence**: 75%
-- **Risk**: HIGH — required for Google OAuth popup to complete
-- **Evidence**: Google sign-in popup flow requires the calling domain to be whitelisted.
-  Firebase auto-adds localhost and the Firebase default domain, but NOT custom domains.
-  If oftheday.net is not listed, Google popup returns an error (likely `auth/unauthorized-domain`
-  which also hits the default case → "Something went wrong. Try again.")
+- **Confidence**: 85% (cannot confirm from code; user reported auth failures)
+- **Risk**: HIGH — sign-in will fail even after app loads and DNS is fixed
+- **Evidence**: Previous session screenshots showed "Something went wrong. Try again."
+  `auth/operation-not-allowed` is now handled in code (added in commit 8830224) and will
+  show a clear message if this is the issue. But the sign-in methods themselves must be
+  enabled in Firebase Console.
 - **Files involved**: Firebase Console only
-- **System**: Firebase Console → Authentication → Settings → Authorized domains
-- **Fix location**: Add `oftheday.net` and `www.oftheday.net`
+- **System**: Firebase Authentication
+- **Fix**: Firebase Console → Authentication → Sign-in method → Enable Email/Password + Google
+  → Authentication → Settings → Authorized domains → Add `oftheday.net`
 
 ---
 
-## Cause 3: Firebase Hosting deploy never ran (or ran an old build)
-- **Classification**: Missing deployment step
-- **Confidence**: 60%
-- **Risk**: MEDIUM — code fixes exist in GitHub but may not be live
-- **Evidence**: The deploy command (`firebase deploy`) must be run manually on the user's
-  Mac. This server only pushes to GitHub. Previous responses said "pushed" but that only
-  means GitHub was updated — NOT that Firebase Hosting was redeployed.
-- **Files involved**: dist/ (build output), firebase.json
-- **System**: Firebase Hosting
-- **Fix**: User must run on their Mac:
-  `cd "/Users/mikeradicone/Desktop/of the day" && git pull origin main && npm run build && firebase deploy --only hosting`
+## Why Previous Fixes Did Not Solve The Problem
 
----
+1. **GitHub Actions was set up but GitHub Secrets were never added.**
+   The workflow correctly references the secrets, but the secrets don't exist in GitHub.
+   The build silently used empty strings. Firebase throws on load.
 
-## Cause 4 (Secondary): auth/operation-not-allowed not in error handler
-- **Classification**: Code gap — error message not user-friendly
-- **Confidence**: 100% (confirmed in source)
-- **Risk**: LOW on its own, but causes the misleading "Something went wrong" message
-  that makes diagnosis harder
-- **Evidence**: `grep "operation-not-allowed" src/App.jsx` → no results
-- **Files involved**: src/App.jsx:754-768 (friendlyAuthError function)
-- **Fix**: Add `case 'auth/operation-not-allowed'` with a clear message
+2. **DNS was never updated.**
+   Every deploy to Firebase Hosting is invisible until the DNS A records for oftheday.net
+   are changed from Netlify's IPs to Firebase's IPs.
 
----
+3. **Firebase Console auth settings were not confirmed.**
+   Code changes cannot enable sign-in providers in the Firebase Console.
 
-## Why Previous Code Fixes Did Not Solve The Problem
-
-Every fix in this session changed JavaScript code and pushed to GitHub. None of them
-could fix the root cause because:
-
-1. Firebase sign-in methods being disabled is a Firebase Console toggle — it cannot
-   be changed by code
-2. Authorized domains is a Firebase Console setting — it cannot be changed by code
-3. The deploy to Firebase Hosting requires a manual step on the user's Mac — GitHub
-   push alone does not update the live site
-
-The code was correct. The infrastructure was not configured.
+These are three independent infrastructure failures, none fixable by code changes alone.
