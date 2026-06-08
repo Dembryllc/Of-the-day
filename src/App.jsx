@@ -10,7 +10,8 @@ import {
   sendPasswordResetEmail,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithRedirect,
+  signInWithCredential,
+  signInWithPopup,
   getRedirectResult,
 } from 'firebase/auth';
 import { auth } from './lib/firebase';
@@ -19,6 +20,8 @@ import { usePlan, FREE_LIMITS } from './lib/usePlan';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const tsToMs = ts => ts?.toMillis?.() ?? (ts?.seconds != null ? ts.seconds * 1000 : null);
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "984386798513-aprar4ehdq87dd4jtguigupaiva0pnr5.apps.googleusercontent.com";
+const LOGO_SRC = "/assets/oftheday-logo.png?v=20260608";
 
 /* ── data ── */
 const CAT_META = {
@@ -752,7 +755,9 @@ function useToast() {
 }
 
 /* ── Auth ── */
-function friendlyAuthError(code) {
+function friendlyAuthError(errorOrCode) {
+  const code = typeof errorOrCode === "string" ? errorOrCode : errorOrCode?.code;
+  const details = typeof errorOrCode === "string" ? "" : errorOrCode?.message;
   switch (code) {
     case 'auth/email-already-in-use': return 'An account with this email already exists.';
     case 'auth/invalid-email': return 'Enter a valid email address.';
@@ -768,9 +773,59 @@ function friendlyAuthError(code) {
     case 'auth/account-exists-with-different-credential': return 'An account already exists with this email. Try signing in with email and password.';
     case 'auth/operation-not-allowed': return 'This sign-in method is not enabled. Go to Firebase Console → Authentication → Sign-in method and enable Email/Password and Google.';
     case 'auth/unauthorized-domain': return 'This domain is not authorized for sign-in. Go to Firebase Console → Authentication → Settings → Authorized domains and add this domain.';
-    case 'auth/internal-error': return 'Google sign-in is not fully configured. In Firebase Console → Authentication → Sign-in method → Google, make sure you have set a Support Email and saved. If the problem continues, check Google Cloud Console → APIs & Services → OAuth consent screen.';
+    case 'auth/internal-error': return `Google sign-in hit a configuration issue.${details && details !== "Firebase: Error (auth/internal-error)." ? ` Details: ${details}` : ' Please try again or use email sign-in.'}`;
     default: return `Something went wrong (${code || 'unknown'}). Try again.`;
   }
+}
+
+function loadGoogleIdentityScript() {
+  if (window.google?.accounts?.oauth2) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-google-identity="true"]');
+    if (existing) {
+      existing.addEventListener("load", resolve, { once: true });
+      existing.addEventListener("error", reject, { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.dataset.googleIdentity = "true";
+    script.onload = resolve;
+    script.onerror = () => reject(new Error("Google sign-in script could not load."));
+    document.head.appendChild(script);
+  });
+}
+
+async function signInWithGoogleIdentity() {
+  await loadGoogleIdentityScript();
+  return new Promise((resolve, reject) => {
+    if (!window.google?.accounts?.oauth2 || !GOOGLE_CLIENT_ID) {
+      reject({ code: "auth/internal-error", message: "Google Identity Services is not configured." });
+      return;
+    }
+    const tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: "openid email profile",
+      prompt: "select_account",
+      callback: async response => {
+        if (response?.error) {
+          reject({ code: `google/${response.error}`, message: response.error_description || response.error });
+          return;
+        }
+        try {
+          const credential = GoogleAuthProvider.credential(null, response.access_token);
+          const result = await signInWithCredential(auth, credential);
+          resolve(result);
+        } catch (err) {
+          reject(err);
+        }
+      },
+      error_callback: error => reject({ code: "google/popup-error", message: error?.message || error?.type || "Google sign-in popup failed." }),
+    });
+    tokenClient.requestAccessToken({ prompt: "select_account" });
+  });
 }
 
 function AuthScreen({ onAuthed, googleError }) {
@@ -787,12 +842,25 @@ function AuthScreen({ onAuthed, googleError }) {
     setBusy(true);
     setError("");
     try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-      await signInWithRedirect(auth, provider);
+      await signInWithGoogleIdentity();
+      setBusy(false);
     } catch (err) {
       console.error("Google sign-in failed", err);
-      const msg = friendlyAuthError(err.code);
+      if (err?.code === "auth/popup-blocked" || err?.code === "google/popup-error") {
+        try {
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: "select_account" });
+          await signInWithPopup(auth, provider);
+          return;
+        } catch (popupErr) {
+          console.error("Google Firebase popup fallback failed", popupErr);
+          const redirectMsg = friendlyAuthError(popupErr);
+          setBusy(false);
+          if (redirectMsg) setError(redirectMsg);
+          return;
+        }
+      }
+      const msg = friendlyAuthError(err);
       setBusy(false);
       if (msg) setError(msg);
     }
@@ -857,7 +925,7 @@ function AuthScreen({ onAuthed, googleError }) {
   return (
     <div className="auth-page">
       <div className="auth-brand">
-        <img className="auth-logo-img" src="/assets/oftheday-logo.png" alt="Of The Day logo"/>
+        <img className="auth-logo-img" src={LOGO_SRC} alt="Of The Day logo"/>
         <div className="auth-kicker">The daily ritual for great teachers</div>
         <div className="auth-headline">Your daily classroom ritual is ready.</div>
         <div className="auth-copy">Build connection, calm, and momentum in minutes.</div>
@@ -865,7 +933,7 @@ function AuthScreen({ onAuthed, googleError }) {
       <div className="auth-card-wrap">
         <div className="auth-panel">
           <div className="auth-panel-logo">
-            <img src="/assets/oftheday-logo.png" alt="Of The Day" className="auth-panel-logo-img"/>
+            <img src={LOGO_SRC} alt="Of The Day" className="auth-panel-logo-img"/>
           </div>
           <div className="auth-tabs">
             <button type="button" className={`auth-tab${mode === "login" ? " active" : ""}`} onClick={() => switchMode("login")}>Sign In</button>
@@ -3255,7 +3323,7 @@ function MainApp({ account, onSignOut }) {
         <div className="sidebar-logo">
           {sidebarCollapsed
             ? <span className="sidebar-logo-mark">☀️</span>
-            : <img className="sidebar-logo-img" src="/assets/oftheday-logo.png" alt="Of The Day logo"/>
+            : <img className="sidebar-logo-img" src={LOGO_SRC} alt="Of The Day logo"/>
           }
           {!sidebarCollapsed && <div className="logo-sub">Good morning, {displayName || tweaks.teacherName}</div>}
         </div>
@@ -3767,7 +3835,7 @@ function UpgradePage({ account }) {
   return (
     <div className="upgrade-page">
       <div className="upgrade-page-inner">
-        <img src="/assets/oftheday-logo.png" alt="Of The Day" className="upgrade-page-logo" />
+        <img src={LOGO_SRC} alt="Of The Day" className="upgrade-page-logo" />
         <h1 className="upgrade-page-title">Upgrade to Pro</h1>
         <p className="upgrade-page-sub">Unlock all activities, every grade band, and projector mode.</p>
         <div className="upgrade-pricing-cards">
@@ -3808,7 +3876,7 @@ function App() {
       console.error("Google redirect result failed", err);
       const code = err?.code || "";
       if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
-        setAuthState(s => ({ ...s, loading: false, googleError: code }));
+        setAuthState(s => ({ ...s, loading: false, googleError: err }));
       }
     });
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
