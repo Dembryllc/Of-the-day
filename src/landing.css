@@ -40,14 +40,23 @@
   height: 72px; gap: 32px;
 }
 .lp .nav-logo {
-  display: flex; align-items: center;
+  display: flex; align-items: center; justify-content: center;
   text-decoration: none;
   flex-shrink: 0;
+  width: 174px;
+  height: 52px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0F1A2E;
+  box-shadow: 0 0 0 1px rgba(27,45,91,0.10);
 }
 .lp .nav-logo-img {
-  height: 64px;
-  width: auto;
+  width: 174px;
+  height: 52px;
+  object-fit: cover;
+  object-position: center;
   display: block;
+  filter: brightness(1.55) contrast(1.12) saturate(1.18);
 }
 .lp .nav-links {
   display: flex; align-items: center; gap: 28px;

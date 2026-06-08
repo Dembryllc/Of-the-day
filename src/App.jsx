@@ -3812,7 +3812,7 @@ function App() {
       try {
         let userDoc = await getUserDocument(user.uid);
         if (!userDoc) {
-          // New Google user returning from redirect — Cloud Function may not have run yet
+          // New Google user — Cloud Function may not have run yet
           await createUserDocument(user.uid, {
             name: user.displayName || "",
             email: user.email || "",

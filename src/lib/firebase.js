@@ -11,7 +11,7 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId) {
   throw new Error(
     'Firebase is not configured. Create a .env.local file with your VITE_FIREBASE_* values ' +
     'from Firebase Console → Project Settings → Web App, then rebuild.'
