@@ -10,7 +10,8 @@ import {
   sendPasswordResetEmail,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from 'firebase/auth';
 import { auth } from './lib/firebase';
 import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade, updateUserProfile } from './lib/firestore';
@@ -772,10 +773,10 @@ function friendlyAuthError(code) {
   }
 }
 
-function AuthScreen({ onAuthed }) {
+function AuthScreen({ onAuthed, googleError }) {
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ name: "", email: "", password: "", grade: "3–5" });
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => googleError ? friendlyAuthError(googleError) || "Google sign-in failed. Try again." : "");
   const [busy, setBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
@@ -786,15 +787,14 @@ function AuthScreen({ onAuthed }) {
     setBusy(true);
     setError("");
     try {
-      const cred = await signInWithPopup(auth, new GoogleAuthProvider());
-      // onAuthStateChanged in App handles the rest; just need to signal success
-      // by letting the auth state update propagate
-      if (!cred.user) throw new Error('No user returned');
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      await signInWithRedirect(auth, provider);
     } catch (err) {
+      console.error("Google sign-in failed", err);
       const msg = friendlyAuthError(err.code);
-      if (msg) setError(msg);
-    } finally {
       setBusy(false);
+      if (msg) setError(msg);
     }
   };
 
@@ -3804,6 +3804,13 @@ function App() {
       setAuthState({ loading: false, account: null });
       return;
     }
+    getRedirectResult(auth).catch(err => {
+      console.error("Google redirect result failed", err);
+      const code = err?.code || "";
+      if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
+        setAuthState(s => ({ ...s, loading: false, googleError: code }));
+      }
+    });
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         setAuthState({ loading: false, account: null });
@@ -3860,7 +3867,7 @@ function App() {
         <Route path="/login" element={
           authState.loading ? loading :
           authed ? <Navigate to="/dashboard" replace /> :
-          <AuthScreen onAuthed={account => setAuthState({ loading: false, account })} />
+          <AuthScreen onAuthed={account => setAuthState({ loading: false, account })} googleError={authState.googleError} />
         } />
         <Route path="/dashboard" element={
           authState.loading ? loading :
