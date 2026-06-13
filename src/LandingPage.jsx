@@ -473,7 +473,7 @@ export default function LandingPage() {
               <ul className="pricing-features">
                 <li>Everything in Pro</li>
                 <li>Up to 50 teacher accounts</li>
-                <li>School-branded templates <em style={{color:'#9CA3AF', fontSize:'12px'}}>(coming soon)</em></li>
+                <li>Priority email support</li>
                 <li>Single invoice for the school</li>
               </ul>
               <a href="mailto:hello@oftheday.net?subject=School Pricing" className="pricing-cta pricing-cta-outline">Contact Us</a>
