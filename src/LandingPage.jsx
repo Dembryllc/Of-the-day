@@ -12,6 +12,8 @@ const FAQ_ITEMS = [
   { id: 'purchase', q: 'Does my school need to purchase it, or can I pay myself?', a: 'Individual teachers can subscribe directly with a credit card. School and district licensing (single invoice, multiple seats) is also available — contact us at hello@oftheday.net.' },
   { id: 'rc', q: 'Is this specifically for Responsive Classroom?', a: "It's built with Responsive Classroom structure in mind — the four Morning Meeting components are the foundation. But the activities work for any morning meeting format, including PBIS morning circles and SEL-focused check-in routines." },
   { id: 'cancel', q: 'What happens to my saved routines if I cancel?', a: 'Your routines and custom activities are yours. If you cancel Pro, you keep your account and any saved content — you\'ll just be moved to the Free tier limits (3 routines, 1 custom activity).' },
+  { id: 'student-data', q: 'Does OfTheDay store student data?', a: 'No. OfTheDay.net is a teacher planning tool — students do not create accounts and do not submit any information through this service. We collect only teacher account information (name, email, grade preference, saved routines). No student personally identifiable information (PII) is ever collected or stored, which means FERPA exposure is minimal.' },
+  { id: 'dpa', q: 'Is a Data Privacy Agreement (DPA) available?', a: 'Yes. Because OfTheDay does not process student data, a standard DPA is typically sufficient for district procurement. Email us at hello@oftheday.net with the subject "DPA Request" and we will respond within 2 business days.' },
 ];
 
 export default function LandingPage() {
