@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { useTweaks, TweaksPanel, TweakSection, TweakSelect, TweakText } from './tweaks-panel';
 import LandingPage from './LandingPage';
 import PrivacyPage from './PrivacyPage';
@@ -830,7 +830,8 @@ async function signInWithGoogleIdentity() {
 }
 
 function AuthScreen({ onAuthed, googleError }) {
-  const [mode, setMode] = useState("login");
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState(searchParams.get('signup') ? "signup" : "login");
   const [form, setForm] = useState({ name: "", email: "", password: "", grade: "3–5" });
   const [error, setError] = useState(() => googleError ? friendlyAuthError(googleError) || "Google sign-in failed. Try again." : "");
   const [busy, setBusy] = useState(false);

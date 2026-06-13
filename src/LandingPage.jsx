@@ -71,7 +71,7 @@ export default function LandingPage() {
           </ul>
           <div className="nav-actions">
             <Link to="/login" className="btn-ghost">Sign In</Link>
-            <Link to="/dashboard" className="btn-primary">Try It Free</Link>
+            <Link to="/login?signup=1" className="btn-primary">Try It Free</Link>
           </div>
           <button className="hamburger" onClick={() => setNavOpen(o => !o)} aria-label="Open menu">
             <span></span><span></span><span></span>
@@ -93,7 +93,7 @@ export default function LandingPage() {
               Greeting, Sharing, Group Activity, and Morning Message — the moment you open it.
             </p>
             <div className="hero-ctas">
-              <Link to="/dashboard" className="btn-primary-lg">Try It Free — No Credit Card</Link>
+              <Link to="/login?signup=1" className="btn-primary-lg">Try It Free — No Credit Card</Link>
               <a href="#how-it-works" className="btn-secondary-lg">See How It Works</a>
             </div>
             <p className="hero-note">Free plan available · Grades K–2, 3–5, 6–8, 9–12</p>
@@ -262,7 +262,7 @@ export default function LandingPage() {
               </div>
               <div style={{marginTop:'20px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <span style={{fontSize:'12px', color:'rgba(255,255,255,0.3)'}}>Total: ~18 min</span>
-                <Link to="/dashboard" style={{fontSize:'12px', color:'#F5A623', textDecoration:'none', fontWeight:'700'}}>Open the app →</Link>
+                <Link to="/login?signup=1" style={{fontSize:'12px', color:'#F5A623', textDecoration:'none', fontWeight:'700'}}>Open the app →</Link>
               </div>
             </div>
           </div>
@@ -435,7 +435,7 @@ export default function LandingPage() {
                 <li>1 custom activity</li>
                 <li>Grade-level filtering (K–12)</li>
               </ul>
-              <Link to="/dashboard" className="pricing-cta pricing-cta-outline">Get Started Free</Link>
+              <Link to="/login?signup=1" className="pricing-cta pricing-cta-outline">Get Started Free</Link>
             </div>
 
             <div className="pricing-card featured">
@@ -542,7 +542,7 @@ export default function LandingPage() {
           <h2>Start Your Day With a Plan.</h2>
           <p>Open OfTheDay.net and your morning meeting is ready in seconds.</p>
           <div className="final-cta-actions">
-            <Link to="/dashboard" className="btn-primary-lg">Try It Free — No Credit Card</Link>
+            <Link to="/login?signup=1" className="btn-primary-lg">Try It Free — No Credit Card</Link>
             <Link to="/login" className="btn-ghost" style={{fontSize:'16px', color:'#4B5563'}}>Already have an account? Sign In →</Link>
           </div>
         </div>
