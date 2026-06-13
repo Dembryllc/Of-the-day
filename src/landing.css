@@ -460,3 +460,75 @@
   .lp .hero-ctas { flex-direction: column; align-items: flex-start; }
   .lp .final-cta-actions { flex-direction: column; align-items: center; }
 }
+
+/* ── LEGAL PAGE (Privacy Policy, Terms) ── */
+.lp .lp-legal-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 64px 24px 96px;
+}
+.lp .lp-legal-page h1 {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--lp-ink);
+  margin-bottom: 8px;
+}
+.lp .lp-legal-date {
+  font-size: 14px;
+  color: var(--lp-muted);
+  margin-bottom: 40px;
+}
+.lp .lp-legal-page h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--lp-ink);
+  margin: 40px 0 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--lp-border);
+}
+.lp .lp-legal-page h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--lp-ink);
+  margin: 20px 0 8px;
+}
+.lp .lp-legal-page p {
+  font-size: 15px;
+  color: #374151;
+  line-height: 1.75;
+  margin-bottom: 16px;
+}
+.lp .lp-legal-page ul {
+  font-size: 15px;
+  color: #374151;
+  line-height: 1.75;
+  padding-left: 24px;
+  margin-bottom: 16px;
+}
+.lp .lp-legal-page ul li {
+  margin-bottom: 6px;
+}
+.lp .lp-legal-page a {
+  color: var(--lp-green2);
+  text-decoration: underline;
+}
+.lp-legal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 16px 0 24px;
+}
+.lp-legal-table th {
+  text-align: left;
+  padding: 10px 14px;
+  background: var(--lp-sand);
+  color: var(--lp-ink);
+  font-weight: 600;
+  border-bottom: 2px solid var(--lp-border);
+}
+.lp-legal-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--lp-border);
+  color: #374151;
+  vertical-align: top;
+}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useTweaks, TweaksPanel, TweakSection, TweakSelect, TweakText } from './tweaks-panel';
 import LandingPage from './LandingPage';
+import PrivacyPage from './PrivacyPage';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -3947,6 +3948,7 @@ function App() {
           authed ? <UpgradePage account={authed} /> :
           <Navigate to="/login" replace />
         } />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

@@ -534,6 +534,7 @@ export default function LandingPage() {
           <a href="#pricing">Pricing</a>
           <a href="#faq">FAQ</a>
           <a href="mailto:hello@oftheday.net">Contact</a>
+          <Link to="/privacy">Privacy Policy</Link>
           <Link to="/login">Sign In</Link>
         </div>
         <div className="footer-copy">© 2026 OfTheDay.net · Built for teachers who love their mornings.</div>
