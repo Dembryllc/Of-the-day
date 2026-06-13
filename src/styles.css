@@ -1116,6 +1116,7 @@ button:focus-visible,
   outline: 3px solid rgba(45,122,106,0.18);
   border-color: var(--teal);
 }
+.auth-field-hint { font-size: 12px; color: #9CA3AF; margin-top: -4px; }
 .auth-grade-chips {
   display: flex; gap: 8px;
 }

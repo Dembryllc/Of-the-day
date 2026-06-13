@@ -953,6 +953,10 @@ function AuthScreen({ onAuthed, googleError }) {
           </button>
           <div className="auth-divider"><span>or with email</span></div>
           <form onSubmit={submit}>
+            <label className="auth-field">
+              <span>Email</span>
+              <input type="email" value={form.email} onChange={e => setField("email", e.target.value)} autoComplete="email" placeholder="you@school.edu"/>
+            </label>
             {mode === "signup" && (
               <>
                 <label className="auth-field">
@@ -974,12 +978,9 @@ function AuthScreen({ onAuthed, googleError }) {
               </>
             )}
             <label className="auth-field">
-              <span>Email</span>
-              <input type="email" value={form.email} onChange={e => setField("email", e.target.value)} autoComplete="email" placeholder="you@school.edu"/>
-            </label>
-            <label className="auth-field">
               <span>Password</span>
-              <input type="password" value={form.password} onChange={e => setField("password", e.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"} placeholder={mode === "signup" ? "At least 8 characters" : "Your password"}/>
+              <input type="password" value={form.password} onChange={e => setField("password", e.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"} placeholder="Your password"/>
+              {mode === "signup" && <span className="auth-field-hint">At least 8 characters</span>}
             </label>
             {error && <div className="auth-error">{error}</div>}
             {resetSent && <div className="auth-success">Password reset email sent. Check your inbox.</div>}
