@@ -19,6 +19,7 @@ export default function LandingPage() {
   const [openFaqId, setOpenFaqId] = useState(null);
   const [captureSubmitted, setCaptureSubmitted] = useState(false);
   const [captureEmail, setCaptureEmail] = useState('');
+  const [billingPeriod, setBillingPeriod] = useState('annual');
 
   useLayoutEffect(() => {
     const prevBodyOverflow = document.body.style.overflow;
@@ -409,6 +410,18 @@ export default function LandingPage() {
             <h2 className="section-title">Start Free. Upgrade When You're Ready.</h2>
             <p className="section-sub">No credit card required to get started. Cancel anytime.</p>
           </div>
+
+          <div className="billing-toggle">
+            <button
+              className={`billing-option${billingPeriod === 'monthly' ? ' active' : ''}`}
+              onClick={() => setBillingPeriod('monthly')}
+            >Monthly</button>
+            <button
+              className={`billing-option${billingPeriod === 'annual' ? ' active' : ''}`}
+              onClick={() => setBillingPeriod('annual')}
+            >Annual <span className="billing-save">Save 27%</span></button>
+          </div>
+
           <div className="pricing-grid">
 
             <div className="pricing-card">
@@ -428,7 +441,14 @@ export default function LandingPage() {
             <div className="pricing-card featured">
               <div className="pricing-badge">Most Popular</div>
               <div className="pricing-tier">Pro Teacher</div>
-              <div className="pricing-price"><sup>$</sup>9<span>/month</span></div>
+              {billingPeriod === 'annual' ? (
+                <div className="pricing-price">
+                  <sup>$</sup>79<span>/year</span>
+                  <div className="pricing-per-month">$6.58/month — 2 months free</div>
+                </div>
+              ) : (
+                <div className="pricing-price"><sup>$</sup>9<span>/month</span></div>
+              )}
               <div className="pricing-desc">The full toolkit for teachers who run a structured morning meeting every day.</div>
               <ul className="pricing-features">
                 <li>Everything in Free</li>
@@ -441,7 +461,9 @@ export default function LandingPage() {
                 <li>On This Day historical facts</li>
                 <li>Cloud sync — all your devices</li>
               </ul>
-              <Link to="/upgrade" className="pricing-cta pricing-cta-primary">Start Pro Free Trial</Link>
+              <Link to="/upgrade" className="pricing-cta pricing-cta-primary">
+                {billingPeriod === 'annual' ? 'Start Annual Free Trial' : 'Start Pro Free Trial'}
+              </Link>
             </div>
 
             <div className="pricing-card">
@@ -459,7 +481,7 @@ export default function LandingPage() {
 
           </div>
           <p style={{textAlign:'center', marginTop:'24px', fontSize:'13px', color:'#9CA3AF'}}>
-            Annual Pro plan available at $79/year (save 27%). School and district licensing also available.
+            School and district licensing available. <a href="mailto:hello@oftheday.net?subject=School Pricing" style={{color:'#9CA3AF'}}>Contact us</a> for a quote.
           </p>
         </div>
       </section>
