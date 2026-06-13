@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-r
 import { useTweaks, TweaksPanel, TweakSection, TweakSelect, TweakText } from './tweaks-panel';
 import LandingPage from './LandingPage';
 import PrivacyPage from './PrivacyPage';
+import TermsPage from './TermsPage';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -3953,6 +3954,7 @@ function App() {
           <Navigate to="/login" replace />
         } />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
