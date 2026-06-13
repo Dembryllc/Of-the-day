@@ -1116,6 +1116,20 @@ button:focus-visible,
   outline: 3px solid rgba(45,122,106,0.18);
   border-color: var(--teal);
 }
+.auth-grade-chips {
+  display: flex; gap: 8px;
+}
+.auth-grade-chip {
+  flex: 1; padding: 10px 4px;
+  border: 1.5px solid #D9D4CC; border-radius: 10px;
+  background: #fff; font: 600 14px/1 'Outfit', sans-serif;
+  color: #6B7280; cursor: pointer; transition: all 0.14s;
+}
+.auth-grade-chip:hover { border-color: var(--teal); color: var(--teal); }
+.auth-grade-chip.active {
+  border-color: var(--teal); background: var(--teal);
+  color: #fff; box-shadow: 0 2px 8px rgba(77,184,150,0.25);
+}
 .auth-error {
   background: #FFF1F2;
   color: #BE123C;

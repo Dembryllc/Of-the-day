@@ -958,15 +958,18 @@ function AuthScreen({ onAuthed, googleError }) {
                   <span>Your Name</span>
                   <input value={form.name} onChange={e => setField("name", e.target.value)} autoComplete="name" placeholder="Ms. Johnson"/>
                 </label>
-                <label className="auth-field">
+                <div className="auth-field">
                   <span>Grade Level</span>
-                  <select value={form.grade} onChange={e => setField("grade", e.target.value)}>
-                    <option value="K–2">K–2</option>
-                    <option value="3–5">3–5</option>
-                    <option value="6–8">6–8</option>
-                    <option value="9–12">9–12</option>
-                  </select>
-                </label>
+                  <div className="auth-grade-chips">
+                    {["K–2","3–5","6–8","9–12"].map(g => (
+                      <button
+                        key={g} type="button"
+                        className={`auth-grade-chip${form.grade === g ? ' active' : ''}`}
+                        onClick={() => setField("grade", g)}
+                      >{g}</button>
+                    ))}
+                  </div>
+                </div>
               </>
             )}
             <label className="auth-field">
