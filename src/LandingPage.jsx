@@ -22,6 +22,8 @@ export default function LandingPage() {
   const [captureSubmitted, setCaptureSubmitted] = useState(false);
   const [captureEmail, setCaptureEmail] = useState('');
   const [billingPeriod, setBillingPeriod] = useState('annual');
+  const [schoolForm, setSchoolForm] = useState({ name: '', school: '', email: '' });
+  const [schoolSubmitted, setSchoolSubmitted] = useState(false);
 
   useLayoutEffect(() => {
     const prevBodyOverflow = document.body.style.overflow;
@@ -41,6 +43,22 @@ export default function LandingPage() {
   }, []);
 
   const toggleFaq = (id) => setOpenFaqId(prev => prev === id ? null : id);
+
+  const handleSchoolInquiry = async (e) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'waitlist'), {
+        name: schoolForm.name.trim(),
+        school: schoolForm.school.trim(),
+        email: schoolForm.email.trim().toLowerCase(),
+        source: 'school-inquiry',
+        submittedAt: serverTimestamp(),
+      });
+    } catch {
+      // Fail silently — still confirm to the user
+    }
+    setSchoolSubmitted(true);
+  };
 
   const handleCapture = async (e) => {
     e.preventDefault();
@@ -499,7 +517,28 @@ export default function LandingPage() {
                 <li>Priority email support</li>
                 <li>Single invoice for the school</li>
               </ul>
-              <a href="mailto:hello@oftheday.net?subject=School Pricing" className="pricing-cta pricing-cta-outline">Contact Us</a>
+              {schoolSubmitted ? (
+                <div className="school-form-success">✓ Got it — we'll be in touch within 1 business day.</div>
+              ) : (
+                <form className="school-inquiry-form" onSubmit={handleSchoolInquiry}>
+                  <input
+                    type="text" placeholder="Your name" required
+                    value={schoolForm.name}
+                    onChange={e => setSchoolForm(f => ({ ...f, name: e.target.value }))}
+                  />
+                  <input
+                    type="text" placeholder="School or district name" required
+                    value={schoolForm.school}
+                    onChange={e => setSchoolForm(f => ({ ...f, school: e.target.value }))}
+                  />
+                  <input
+                    type="email" placeholder="your@school.edu" required
+                    value={schoolForm.email}
+                    onChange={e => setSchoolForm(f => ({ ...f, email: e.target.value }))}
+                  />
+                  <button type="submit" className="pricing-cta pricing-cta-outline">Request School Pricing</button>
+                </form>
+              )}
             </div>
 
           </div>
