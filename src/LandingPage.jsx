@@ -70,6 +70,7 @@ export default function LandingPage() {
             <li><a href="#how-it-works" onClick={() => setNavOpen(false)}>How It Works</a></li>
             <li><a href="#pricing" onClick={() => setNavOpen(false)}>Pricing</a></li>
             <li><a href="#faq" onClick={() => setNavOpen(false)}>FAQ</a></li>
+            <li><Link to="/login?signup=1" onClick={() => setNavOpen(false)}>Get Started Free</Link></li>
           </ul>
           <div className="nav-actions">
             <Link to="/login" className="btn-ghost">Sign In</Link>
