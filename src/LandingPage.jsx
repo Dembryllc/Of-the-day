@@ -574,6 +574,11 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ══════════ CONTACT LINE ══════════ */}
+      <div className="contact-line">
+        Questions? Email us at <a href="mailto:hello@oftheday.net">hello@oftheday.net</a> — we respond within 1 business day.
+      </div>
+
       {/* ══════════ EMAIL CAPTURE ══════════ */}
       <section className="capture" id="waitlist">
         <div className="capture-inner">

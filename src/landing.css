@@ -455,6 +455,17 @@
   border-radius: 10px; font-size: 14px; font-weight: 600; color: #166534;
 }
 
+/* ── CONTACT LINE ── */
+.lp .contact-line {
+  text-align: center;
+  padding: 20px 24px;
+  font-size: 14px;
+  color: var(--lp-muted);
+  border-top: 1px solid var(--lp-border);
+}
+.lp .contact-line a { color: var(--lp-ink2); text-decoration: underline; }
+.lp .contact-line a:hover { color: var(--lp-teal); }
+
 /* ── FAQ ── */
 .lp .faq { background: var(--lp-sand); }
 .lp .faq-list { max-width: 720px; margin: 48px auto 0; }
