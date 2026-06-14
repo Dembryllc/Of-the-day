@@ -537,10 +537,10 @@ export default function LandingPage() {
       {/* ══════════ EMAIL CAPTURE ══════════ */}
       <section className="capture" id="waitlist">
         <div className="capture-inner">
-          <h2>Join Teachers Getting Started for Free</h2>
-          <p>Leave your email and we'll send you a link to get started — plus updates as we add new features.</p>
+          <h2>Get a Free Morning Meeting Resource Pack</h2>
+          <p>10 ready-to-use activities — greetings, sharing prompts, group activities, and morning messages — sent straight to your inbox.</p>
           {captureSubmitted ? (
-            <div className="capture-success">🎉 You're on the list! We'll be in touch.</div>
+            <div className="capture-success">🎉 On its way! Check your inbox in a few minutes.</div>
           ) : (
             <form className="capture-form" onSubmit={handleCapture}>
               <input
@@ -551,7 +551,7 @@ export default function LandingPage() {
                 value={captureEmail}
                 onChange={e => setCaptureEmail(e.target.value)}
               />
-              <button type="submit">Get Early Access</button>
+              <button type="submit">Send Me the Pack</button>
             </form>
           )}
           <p className="capture-note">No spam. Unsubscribe anytime. We'll never share your email.</p>
