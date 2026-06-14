@@ -21,6 +21,8 @@ Single-page app. One `index.html` entry, one JS/CSS bundle, React Router handles
 | `/login` | `AuthScreen` | Public (redirects to `/dashboard` if authed) |
 | `/dashboard` | `MainApp` | Protected (redirects to `/login` if unauthed) |
 | `/upgrade` | `UpgradePage` | Protected (redirects to `/login` if unauthed) |
+| `/privacy` | `PrivacyPage` | Public |
+| `/terms` | `TermsPage` | Public |
 | `?projector=1` | `ProjectorReceiver` | Public — checked before router |
 | `*` | Redirect to `/` | — |
 
@@ -30,6 +32,8 @@ src/
   App.jsx          — all app logic (4000+ lines); Auth, MainApp, AuthScreen, UpgradePage,
                      ProfileSheet, projector/DisplayMode, modals
   LandingPage.jsx  — marketing landing page (React component)
+  PrivacyPage.jsx  — /privacy route; full privacy policy with FERPA statement
+  TermsPage.jsx    — /terms route; full terms of service
   landing.css      — landing page styles (scoped under .lp to avoid conflicts with app CSS)
   styles.css       — app styles (Outfit font, all component classes)
   main.jsx         — React entry, ErrorBoundary
@@ -38,6 +42,7 @@ src/
     firestore.js   — Firestore helpers: createUserDocument, saveDataSnapshot, fetchActivities,
                      updateUserGrade, updateUserProfile, etc.
     usePlan.js     — plan resolution hook: reads account.tier + account.plan + trialStartedAt → 'pro'|'free'
+                     NOTE: uses toMs() helper to convert Firestore Timestamps — do not use raw arithmetic
   tweaks-panel.jsx — dev tweaks UI
 
 functions/
@@ -117,7 +122,8 @@ That error is `auth/operation-not-allowed` — thrown when a sign-in method is d
 ```
 users/{uid}
   name, email, grade, plan, createdAt
-  trialStartedAt          — set by onUserCreate on signup (or createUserDocument fallback)
+  trialStartedAt          — Firestore Timestamp; set by onUserCreate (or createUserDocument fallback)
+                            IMPORTANT: always convert with toMs() / tsToMs() — never use raw arithmetic
   tier                    — 'pro' | 'free'; written by stripeWebhook only
   stripeCustomerId        — set on first checkout attempt
   subscriptionId          — set by stripeWebhook on checkout.session.completed
@@ -129,6 +135,9 @@ users/{uid}/data/main
 
 activities/{id}
   id, cat, title, meta, time, prompt, starter, directions, source, sourceUrl
+
+waitlist/{id}
+  email, name?, school?, source ('landing-page' | 'school-inquiry'), submittedAt
 ```
 
 ## Plan / tier resolution
@@ -139,6 +148,9 @@ activities/{id}
 4. Everything else → Free
 
 `userTier` in `MainApp` is derived from `effectivePlan` (not a separate useState), so both activity gating and feature gating always agree.
+
+**Timestamp arithmetic warning:** `trialStartedAt` is a Firestore `Timestamp` object, not a number.
+`Date.now() - timestamp` produces `NaN`. Always use `toMs(ts)` in `usePlan.js` or `tsToMs(ts)` in `App.jsx`.
 
 ## Freemium gates
 | Feature | Free | Pro |
@@ -164,13 +176,50 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
   user doc creation for new Google users (creates doc with `plan:'trial'` if none exists)
 - `onUserCreate` Cloud Function (Gen 1) fires on every new Firebase Auth user regardless of provider
 - `friendlyAuthError()` handles `auth/popup-closed-by-user` and `auth/cancelled-popup-request` silently;
-  handles `auth/popup-blocked` with a clear message to allow popups
+  handles `auth/popup-blocked` with a clear message to allow popups; handles `auth/internal-error` with
+  instructions to configure OAuth consent screen in Firebase Console
 - New users: `emailVerified` tracked on account state; unverified email/password users see a dismissible
   amber banner with a "Resend verification email" button
+
+## AuthScreen sign-up flow
+- All "Try It Free" / "Get Started Free" links go to `/login?signup=1`
+- `AuthScreen` reads `?signup=1` param and defaults to the Sign Up tab via `useSearchParams`
+- Sign Up field order: Email → Name → Grade (chips) → Password
+- Grade level uses pill chips (K–2, 3–5, 6–8, 9–12), not a `<select>` dropdown
+- Password field has persistent helper text "At least 8 characters" (not just placeholder)
+- Avatar initials fallback: `name → account.name → account.email[0] → '?'` (both sidebar and ProfileSheet)
+
+## Landing page structure (LandingPage.jsx)
+Sections in order:
+1. Nav — logo + links (Features, How It Works, Pricing, FAQ, Get Started Free) + Sign In / Try It Free buttons
+2. Hero — headline, sub, CTAs, app mockup
+3. Trust bar — "5,000+ teachers · 180 school days · 30s to a routine"
+4. Problem — stats + teacher voice quote
+5. How It Works — 3-step walkthrough
+6. Features — 6 feature cards
+7. Use Cases (Teacher Stories) — 3 testimonials
+8. Who It's For — grade chips + checklist
+9. Pricing — billing toggle (Monthly/Annual, defaults Annual) + 3 cards
+   - Free: basic access
+   - Pro: $79/year annual (default) / $9/month; "Start Annual Free Trial" CTA
+   - School: inline inquiry form (name + school + email → Firestore `waitlist` with `source:'school-inquiry'`)
+10. FAQ — 9 questions including "Does OfTheDay store student data?" and "Is a DPA available?"
+11. Contact line — "Questions? Email us at hello@oftheday.net"
+12. Email capture — lead magnet "Get a Free Morning Meeting Resource Pack" → Firestore `waitlist`
+13. Final CTA
+14. Footer — Features, Pricing, FAQ, Contact, Privacy Policy, Terms of Service, Sign In
+
+## First-run welcome card
+- Shows on first dashboard visit for each account (keyed by `localStorage('ofd:welcomed:{uid}')`)
+- Navy card at top of Today view with 3 onboarding steps + embedded grade chips
+- Selecting a grade chip calls `handleGradeChange` and dismisses the card permanently
+- ✕ button dismisses without changing grade
+- Never shows again after first dismissal (localStorage, not sessionStorage)
 
 ## CSS notes
 - App CSS lives in `src/styles.css` — uses Outfit font (woff2 in `public/fonts/`)
 - Landing page CSS in `src/landing.css` — all selectors scoped under `.lp` parent class
+- Legal pages (PrivacyPage, TermsPage) use `.lp-legal-page` class defined in `landing.css`
 - `.app` is `display: flex; flex-direction: column; height: 100vh; overflow: hidden`
 - `.app-shell` is the inner flex row containing `.sidebar` + `.main` — `flex: 1; overflow: hidden`
 - Trial banner + verify banner + pro success banner render in document flow (inside `.app`, above `.app-shell`) — NOT fixed position
@@ -179,11 +228,11 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
 ### Color tokens
 | Token | Value | Usage |
 |-------|-------|-------|
-| Navy | `#1B2D5B` | Sidebar background, auth panel accents |
-| Gold | `#F5A623` | Active nav accent, upgrade CTAs, projector nav |
+| Navy | `#1B2D5B` | Sidebar background, auth panel accents, welcome card |
+| Gold | `#F5A623` | Active nav accent, upgrade CTAs, projector nav, welcome card step numbers |
 | Sky Blue | `#4A90D9` | Secondary only |
 | Background | `#F8F9FC` | App background |
-| Teal | `#4DB896` (var --teal) | Primary action buttons |
+| Teal | `#4DB896` (var --teal) | Primary action buttons, active grade chips |
 
 ## Sidebar
 - Background: `#1B2D5B` (navy)
@@ -192,6 +241,7 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
 - Collapse toggle: `sidebarCollapsed` state in `MainApp`, persisted to `localStorage('ofd:sidebarCollapsed')`
 - Collapsed width: 60px — shows emoji icons only, hides text labels, trial card, upgrade btn, projector live card
 - Profile row at bottom: gold avatar circle (initials) + name + plan label → opens `ProfileSheet`
+- Avatar initials fallback: `displayName[0] → account.name[0] → account.email[0] → '?'`
 
 ## ProfileSheet
 - Component in `App.jsx`, opened via sidebar profile row
@@ -203,6 +253,7 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
 
 ## Trial status UI
 - `trialDaysLeft` useMemo in `MainApp`: null if paid/free, 0–14 for active trial
+- Uses `tsToMs(account?.trialStartedAt)` — Firestore Timestamp converted before arithmetic
 - Top banner: blue → amber (≤7 days) → red (≤3 days); dismissed per-session via `sessionStorage`
 - Sidebar trial card: gold-bordered, shows countdown + "Upgrade to Pro →" link
 - Paid users (`account.tier === 'pro'`): see neither banner nor trial card
@@ -244,7 +295,7 @@ The projector is a full-screen overlay component (`position: fixed; inset: 0; z-
 
 ### Bottom nav
 - Previous ← (hidden via `visibility: hidden` when on first activity, not removed)
-- Center: "Activity X of Y" label + dot indicators (gold active dot)
+- Center: "Activity X of Y" label + dot indicators (gold active dot); dots use `key={item?.id ?? i}`
 - Next → (navy background, gold border) / Done ✓ (gold tint) on last activity
 - Min-height 50px for SMART board touch targets
 
@@ -253,7 +304,11 @@ The projector is a full-screen overlay component (`position: fixed; inset: 0; z-
 - ↺ Reset button (sets to full time, pauses)
 
 ## Static assets
-Logo and images go in `public/assets/` — Vite copies everything in `public/` to `dist/` at build time. Reference them with an absolute path: `src="/assets/oftheday-logo.png"`. Never use a relative path (`assets/...`) — it breaks on any route other than `/`.
+Logo files in `public/assets/`:
+- `ofthedaylogi.png` — **active logo**, clean crop, no whitespace. Used in nav and all headers.
+- `oftheday-logo.png` — legacy file with 74% transparent whitespace — do NOT use for display
+
+Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relative paths.
 
 ## Cloud Functions notes
 
@@ -264,7 +319,7 @@ Logo and images go in `public/assets/` — Vite copies everything in `public/` t
 
 ### onUserCreate (Gen 1)
 - Fires on every new Firebase Auth user creation (email/password AND Google)
-- Writes `{ email, plan: 'trial', trialStartedAt, createdAt }` to `users/{uid}` in Firestore
+- Writes `{ email, plan: 'trial', trialStartedAt: serverTimestamp(), createdAt: serverTimestamp() }` to `users/{uid}`
 - Wrapped in try-catch — never blocks signup; client-side `createUserDocument` is the fallback
 - **Why Gen 1:** `beforeUserCreated` (Gen 2 equivalent) requires Firebase Identity Platform (GCIP), which this project does not use
 
@@ -280,24 +335,29 @@ Logo and images go in `public/assets/` — Vite copies everything in `public/` t
 - `customer.subscription.updated` → updates `tier` and `currentPeriodEnd`
 - `customer.subscription.deleted` → sets `tier:'free'`
 
+## Known bugs fixed (do not reintroduce)
+- **Timestamp arithmetic**: `trialStartedAt` is a Firestore Timestamp. `Date.now() - timestamp` = NaN.
+  Fixed in both `App.jsx` (`tsToMs`) and `usePlan.js` (`toMs`). Never use raw subtraction.
+- **`favorites.has()` without guard**: `ActivityCard` and `FavoritesScreen` now use `favorites?.has()`.
+  Passing undefined favorites crashes both components.
+- **Projector dots `key={i}`**: Fixed to `key={item?.id ?? i}` — index keys break reconciliation on shuffle.
+- **Avatar initials hardcoded `'T'` fallback**: Now falls back to email initial, then `'?'`.
+
 ## Live site status
-**oftheday.net — code is current on main as of 2026-06-05. Firebase deploy required to go live.**
-- Code merged to `main` ✓
-- Firebase Hosting: requires manual `firebase deploy` from Mac to update live bundle
-- `/login` → "Something went wrong" error confirms Firebase Console sign-in methods need enabling
-- All UI features confirmed working in code: auth, dashboard, projector, freemium gates ✓
-- Netlify fully removed from codebase (no netlify.toml, no netlify/ directory) ✓
-- Email verification banner ✓
-- Stripe webhook now hard-rejects if secret missing ✓
-- Sidebar collapse, profile sheet, trial banner all wired up ✓
+**Last updated: 2026-06-14**
+- All code changes are on `main` and auto-deploy to Firebase Hosting via GitHub Actions
+- Firebase Hosting URL: `oftheday-c6490.web.app` (all deploys land here)
+- `oftheday.net` DNS still points to Netlify — custom domain not yet connected to Firebase Hosting
+- Firebase Console sign-in methods need enabling before auth works on live site
+- GitHub Actions secrets (VITE_FIREBASE_*) are set and confirmed working (runs show `***` not blank)
 
 ## Pending work — in priority order
-1. **Firebase Console** — Enable Email/Password + Google sign-in methods; add `oftheday.net` to Authorized Domains
-2. **Firebase deploy** — Run deploy command on Mac after Console fix to push latest build live
-3. **Stripe webhook secret** — Register endpoint in Stripe Dashboard, add `STRIPE_WEBHOOK_SECRET` to `functions/.env`, redeploy functions
-4. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
-5. **Component extraction** — App.jsx is 4000+ lines; ProfileSheet, DisplayMode, AuthScreen are candidates
-6. **Merge Netlify DNS → Firebase DNS** — Update A records in Netlify DNS panel to point at Firebase servers
+1. **Firebase Console** — Enable Email/Password + Google sign-in methods; add `oftheday.net` to Authorized Domains; set Support Email on Google provider
+2. **DNS** — Connect `oftheday.net` custom domain in Firebase Console → Hosting; update Netlify DNS A records to Firebase IPs
+3. **Stripe go-live** — Switch to live keys in `functions/.env`, register webhook in Stripe Dashboard, set `STRIPE_WEBHOOK_SECRET`
+4. **Trial reminder emails** — No email drip at trial end; Day 12 nudge would improve conversion
+5. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
+6. **Component extraction** — App.jsx is 4000+ lines; ProfileSheet, DisplayMode, AuthScreen are candidates
 
 ## Git branch
 Active development: `main` (dev branch `claude/activity-of-day-app-2JlTT` merged)
