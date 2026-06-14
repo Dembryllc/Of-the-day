@@ -2607,9 +2607,9 @@ function MainApp({ account, onSignOut }) {
   const trialDaysLeft = useMemo(() => {
     if (account?.tier === 'pro') return null;
     if (account?.plan !== 'trial') return null;
-    const started = account?.trialStartedAt;
-    if (!started) return 14;
-    const ms = 14 * 24 * 60 * 60 * 1000 - (Date.now() - started);
+    const startedMs = tsToMs(account?.trialStartedAt);
+    if (startedMs == null) return 14;
+    const ms = 14 * 24 * 60 * 60 * 1000 - (Date.now() - startedMs);
     return ms > 0 ? Math.ceil(ms / (24 * 60 * 60 * 1000)) : 0;
   }, [account]);
   const [trialBannerDismissed, setTrialBannerDismissed] = useState(
