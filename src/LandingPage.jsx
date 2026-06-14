@@ -156,6 +156,26 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ══════════ TRUST BAR ══════════ */}
+      <div className="trust-bar">
+        <div className="trust-bar-inner">
+          <div className="trust-stat">
+            <span className="trust-num">5,000+</span>
+            <span className="trust-label">teachers using OfTheDay</span>
+          </div>
+          <div className="trust-divider" aria-hidden="true"/>
+          <div className="trust-stat">
+            <span className="trust-num">180</span>
+            <span className="trust-label">school days covered, every year</span>
+          </div>
+          <div className="trust-divider" aria-hidden="true"/>
+          <div className="trust-stat">
+            <span className="trust-num">30s</span>
+            <span className="trust-label">to a complete morning routine</span>
+          </div>
+        </div>
+      </div>
+
       {/* ══════════ PROBLEM ══════════ */}
       <section className="problem" id="problem">
         <div className="container">
