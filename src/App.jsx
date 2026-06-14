@@ -1021,7 +1021,7 @@ function GradePicker({ value, onChange }) {
 /* ── Activity Card ── */
 function ActivityCard({ activity, selected, onSelect, onSwap, onFave, favorites, index, useNow = false }) {
   const cm = CAT_META[activity.cat] || { color: "#CCC" };
-  const isFave = favorites.has(activity.id);
+  const isFave = favorites?.has(activity.id) ?? false;
   return (
     <div className={`card component-card${selected ? ' selected' : ''}${useNow ? ' use-now' : ''}`} role="button" tabIndex="0"
       onClick={() => onSelect(activity)}
@@ -1878,7 +1878,7 @@ function DisplayMode({ routine, startIndex=0, onExit, projectorStyle=DEFAULT_PRO
         <div className="disp-bottom-center">
           <div className="disp-activity-counter">Activity {idx+1} of {routine.length}</div>
           <div className="disp-dots">
-            {routine.map((_,i) => <div key={i} className={"disp-dot" + (i===idx ? " curr" : "")}/>)}
+            {routine.map((item,i) => <div key={item?.id ?? i} className={"disp-dot" + (i===idx ? " curr" : "")}/>)}
           </div>
         </div>
         {idx < routine.length-1
@@ -2456,7 +2456,7 @@ function SavedRoutinesScreen({ routines, onLoad, onEdit, onProject, onDelete, on
 
 /* ── Favorites Screen ── */
 function FavoritesScreen({ activities, favorites, onFave, onAdd, onBuild, onDisplay }) {
-  const faveItems = activities.filter(a => favorites.has(a.id));
+  const faveItems = activities.filter(a => favorites?.has(a.id));
   if (faveItems.length === 0) {
     return (
       <div className="routine-col">
@@ -2670,7 +2670,7 @@ function MainApp({ account, onSignOut }) {
   const [historySourceUrl, setHistorySourceUrl] = useState(() => onThisDayUrl());
   const [activeNav, setActiveNav] = useState("Today");
   const [showWelcome, setShowWelcome] = useState(
-    () => !localStorage.getItem(`ofd:welcomed:${account.uid}`)
+    () => !localStorage.getItem(`ofd:welcomed:${account?.uid}`)
   );
   const [builderDraft, setBuilderDraft] = useState({ name: "My Classroom Routine", items: [] });
   const [replacementTarget, setReplacementTarget] = useState(null);
@@ -2884,7 +2884,7 @@ function MainApp({ account, onSignOut }) {
   }, [account, activityPool, filters, customActivities, customVocab, customDoNow, setTweak, showToast]);
 
   const dismissWelcome = useCallback((grade) => {
-    localStorage.setItem(`ofd:welcomed:${account.uid}`, '1');
+    localStorage.setItem(`ofd:welcomed:${account?.uid}`, '1');
     setShowWelcome(false);
     if (grade) handleGradeChange(grade);
   }, [account.uid, handleGradeChange]);
