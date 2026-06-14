@@ -2669,6 +2669,9 @@ function MainApp({ account, onSignOut }) {
   const [historySource, setHistorySource] = useState("Built-in classroom fallback");
   const [historySourceUrl, setHistorySourceUrl] = useState(() => onThisDayUrl());
   const [activeNav, setActiveNav] = useState("Today");
+  const [showWelcome, setShowWelcome] = useState(
+    () => !localStorage.getItem(`ofd:welcomed:${account.uid}`)
+  );
   const [builderDraft, setBuilderDraft] = useState({ name: "My Classroom Routine", items: [] });
   const [replacementTarget, setReplacementTarget] = useState(null);
   const { toasts, show: showToast } = useToast();
@@ -2879,6 +2882,12 @@ function MainApp({ account, onSignOut }) {
     if (account?.uid) updateUserGrade(account.uid, grade).catch(() => {});
     showToast(`Grade set to ${grade}`);
   }, [account, activityPool, filters, customActivities, customVocab, customDoNow, setTweak, showToast]);
+
+  const dismissWelcome = useCallback((grade) => {
+    localStorage.setItem(`ofd:welcomed:${account.uid}`, '1');
+    setShowWelcome(false);
+    if (grade) handleGradeChange(grade);
+  }, [account.uid, handleGradeChange]);
 
   const closeTutorial = useCallback(() => {
     localStorage.setItem("ofd:tutorialSeen", "true");
@@ -3494,7 +3503,47 @@ function MainApp({ account, onSignOut }) {
           {activeNav === "Today" && (
             <>
               <div className="routine-col">
-                <div className="routine-header">
+                {showWelcome && (
+                <div className="welcome-card">
+                  <button className="welcome-dismiss" type="button" aria-label="Dismiss" onClick={() => dismissWelcome(null)}>✕</button>
+                  <div className="welcome-heading">Welcome to OfTheDay 👋</div>
+                  <div className="welcome-sub">Your morning meeting is already built. Three steps to get started:</div>
+                  <div className="welcome-steps">
+                    <div className="welcome-step">
+                      <div className="welcome-step-num">1</div>
+                      <div className="welcome-step-body">
+                        <strong>Choose your grade</strong>
+                        <span>Activities, vocabulary, and warm-ups adjust automatically.</span>
+                      </div>
+                    </div>
+                    <div className="welcome-step">
+                      <div className="welcome-step-num">2</div>
+                      <div className="welcome-step-body">
+                        <strong>See today's routine</strong>
+                        <span>A complete Greeting, Sharing, Activity, and Morning Message — ready now.</span>
+                      </div>
+                    </div>
+                    <div className="welcome-step">
+                      <div className="welcome-step-num">3</div>
+                      <div className="welcome-step-body">
+                        <strong>Project for your class</strong>
+                        <span>Hit "Project Today" to display the routine full-screen on your smartboard.</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="welcome-grade-row">
+                    <span className="welcome-grade-label">Pick your grade to get started:</span>
+                    {["K–2","3–5","6–8","9–12"].map(g => (
+                      <button
+                        key={g} type="button"
+                        className={`welcome-grade-chip${currentGrade === g ? ' active' : ''}`}
+                        onClick={() => dismissWelcome(g)}
+                      >{g}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="routine-header">
                   <div className="routine-header-row">
                     <div>
                       <div className="section-eyebrow">Responsive Classroom Meeting</div>

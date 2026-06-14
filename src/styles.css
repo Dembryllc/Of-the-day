@@ -1536,6 +1536,62 @@ button:focus-visible,
 
 
 /* ── Meeting dashboard ── */
+/* ── FIRST-RUN WELCOME CARD ── */
+.welcome-card {
+  position: relative;
+  background: linear-gradient(135deg, #1B2D5B 0%, #223566 100%);
+  border-radius: 16px;
+  padding: 24px 28px 20px;
+  margin-bottom: 16px;
+  color: #fff;
+}
+.welcome-dismiss {
+  position: absolute; top: 14px; right: 14px;
+  background: rgba(255,255,255,0.12); border: none; border-radius: 50%;
+  width: 28px; height: 28px; cursor: pointer; color: rgba(255,255,255,0.7);
+  font-size: 13px; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.welcome-dismiss:hover { background: rgba(255,255,255,0.22); color: #fff; }
+.welcome-heading { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.welcome-sub { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 20px; }
+.welcome-steps {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-bottom: 20px;
+}
+.welcome-step {
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.welcome-step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #F5A623; color: #1B2D5B;
+  font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.welcome-step-body { display: flex; flex-direction: column; gap: 2px; }
+.welcome-step-body strong { font-size: 13px; font-weight: 700; }
+.welcome-step-body span { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.4; }
+.welcome-grade-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.12);
+}
+.welcome-grade-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); margin-right: 4px; }
+.welcome-grade-chip {
+  padding: 7px 16px; border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85);
+  font: 600 13px/1 'Outfit', sans-serif; cursor: pointer; transition: all 0.14s;
+}
+.welcome-grade-chip:hover { border-color: #F5A623; color: #F5A623; }
+.welcome-grade-chip.active {
+  background: #F5A623; border-color: #F5A623; color: #1B2D5B;
+}
+@media (max-width: 700px) {
+  .welcome-steps { grid-template-columns: 1fr; gap: 10px; }
+  .welcome-card { padding: 20px 16px 16px; }
+}
+
 .morning-hero {
   margin-top: 12px;
   background: linear-gradient(135deg, #FFFFFF 0%, #EEF8F5 100%);
