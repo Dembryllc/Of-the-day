@@ -1337,7 +1337,7 @@ function ProfileSheet({ account, displayName, trialDaysLeft, effectivePlan, onCl
   const [grade, setGrade] = useState(account?.grade || '3–5');
   const [saving, setSaving] = useState(false);
 
-  const initials = (name || account?.name || 'T')[0].toUpperCase();
+  const initials = (name || account?.name || account?.email || '?')[0].toUpperCase();
 
   const planLabel = account?.tier === 'pro'
     ? 'Pro'
@@ -3392,7 +3392,7 @@ function MainApp({ account, onSignOut }) {
             </div>
           )}
           <button className="sidebar-profile" type="button" onClick={() => setProfileOpen(true)} title={sidebarCollapsed ? (displayName || account?.name || 'Profile') : undefined}>
-            <div className="sidebar-avatar">{(displayName || account?.name || 'T')[0].toUpperCase()}</div>
+            <div className="sidebar-avatar">{(displayName || account?.name || account?.email || '?')[0].toUpperCase()}</div>
             {!sidebarCollapsed && (
               <div className="sidebar-profile-info">
                 <div className="sidebar-profile-name">{displayName || account?.name || 'Teacher'}</div>
