@@ -179,11 +179,6 @@ export default function LandingPage() {
       <div className="trust-bar">
         <div className="trust-bar-inner">
           <div className="trust-stat">
-            <span className="trust-num">5,000+</span>
-            <span className="trust-label">teachers using OfTheDay</span>
-          </div>
-          <div className="trust-divider" aria-hidden="true"/>
-          <div className="trust-stat">
             <span className="trust-num">180</span>
             <span className="trust-label">school days covered, every year</span>
           </div>
@@ -191,6 +186,11 @@ export default function LandingPage() {
           <div className="trust-stat">
             <span className="trust-num">30s</span>
             <span className="trust-label">to a complete morning routine</span>
+          </div>
+          <div className="trust-divider" aria-hidden="true"/>
+          <div className="trust-stat">
+            <span className="trust-num">Free</span>
+            <span className="trust-label">to start — no credit card needed</span>
           </div>
         </div>
       </div>
@@ -221,7 +221,7 @@ export default function LandingPage() {
                 <div className="stat-label">school days that need a fresh routine every year</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">14</div>
+                <div className="stat-number">8</div>
                 <div className="stat-label">activity categories built into the library</div>
               </div>
               <div className="stat-card">

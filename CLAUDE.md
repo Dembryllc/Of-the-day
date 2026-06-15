@@ -407,15 +407,33 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 1. **Firebase Console** — Enable Email/Password + Google sign-in methods; add `oftheday.net` to Authorized Domains; set Support Email on Google provider
 2. **DNS** — Connect `oftheday.net` custom domain in Firebase Console → Hosting; update Netlify DNS A records to Firebase IPs
 3. **Stripe go-live** — Switch to live keys in `functions/.env`, register webhook in Stripe Dashboard, set `STRIPE_WEBHOOK_SECRET`
-4. **Trial reminder emails** — No email drip at trial end; Day 12 nudge would improve conversion
-5. **Email capture delivery** — "Get a Free Morning Meeting Resource Pack" form collects emails but delivers nothing; build delivery or update copy
-6. **Demo mode** — Let unauthenticated teachers browse 5 sample activities before requiring signup; biggest conversion lever
-7. **Activity pool expansion** — 60 activities repeats in ~3 weeks of daily use; target 200+ per category for a full school year without repetition
-8. **Weekly/monthly activity history view** — Show teachers what they've used this week so they can plan variety
-9. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
-10. **Component extraction** — App.jsx is 4000+ lines; ProfileSheet, DisplayMode, AuthScreen are candidates
-11. **"5,000+ teachers" stat** — Unverifiable claim on landing page; could fail district procurement scrutiny
-12. **District/school admin panel** — No way to manage school licenses, view adoption, or onboard a department
+4. **Email capture delivery** — "Get a Free Morning Meeting Resource Pack" form collects emails but delivers nothing; build delivery or update copy
+5. **Demo mode** — Let unauthenticated teachers browse sample activities before signup; biggest conversion lever
+6. **Activity pool expansion** — Thin in some categories; repetition possible within weeks of daily use
+7. **Weekly activity history view** — Show teachers what they've used this week so they can plan variety
+8. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
+9. **Component extraction** — App.jsx is 4000+ lines; see "Code architecture" section below
+
+## Code architecture
+`src/App.jsx` is a single-file component at 4000+ lines. This is intentional for now — all state lives in `MainApp` and flows down as props. The trade-off:
+
+**Pros of current approach:**
+- No prop-drilling through Context or Redux; state flow is traceable
+- AI sessions can read the full component tree in one file
+- No import/export wiring to manage
+
+**When to extract (not yet):**
+Extract a component when it: (a) has its own significant state that never needs to live in MainApp, AND (b) can receive everything it needs as props with no callbacks back up except event handlers.
+
+**Current candidates (in order of readiness):**
+1. `DisplayMode` (~400 lines) — most self-contained; receives `items`, `initialIdx`, `style`, fires `onDone`; no shared state with MainApp except `projectorStyle` which is already a prop
+2. `AuthScreen` (~300 lines) — completely standalone; only fires `onAuth` callback
+3. `ProfileSheet` (~70 lines) — self-contained; already well-isolated
+
+**Do not extract yet:**
+- `BrowseScreen`, `RoutineBuilderScreen`, `FavoritesScreen` — too many callbacks into MainApp state; extraction would require Context or significant refactor
+
+**Rule:** Do not extract to reduce line count. Extract only when a component becomes independently testable and its state is truly local.
 
 ## Git branch
 Active development: `main` (dev branch `claude/activity-of-day-app-2JlTT` merged)
