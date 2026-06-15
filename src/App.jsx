@@ -1027,7 +1027,7 @@ function ActivityCard({ activity, selected, onSelect, onSwap, onFave, favorites,
     <div className={`card component-card${selected ? ' selected' : ''}${useNow ? ' use-now' : ''}`} role="button" tabIndex="0"
       onClick={() => onSelect(activity)}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(activity); } }}>
-      {typeof index === "number" ? <div className="morning-card-index" style={{ background: cm.dark || cm.color }}>{index + 1}</div> : <div className="card-stripe" style={{ background: cm.color }}/>} 
+      {typeof index === "number" ? <div className="morning-card-index" style={{ background: cm.dark || cm.color }}>{index + 1}</div> : <div className="card-stripe" style={{ background: cm.color }}/>}
       <div className="card-inner">
         <div className="card-cat">{activity.cat}</div>
         <div className="card-title">{activity.title}</div>
@@ -1042,6 +1042,7 @@ function ActivityCard({ activity, selected, onSelect, onSwap, onFave, favorites,
           </button>
         </div>
       </div>
+      {useNow && <div className="card-chevron" aria-hidden="true">›</div>}
     </div>
   );
 }
@@ -1114,8 +1115,8 @@ function DetailPanel({ activity, onSwap, onDisplayOne, onAddToRoutine, onRemove,
       {activity
         ? <DetailContent activity={activity} onSwap={onSwap} onDisplayOne={onDisplayOne} onAddToRoutine={onAddToRoutine} onRemove={onRemove} onFave={onFave} isFavorite={favorites?.has(activity.id)} currentGrade={currentGrade}/>
         : <div className="detail-empty">
-            <div className="detail-empty-icon">Preview</div>
-            <div className="detail-empty-text">Select an activity to see directions, student prompt, and projector controls.</div>
+            <div className="detail-empty-icon">←</div>
+            <div className="detail-empty-text">Tap any activity to preview directions, the student prompt, and projector controls.</div>
           </div>
       }
     </div>
