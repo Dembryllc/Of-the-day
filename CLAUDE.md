@@ -7,8 +7,9 @@ Morning meeting planner for K–12 teachers using Responsive Classroom. Teachers
 - **Frontend**: React 19, Vite 8, react-router-dom 7
 - **Auth + DB**: Firebase Auth (email/password + Google) + Firestore (`oftheday-c6490`)
 - **Hosting**: Firebase Hosting (serves `dist/`)
-- **Functions**: Firebase Cloud Functions mixed gen (`functions/index.js`) — `onthisday` + `createCheckoutSession` + `stripeWebhook` are Gen 2; `onUserCreate` is Gen 1
+- **Functions**: Firebase Cloud Functions mixed gen (`functions/index.js`) — `onthisday` + `createCheckoutSession` + `stripeWebhook` + `sendLeadMagnet` are Gen 2; `onUserCreate` is Gen 1
 - **Payments**: Stripe (test mode) — checkout sessions, webhooks, subscription lifecycle
+- **Email**: Resend (`functions/index.js`) — welcome email on signup, resource pack lead magnet delivery
 - **Build output**: `dist/` (gitignored)
 
 ## Architecture
@@ -29,9 +30,12 @@ Single-page app. One `index.html` entry, one JS/CSS bundle, React Router handles
 ## Key files
 ```
 src/
-  App.jsx          — all app logic (4000+ lines); Auth, MainApp, AuthScreen, UpgradePage,
-                     ProfileSheet, projector/DisplayMode, modals
-  LandingPage.jsx  — marketing landing page (React component)
+  App.jsx          — main app logic (~3,400 lines); MainApp, UpgradePage, ProfileSheet, modals,
+                     ActivityCard, BrowseScreen, BuildScreen, FavoritesScreen, etc.
+                     AuthScreen and DisplayMode have been extracted to separate files.
+  AuthScreen.jsx   — extracted auth component (login/signup/Google/reset); fires onAuthed callback
+  DisplayMode.jsx  — extracted projector overlay component; receives routine/style props, fires onExit
+  LandingPage.jsx  — marketing landing page; calls sendLeadMagnet Cloud Function on email capture
   PrivacyPage.jsx  — /privacy route; full privacy policy with FERPA statement
   TermsPage.jsx    — /terms route; full terms of service
   landing.css      — landing page styles (scoped under .lp to avoid conflicts with app CSS)
@@ -43,14 +47,24 @@ src/
                      updateUserGrade, updateUserProfile, etc.
     usePlan.js     — plan resolution hook: reads account.tier + account.plan + trialStartedAt → 'pro'|'free'
                      NOTE: uses toMs() helper to convert Firestore Timestamps — do not use raw arithmetic
+    catMeta.js     — CAT_META (14 category definitions) and MORNING_MEETING_CATS Set; shared between
+                     App.jsx and DisplayMode.jsx
+    projector.js   — all projector constants (PROJECTOR_THEMES, PROJECTOR_BACKGROUNDS, DEFAULT_PROJECTOR_STYLE)
+                     and helpers (normalizeProjectorStyle, getProjectorBackgroundImage, readProjectorStyle,
+                     persistProjectorStyle, normalizeColor, normalizeBackgroundUrl, isLikelyDirectImageUrl)
   tweaks-panel.jsx — dev tweaks UI
 
 functions/
-  index.js         — four Cloud Functions:
+  index.js         — six Cloud Functions:
                      • onthisday (Gen 2, onRequest) — fetches from onthisday.com, filters for classrooms
-                     • onUserCreate (Gen 1, auth.user().onCreate) — writes plan:'trial' to Firestore on signup
+                     • onUserCreate (Gen 1, auth.user().onCreate) — writes plan:'trial' to Firestore on
+                       signup AND sends welcome email via Resend (fails silently if key not set)
                      • createCheckoutSession (Gen 2, onCall) — creates Stripe customer + checkout session
                      • stripeWebhook (Gen 2, onRequest) — handles subscription lifecycle events
+                     • sendLeadMagnet (Gen 2, onCall) — sends resource pack email via Resend; called from
+                       LandingPage after Firestore waitlist write; no-ops if RESEND_API_KEY not set
+  .env.example     — documents required env vars (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, RESEND_API_KEY)
+  package.json     — includes resend, stripe, firebase-admin, firebase-functions
 
 scripts/
   seed.js          — seeds Firestore activities collection (requires service-account.json)
@@ -78,10 +92,18 @@ VITE_FIREBASE_MEASUREMENT_ID=   (optional)
 ```
 See `.env.example` for reference. Get values from Firebase Console → Project Settings → Web App.
 
+Required in `functions/.env` (gitignored — never commit). See `functions/.env.example`:
+```
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+RESEND_API_KEY=re_...
+```
+
 **Security rules — never break these:**
-- `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are server-side only (Firebase Functions)
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `RESEND_API_KEY` are server-side only (Firebase Functions)
 - `VITE_*` vars are safe for the frontend bundle
 - `scripts/service-account.json` is gitignored — never commit it
+- `functions/.env` is gitignored — never commit it
 
 ## Development
 ```bash
@@ -170,12 +192,31 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
 - Events to register: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
 - Success URL: `https://oftheday.net/dashboard?upgraded=true` → shows "Welcome to Pro!" banner
 
+## Email delivery (Resend)
+- Provider: Resend (`resend` npm package in `functions/`)
+- `RESEND_API_KEY` in `functions/.env` — server-side only, never in frontend
+- From address: `OfTheDay <hello@oftheday.net>` — requires domain verified in Resend Console → Domains
+  - Until verified, use `from: 'OfTheDay <onboarding@resend.dev>'` for testing
+- `getResend()` helper in functions/index.js returns null if key not set — all sends fail silently
+- Email helper: `emailBase(bodyContent)` wraps any HTML in the brand template (navy header, white body, gray footer)
+
+### Welcome email
+- Triggered by `onUserCreate` after the Firestore doc is written
+- Subject: "Your morning meeting is ready 🌅"
+- Content: personalized greeting, 3 quick-start steps, CTA to dashboard
+
+### Resource pack email (lead magnet)
+- Triggered by `sendLeadMagnet` callable (called from LandingPage after Firestore waitlist write)
+- Subject: "Your Morning Meeting Resource Pack is here 🎉"
+- Content: 10 ready-to-use activities (2 greetings, 2 sharing, 2 group activities, 2 morning messages, 1 SEL, 1 brain teaser) + CTA to sign up free
+- Unsubscribe link: mailto:hello@oftheday.net?subject=Unsubscribe
+
 ## Auth notes
-- Email/password: `createUserWithEmailAndPassword` / `signInWithEmailAndPassword`
+- Email/password: `createUserWithEmailAndPassword` / `signInWithEmailAndPassword` — in `AuthScreen.jsx`
 - Google: `signInWithPopup(auth, new GoogleAuthProvider())` — `onAuthStateChanged` in `App` handles
   user doc creation for new Google users (creates doc with `plan:'trial'` if none exists)
 - `onUserCreate` Cloud Function (Gen 1) fires on every new Firebase Auth user regardless of provider
-- `friendlyAuthError()` handles `auth/popup-closed-by-user` and `auth/cancelled-popup-request` silently;
+- `friendlyAuthError()` in `AuthScreen.jsx` handles `auth/popup-closed-by-user` and `auth/cancelled-popup-request` silently;
   handles `auth/popup-blocked` with a clear message to allow popups; handles `auth/internal-error` with
   instructions to configure OAuth consent screen in Firebase Console
 - New users: `emailVerified` tracked on account state; unverified email/password users see a dismissible
@@ -198,7 +239,7 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
 Sections in order:
 1. Nav — logo + links (Features, How It Works, Pricing, FAQ, Get Started Free) + Sign In / Try It Free buttons
 2. Hero — headline, sub, CTAs, app mockup
-3. Trust bar — "5,000+ teachers · 180 school days · 30s to a routine"
+3. Trust bar — "180 school days · 30s to a routine · Free to start"
 4. Problem — stats + teacher voice quote
 5. How It Works — 3-step walkthrough
 6. Features — 6 feature cards
@@ -210,7 +251,8 @@ Sections in order:
    - School: inline inquiry form (name + school + email → Firestore `waitlist` with `source:'school-inquiry'`)
 10. FAQ — 9 questions including "Does OfTheDay store student data?" and "Is a DPA available?"
 11. Contact line — "Questions? Email us at hello@oftheday.net"
-12. Email capture — lead magnet "Get a Free Morning Meeting Resource Pack" → Firestore `waitlist`
+12. Email capture — "Get a Free Morning Meeting Resource Pack" → saves to Firestore `waitlist` + calls
+    `sendLeadMagnet` Cloud Function to deliver 10 activities via email; both fail silently
 13. Final CTA
 14. Footer — Features, Pricing, FAQ, Contact, Privacy Policy, Terms of Service, Sign In
 
@@ -249,12 +291,20 @@ Sections in order:
 - Profile row at bottom: gold avatar circle (initials) + name + plan label → opens `ProfileSheet`
 - Avatar initials fallback: `displayName[0] → account.name[0] → account.email[0] → '?'`
 
+### Sidebar content teasers (expanded only)
+Two tappable teaser cards appear below the streak row, above the upgrade/trial card:
+1. **Word of the Day teaser** (`📖`) — shows today's word + definition snippet; navigates to "Word of the Day" view on click
+2. **On This Day teaser** (`⏳`) — shows `historyItems[0].year: title`; navigates to "On This Day" view on click
+- Both show a dimmed "Refreshes in Xh Ym" countdown (`midnightResetLabel` useMemo) making content feel ephemeral
+- CSS: `.sidebar-otd-teaser`, `.sidebar-otd-icon`, `.sidebar-otd-text`, `.sidebar-otd-label`, `.sidebar-otd-fact`, `.sidebar-otd-reset`
+
 ## ProfileSheet
 - Component in `App.jsx`, opened via sidebar profile row
 - Editable: name, default grade
 - Read-only: email, plan badge (Pro / Trial · X days / Free)
 - Upgrade link shown for non-pro users
 - Save → calls `updateUserProfile(uid, { name, grade })` in `firestore.js`, updates `displayName` local state + `handleGradeChange`
+- "Share OfTheDay with a Colleague" button copies referral link to clipboard; `copied` state shows confirmation for 3s
 - Sign Out button inside the sheet
 
 ## Trial status UI
@@ -276,7 +326,8 @@ Sections in order:
 - `.library-pill-wrap::after` — right-edge fade gradient (52px, `transparent → var(--sand)`) signals more pills; `pointer-events: none`
 
 ## DisplayMode (projector)
-The projector is a full-screen overlay component (`position: fixed; inset: 0; z-index: 300`).
+The projector is a full-screen overlay component in `src/DisplayMode.jsx` (`position: fixed; inset: 0; z-index: 300`).
+Imports from `./lib/catMeta` and `./lib/projector`.
 
 ### Teacher control bar
 - Toggle button (top-right): "⚙ Controls" / "✕ Close"
@@ -310,6 +361,12 @@ The projector is a full-screen overlay component (`position: fixed; inset: 0; z-
 - Pause / ▶ Start toggle button
 - ↺ Reset button (sets to full time, pauses)
 
+### Projector exit side effects
+When `onExit` fires (teacher hits Done ✓ or End Projection):
+- Sets `localStorage('ofd:projectedToday')` = today's ISO date → `projectedToday` state → shows completion card
+- Calls `markActivitiesSeen(ids)` → adds all routine IDs to `ofd:seenActivities`
+- Updates `seenActivities` state → removes "New" badges from those activities
+
 ## Static assets
 Logo files in `public/assets/`:
 - `ofthedaylogi.png` — **active logo**, clean crop, no whitespace. Used in nav and all headers.
@@ -327,6 +384,7 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 ### onUserCreate (Gen 1)
 - Fires on every new Firebase Auth user creation (email/password AND Google)
 - Writes `{ email, plan: 'trial', trialStartedAt: serverTimestamp(), createdAt: serverTimestamp() }` to `users/{uid}`
+- Also sends welcome email via Resend; fails silently if `RESEND_API_KEY` not set
 - Wrapped in try-catch — never blocks signup; client-side `createUserDocument` is the fallback
 - **Why Gen 1:** `beforeUserCreated` (Gen 2 equivalent) requires Firebase Identity Platform (GCIP), which this project does not use
 
@@ -341,6 +399,13 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 - `checkout.session.completed` → sets `tier:'pro'`, `subscriptionId`, `currentPeriodEnd`
 - `customer.subscription.updated` → updates `tier` and `currentPeriodEnd`
 - `customer.subscription.deleted` → sets `tier:'free'`
+
+### sendLeadMagnet (Gen 2, callable)
+- Called from `LandingPage.jsx` after saving to Firestore waitlist
+- Params: `{ email }`
+- Sends resource pack email via Resend with 10 ready-to-use morning meeting activities
+- Returns `{ sent: true/false }` — returns false (not throws) if Resend fails
+- No-ops silently if `RESEND_API_KEY` not set
 
 ## Known bugs fixed (do not reintroduce)
 - **Timestamp arithmetic**: `trialStartedAt` is a Firestore Timestamp. `Date.now() - timestamp` = NaN.
@@ -373,6 +438,24 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 - Milestone labels appear at 7, 14, 30 days (`sidebar-streak-badge`, gold pill)
 - CSS classes: `.sidebar-streak`, `.sidebar-streak--collapsed`, `.sidebar-streak-flame`, `.sidebar-streak-label`, `.sidebar-streak-badge`
 
+### Streak milestone toasts
+- `STREAK_MILESTONES` constant: `{ 3: "...", 7: "...", 14: "...", 30: "..." }`
+- `useEffect` on `[streakCount]` fires once per milestone using `localStorage('ofd:streakMilestones')` (array of celebrated counts) to suppress repeats
+- Fires `showToast(🔥 message)` on milestone days
+
+### Dynamic sidebar greeting
+- `sidebarGreeting` useMemo: time-aware + streak-aware
+  - Day 1–2: "Good morning/afternoon/evening, Name"
+  - Day 3+: "🔥 Day N in a row, Name"
+  - Day 7+: "🏆 Day N in a row, Name!"
+  - Day 14+: "💪 Day N in a row, Name!"
+  - Day 30+: "🎉 Day N in a row, Name!"
+- Replaces static "Good morning, Name" in sidebar
+
+### Topbar streak pill
+- Gold `🔥 N-day streak` chip in topbar date line when `streakCount >= 2`
+- CSS: `.topbar-streak-pill`
+
 ## Activity history (used-today tracking)
 - `readUsedToday()` / `recordUsedToday(ids)` helpers in App.jsx use `localStorage('ofd:usedToday')` (`{ date, ids[] }`)
 - Object resets automatically when `date` !== today
@@ -381,6 +464,35 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 - `BrowseScreen` receives `usedToday` prop; Library browse-cards show a teal `✓ Today` badge if `usedToday.has(a.id)`
 - `ActivityCard` also accepts `usedToday` — shows `.card-used-badge` on the cat line when `usedNow && !useNow`
   (badge hidden on Today view cards since they're obviously in today's routine)
+
+## Activity novelty tracking ("New to you")
+- `readSeenActivities()` / `markActivitiesSeen(ids)` helpers use `localStorage('ofd:seenActivities')` (array of IDs, persistent, no expiry)
+- `seenActivities` state in `MainApp` initialized from `readSeenActivities()`
+- On projector exit: `markActivitiesSeen(routineIds)` is called → `seenActivities` state refreshed
+- `ActivityCard` accepts `seenActivities` prop — shows teal `NEW` badge (`.card-new-badge`) when `!seenActivities.has(activity.id)`
+- Routine header shows "· N new to you" count (`.routine-new-count`, teal) via `newCountToday` derived value
+- Only passed to Today view ActivityCards — not Library/Browse cards
+
+## Daily habit formation (completion + return signals)
+### Projection completion card
+- `projectedToday` state: initialized from `localStorage('ofd:projectedToday') === today`
+- Set to `true` on projector `onExit`; persists across page reloads until midnight (new date)
+- When true: green completion card at top of Today view: "✓ Morning meeting complete · N-day streak 🔥 — see you tomorrow!"
+- On Fridays: appends "Have a great weekend — Monday's routine is ready. 🌅"
+- CSS: `.completion-card`, `.completion-icon`, `.completion-msg`, `.completion-friday`
+
+### Friday preview card
+- When `isFriday` (computed once on mount: `new Date().getDay() === 5`) AND not yet projected: shows amber `.friday-card`
+- Copy: "🌅 Have a great weekend! Come back Monday — your next routine will be ready."
+
+### Returning teacher detection
+- `projectedYesterday` useMemo: checks `localStorage('ofd:projectedToday') === yesterday's date`
+- When `projectedYesterday && !projectedToday`: morning hero headline switches to "Welcome back! New activities are waiting." with streak-urgency subtext
+- When projector class name is set and non-default: hero reads "[Class Name]'s morning meeting is ready."
+
+### Midnight reset label
+- `midnightResetLabel` useMemo: computes "Refreshes in Xh Ym" from now to next midnight
+- Used in both sidebar teasers (OTD and Vocab) to signal daily content turnover
 
 ## Share with a colleague
 - `ProfileSheet` has `handleShare` that copies a referral message to clipboard via `navigator.clipboard.writeText`
@@ -395,6 +507,23 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 - `buildViews` array: `["Routines", "My Routines", "My Activities"]`
 - Internal component/state names (`BuildScreen`, `builderDraft`, `startBuilderWithActivity`) were NOT renamed — only the user-visible label changed
 
+## localStorage keys (complete reference)
+| Key | Shape | Purpose |
+|-----|-------|---------|
+| `ofd:streak` | `{ count, lastDate }` | Usage streak count |
+| `ofd:streakMilestones` | `[3, 7, ...]` | Milestone toast suppression |
+| `ofd:usedToday` | `{ date, ids[] }` | Activities in today's routine (resets daily) |
+| `ofd:seenActivities` | `[id, ...]` | All activity IDs ever projected (persistent) |
+| `ofd:projectedToday` | ISO date string | Whether teacher projected today (resets daily) |
+| `ofd:favorites` | `[id, ...]` | Favorited activity IDs |
+| `ofd:savedRoutines` | `[{...}, ...]` | Saved routine objects |
+| `ofd:sidebarCollapsed` | `'1'` or `'0'` | Sidebar collapse state |
+| `ofd:welcomed:{uid}` | `'1'` | Welcome card dismissed (per account) |
+| `ofd:projectorStyle` | `{...}` | Projector style settings |
+| `ofd:projectorState` | `{...}` | Cross-window projector state bridge |
+| `ofd:presentationView` | `'clean'` or `'guided'` | Last projector view mode |
+| `ofd:cloudAutoSave` | `'true'` | Cloud auto-save preference |
+
 ## Live site status
 **Last updated: 2026-06-15**
 - All code changes are on `main` and auto-deploy to Firebase Hosting via GitHub Actions
@@ -407,28 +536,23 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 1. **Firebase Console** — Enable Email/Password + Google sign-in methods; add `oftheday.net` to Authorized Domains; set Support Email on Google provider
 2. **DNS** — Connect `oftheday.net` custom domain in Firebase Console → Hosting; update Netlify DNS A records to Firebase IPs
 3. **Stripe go-live** — Switch to live keys in `functions/.env`, register webhook in Stripe Dashboard, set `STRIPE_WEBHOOK_SECRET`
-4. **Email capture delivery** — "Get a Free Morning Meeting Resource Pack" form collects emails but delivers nothing; build delivery or update copy
+4. **Resend setup** — Sign up at resend.com, verify `oftheday.net` domain, add `RESEND_API_KEY` to `functions/.env`, deploy functions. Until then update `EMAIL_FROM` in `functions/index.js` to use `onboarding@resend.dev` for testing.
 5. **Demo mode** — Let unauthenticated teachers browse sample activities before signup; biggest conversion lever
 6. **Activity pool expansion** — Thin in some categories; repetition possible within weeks of daily use
 7. **Weekly activity history view** — Show teachers what they've used this week so they can plan variety
 8. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
-9. **Component extraction** — App.jsx is 4000+ lines; see "Code architecture" section below
 
 ## Code architecture
-`src/App.jsx` is a single-file component at 4000+ lines. This is intentional for now — all state lives in `MainApp` and flows down as props. The trade-off:
+`src/App.jsx` is ~3,400 lines. `AuthScreen` and `DisplayMode` have been extracted to separate files. Shared data/logic lives in `src/lib/`.
 
-**Pros of current approach:**
-- No prop-drilling through Context or Redux; state flow is traceable
-- AI sessions can read the full component tree in one file
-- No import/export wiring to manage
+**Extracted so far:**
+- `src/AuthScreen.jsx` — fully self-contained; imports firebase auth directly; fires `onAuthed` callback
+- `src/DisplayMode.jsx` — projector overlay; receives `routine`, `startIndex`, `projectorStyle`, `initialView`, `onExit`
+- `src/lib/catMeta.js` — `CAT_META` + `MORNING_MEETING_CATS`; imported by both App.jsx and DisplayMode.jsx
+- `src/lib/projector.js` — all projector constants and helper functions
 
-**When to extract (not yet):**
+**When to extract more:**
 Extract a component when it: (a) has its own significant state that never needs to live in MainApp, AND (b) can receive everything it needs as props with no callbacks back up except event handlers.
-
-**Current candidates (in order of readiness):**
-1. `DisplayMode` (~400 lines) — most self-contained; receives `items`, `initialIdx`, `style`, fires `onDone`; no shared state with MainApp except `projectorStyle` which is already a prop
-2. `AuthScreen` (~300 lines) — completely standalone; only fires `onAuth` callback
-3. `ProfileSheet` (~70 lines) — self-contained; already well-isolated
 
 **Do not extract yet:**
 - `BrowseScreen`, `RoutineBuilderScreen`, `FavoritesScreen` — too many callbacks into MainApp state; extraction would require Context or significant refactor
