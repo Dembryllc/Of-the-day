@@ -189,6 +189,11 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
 - Password field has persistent helper text "At least 8 characters" (not just placeholder)
 - Avatar initials fallback: `name → account.name → account.email[0] → '?'` (both sidebar and ProfileSheet)
 
+## Topbar grade picker
+- `GradePicker` component renders `.grade-chips-topbar` — four pill buttons, not a `<select>`
+- Classes: `.grade-chip-topbar` (base) + `.active` (teal fill) — same K–2/3–5/6–8/9–12 set
+- Default grade fallback in `TWEAK_DEFAULTS`: `account?.grade || "3–5"`
+
 ## Landing page structure (LandingPage.jsx)
 Sections in order:
 1. Nav — logo + links (Features, How It Works, Pricing, FAQ, Get Started Free) + Sign In / Try It Free buttons
@@ -215,6 +220,7 @@ Sections in order:
 - Selecting a grade chip calls `handleGradeChange` and dismisses the card permanently
 - ✕ button dismisses without changing grade
 - Never shows again after first dismissal (localStorage, not sessionStorage)
+- **Only onboarding flow** — `TutorialModal` was removed; do not re-add it
 
 ## CSS notes
 - App CSS lives in `src/styles.css` — uses Outfit font (woff2 in `public/fonts/`)
@@ -265,8 +271,9 @@ Sections in order:
 - Google users are always verified — banner never shows for them
 
 ## Library header
-- Horizontal scrollable `.library-pill-row`
-- Pills: Build a Routine (teal/filled), Word of the Day, Do Now, On This Day, My Activities, Favorites
+- Horizontal scrollable `.library-pill-row` inside `.library-pill-wrap` container
+- Pills: Routines (teal/filled), Word of the Day, Do Now, On This Day, My Activities, Favorites
+- `.library-pill-wrap::after` — right-edge fade gradient (52px, `transparent → var(--sand)`) signals more pills; `pointer-events: none`
 
 ## DisplayMode (projector)
 The projector is a full-screen overlay component (`position: fixed; inset: 0; z-index: 300`).
@@ -338,13 +345,35 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 ## Known bugs fixed (do not reintroduce)
 - **Timestamp arithmetic**: `trialStartedAt` is a Firestore Timestamp. `Date.now() - timestamp` = NaN.
   Fixed in both `App.jsx` (`tsToMs`) and `usePlan.js` (`toMs`). Never use raw subtraction.
+- **`toMs()` plain-number passthrough (critical — trial never expired)**: `account.trialStartedAt` is
+  pre-converted to plain ms by `tsToMs()` before being stored on the account object. Old `toMs()` in
+  `usePlan.js` returned `null` for plain numbers → `null == null` → trial granted forever. Fix: both
+  `toMs()` and `tsToMs()` now have `if (typeof ts === 'number') return ts;` as the first guard.
 - **`favorites.has()` without guard**: `ActivityCard` and `FavoritesScreen` now use `favorites?.has()`.
   Passing undefined favorites crashes both components.
 - **Projector dots `key={i}`**: Fixed to `key={item?.id ?? i}` — index keys break reconciliation on shuffle.
 - **Avatar initials hardcoded `'T'` fallback**: Now falls back to email initial, then `'?'`.
+- **UpgradeModal price wrong**: Was `$99/year`, now correctly shows `$79/year` matching Stripe + landing page.
+- **Wrong default grade in TWEAK_DEFAULTS**: Was `"9–12"`, now `"3–5"` (the majority audience).
+- **Duplicate onboarding flows**: `TutorialModal` (blocking modal, `ofd:tutorialSeen`) removed entirely.
+  Welcome card (`ofd:welcomed:{uid}`, in-page, per-account) is the sole onboarding experience.
+- **Logo whitespace**: `LOGO_SRC` now points to `ofthedaylogi.png` (clean crop). `oftheday-logo.png`
+  (74% transparent whitespace) must never be used in the UI.
+
+## Activity card discoverability
+- Cards with `useNow={true}` render a `.card-chevron` (`›`) on the right edge
+- Muted gray (`#C8C3BA`) at rest, teal on `.card:hover` and `.card.selected`
+- Detail panel empty state shows a `←` icon + "Tap any activity to preview directions, the student prompt, and projector controls."
+
+## Sidebar nav labels
+The sidebar nav uses these exact string labels (referenced throughout App.jsx as `activeNav` values):
+- "Today", "Library", **"Routines"** (was "Build" — renamed 2026-06-15), "Word of the Day",
+  "Do Now", "On This Day", "My Activities", "Favorites"
+- `buildViews` array: `["Routines", "My Routines", "My Activities"]`
+- Internal component/state names (`BuildScreen`, `builderDraft`, `startBuilderWithActivity`) were NOT renamed — only the user-visible label changed
 
 ## Live site status
-**Last updated: 2026-06-14**
+**Last updated: 2026-06-15**
 - All code changes are on `main` and auto-deploy to Firebase Hosting via GitHub Actions
 - Firebase Hosting URL: `oftheday-c6490.web.app` (all deploys land here)
 - `oftheday.net` DNS still points to Netlify — custom domain not yet connected to Firebase Hosting
@@ -356,8 +385,10 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 2. **DNS** — Connect `oftheday.net` custom domain in Firebase Console → Hosting; update Netlify DNS A records to Firebase IPs
 3. **Stripe go-live** — Switch to live keys in `functions/.env`, register webhook in Stripe Dashboard, set `STRIPE_WEBHOOK_SECRET`
 4. **Trial reminder emails** — No email drip at trial end; Day 12 nudge would improve conversion
-5. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
-6. **Component extraction** — App.jsx is 4000+ lines; ProfileSheet, DisplayMode, AuthScreen are candidates
+5. **Email capture delivery** — "Get a Free Morning Meeting Resource Pack" form collects emails but delivers nothing; build delivery or update copy
+6. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
+7. **Component extraction** — App.jsx is 4000+ lines; ProfileSheet, DisplayMode, AuthScreen are candidates
+8. **"5,000+ teachers" stat** — Unverifiable claim on landing page; could fail district procurement scrutiny
 
 ## Git branch
 Active development: `main` (dev branch `claude/activity-of-day-app-2JlTT` merged)
