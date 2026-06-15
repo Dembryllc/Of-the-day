@@ -1327,7 +1327,14 @@ button:focus-visible,
 @media (max-width: 700px) { .projector-form-grid, .color-grid, .background-grid, .url-row { grid-template-columns: 1fr; } }
 
 
-.library-pill-row { display: flex; gap: 8px; margin-top: 14px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.library-pill-wrap { position: relative; margin-top: 14px; }
+.library-pill-wrap::after {
+  content: '';
+  position: absolute; top: 0; right: 0; bottom: 4px; width: 52px;
+  background: linear-gradient(to right, transparent, var(--sand));
+  pointer-events: none;
+}
+.library-pill-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .library-pill-row::-webkit-scrollbar { display: none; }
 .library-pill-btn { flex-shrink: 0; border: 1.5px solid #E2DDD5; background: #fff; border-radius: 20px; padding: 7px 16px; font: 600 13px/1 'Outfit', sans-serif; color: var(--ink); cursor: pointer; white-space: nowrap; transition: border-color .12s, background .12s, color .12s; }
 .library-pill-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-bg); }

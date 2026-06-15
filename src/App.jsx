@@ -1940,13 +1940,15 @@ function BrowseScreen({ activities, grade, favorites, builderCount, replacementT
             <button className="btn-secondary btn-compact" type="button" onClick={onCancelReplacement}>Cancel</button>
           </div>
         )}
-        {!replacementTarget && <div className="library-pill-row" aria-label="Library shortcuts">
-          <button type="button" className="library-pill-btn primary" onClick={() => onOpenTool("Build")}>Build a Routine</button>
-          <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Word of the Day")}>Word of the Day</button>
-          <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Do Now")}>Do Now</button>
-          <button type="button" className="library-pill-btn" onClick={() => onOpenTool("On This Day")}>On This Day</button>
-          <button type="button" className="library-pill-btn" onClick={() => onOpenTool("My Activities")}>My Activities</button>
-          <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Favorites")}>Favorites</button>
+        {!replacementTarget && <div className="library-pill-wrap">
+          <div className="library-pill-row" aria-label="Library shortcuts">
+            <button type="button" className="library-pill-btn primary" onClick={() => onOpenTool("Build")}>Build a Routine</button>
+            <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Word of the Day")}>Word of the Day</button>
+            <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Do Now")}>Do Now</button>
+            <button type="button" className="library-pill-btn" onClick={() => onOpenTool("On This Day")}>On This Day</button>
+            <button type="button" className="library-pill-btn" onClick={() => onOpenTool("My Activities")}>My Activities</button>
+            <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Favorites")}>Favorites</button>
+          </div>
         </div>}
         {!replacementTarget && builderCount > 0 && (
           <div className="routine-tray">
