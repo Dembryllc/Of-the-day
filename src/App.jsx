@@ -2511,28 +2511,6 @@ function FavoritesScreen({ activities, favorites, onFave, onAdd, onBuild, onDisp
   );
 }
 
-function TutorialModal({ onClose }) {
-  return (
-    <div className="tutorial-overlay" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
-      <div className="tutorial-card">
-        <div className="tutorial-kicker">Of The Day</div>
-        <div className="tutorial-title" id="tutorial-title">The daily ritual for great teachers.</div>
-        <div className="tutorial-lede">
-          Of The Day eliminates the daily scramble by delivering ready-to-use classroom activities that build culture, connection, and community — one day at a time.
-        </div>
-        <div className="tutorial-grid">
-          <div className="tutorial-step"><strong>1. Pick your fit</strong><span>Set grade, time, and energy from any screen.</span></div>
-          <div className="tutorial-step"><strong>2. Use today's starter</strong><span>Shuffle, swap, save favorites, or add your own activity.</span></div>
-          <div className="tutorial-step"><strong>3. Project for students</strong><span>Launch Today, Word of the Day, or Do Now in a clean classroom view.</span></div>
-        </div>
-        <div className="tutorial-actions">
-          <button className="btn-primary" type="button" onClick={onClose}>Start Teaching</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function UpgradeModal({ feature, onClose }) {
   return (
     <div className="overlay dialog-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -2867,8 +2845,6 @@ function MainApp({ account, onSignOut }) {
     startBuilderWithActivity(activity);
     setActiveNav("Build");
   }, [startBuilderWithActivity]);
-  const [tutorialOpen, setTutorialOpen] = useState(() => !localStorage.getItem("ofd:tutorialSeen"));
-
   const handleGradeChange = useCallback(grade => {
     const nextFilters = { ...filters, grade };
     setFilters(nextFilters);
@@ -2888,11 +2864,6 @@ function MainApp({ account, onSignOut }) {
     setShowWelcome(false);
     if (grade) handleGradeChange(grade);
   }, [account.uid, handleGradeChange]);
-
-  const closeTutorial = useCallback(() => {
-    localStorage.setItem("ofd:tutorialSeen", "true");
-    setTutorialOpen(false);
-  }, []);
 
   const projectWord = useCallback(() => {
     projectToWindow([vocabToActivity(vocabWord, currentGrade)], 0);
@@ -3816,11 +3787,6 @@ function MainApp({ account, onSignOut }) {
           onChoose={choosePresentationView}
           onClose={() => setPresentationChoice(null)}
         />
-      )}
-
-      {/* FIRST-RUN TUTORIAL */}
-      {tutorialOpen && (
-        <TutorialModal onClose={closeTutorial}/>
       )}
 
       {/* CUSTOM ACTIVITY SHEET */}
