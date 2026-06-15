@@ -2057,7 +2057,19 @@ function MainApp({ account, onSignOut }) {
     const today = new Date().toISOString().slice(0, 10);
     try { return localStorage.getItem('ofd:projectedToday') === today; } catch { return false; }
   });
+  const projectedYesterday = useMemo(() => {
+    const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    try { return localStorage.getItem('ofd:projectedToday') === yest; } catch { return false; }
+  }, []);
   const isFriday = new Date().getDay() === 5;
+  const midnightResetLabel = useMemo(() => {
+    const now = new Date();
+    const midnight = new Date(now); midnight.setHours(24, 0, 0, 0);
+    const h = Math.floor((midnight - now) / 3600000);
+    const m = Math.floor(((midnight - now) % 3600000) / 60000);
+    if (h >= 1) return `Refreshes in ${h}h ${m}m`;
+    return `Refreshes in ${m}m`;
+  }, []);
   const [historyItems, setHistoryItems] = useState(() => getFallbackHistory());
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -2804,7 +2816,7 @@ function MainApp({ account, onSignOut }) {
           <button type="button" className="sidebar-otd-teaser" onClick={() => setActiveNav("On This Day")}>
             <span className="sidebar-otd-icon">⏳</span>
             <span className="sidebar-otd-text">
-              <span className="sidebar-otd-label">On this day</span>
+              <span className="sidebar-otd-label">On this day · <span className="sidebar-otd-reset">{midnightResetLabel}</span></span>
               <span className="sidebar-otd-fact">{historyItems[0].year}: {historyItems[0].title}</span>
             </span>
           </button>
@@ -3005,8 +3017,18 @@ function MainApp({ account, onSignOut }) {
                   </div>
                   <div className="morning-hero">
                     <div>
-                      <div className="morning-hero-title">Your daily classroom ritual is ready.</div>
-                      <div className="morning-hero-text">A complete classroom meeting built around greeting, sharing, group activity, and morning message so students start connected and ready to learn.</div>
+                      <div className="morning-hero-title">
+                        {projectedYesterday && !projectedToday
+                          ? "Welcome back! New activities are waiting."
+                          : projectorStyle.className && projectorStyle.className !== (account?.name ? account.name + "'s Class" : "Our Class")
+                            ? `${projectorStyle.className}'s morning meeting is ready.`
+                            : "Your daily classroom ritual is ready."}
+                      </div>
+                      <div className="morning-hero-text">
+                        {projectedYesterday && !projectedToday
+                          ? `Today's routine is built and ready for ${projectorStyle.className || 'your class'}. Your ${streakCount}-day streak is on the line — let's keep it going.`
+                          : "A complete classroom meeting built around greeting, sharing, group activity, and morning message so students start connected and ready to learn."}
+                      </div>
                     </div>
                     <div className="morning-hero-actions">
                       <button className="btn-primary btn-compact" type="button" onClick={() => projectToWindow(routine, 0)}>Project Today</button>
