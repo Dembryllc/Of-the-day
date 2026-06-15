@@ -3,6 +3,123 @@ const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 admin.initializeApp();
 
+// ── Email helpers ─────────────────────────────────────────────────────────────
+// Requires RESEND_API_KEY in functions/.env
+// From address requires a verified domain in Resend Console → Domains.
+// Until your domain is verified, use: from: 'OfTheDay <onboarding@resend.dev>'
+const EMAIL_FROM = 'OfTheDay <hello@oftheday.net>';
+const APP_URL = 'https://oftheday.net';
+
+function getResend() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  const { Resend } = require('resend');
+  return new Resend(key);
+}
+
+function emailBase(bodyContent) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OfTheDay</title></head>
+<body style="margin:0;padding:0;background:#F8F9FC;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F8F9FC;padding:32px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+  <tr><td style="background:#1B2D5B;padding:24px 32px;">
+    <span style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.3px;">of<span style="color:#F5A623;">·</span>the<span style="color:#F5A623;">·</span>day</span>
+  </td></tr>
+  <tr><td style="padding:32px;">
+    ${bodyContent}
+  </td></tr>
+  <tr><td style="background:#F3F4F6;padding:16px 32px;text-align:center;">
+    <p style="margin:0;font-size:12px;color:#9CA3AF;">
+      OfTheDay.net · Built for teachers ·
+      <a href="${APP_URL}" style="color:#4DB896;text-decoration:none;">Open the app</a>
+    </p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+function welcomeEmailHtml(name) {
+  const first = name ? name.split(' ')[0] : 'Teacher';
+  return emailBase(`
+    <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1B2D5B;">Welcome, ${first}! 👋</h1>
+    <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">
+      Your morning meeting is already built. Open OfTheDay any morning and you'll find a complete,
+      grade-appropriate Greeting, Sharing, Group Activity, and Morning Message — ready in seconds.
+    </p>
+    <h3 style="margin:0 0 10px;font-size:14px;font-weight:700;color:#1B2D5B;text-transform:uppercase;letter-spacing:0.05em;">Three things to try first</h3>
+    <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;width:100%;">
+      <tr><td style="padding:10px 12px;background:#F0FDF4;border-radius:8px;margin-bottom:8px;">
+        <span style="font-size:16px;">1.</span>
+        <strong style="color:#1B2D5B;margin-left:6px;">Set your grade level</strong>
+        <span style="display:block;font-size:13px;color:#6B7280;margin-left:22px;">Activities, vocabulary, and Do Now problems auto-adjust.</span>
+      </td></tr>
+      <tr><td style="height:6px;"></td></tr>
+      <tr><td style="padding:10px 12px;background:#F0FDF4;border-radius:8px;">
+        <span style="font-size:16px;">2.</span>
+        <strong style="color:#1B2D5B;margin-left:6px;">Hit "Project Today"</strong>
+        <span style="display:block;font-size:13px;color:#6B7280;margin-left:22px;">Opens a full-screen view for your smartboard or projector.</span>
+      </td></tr>
+      <tr><td style="height:6px;"></td></tr>
+      <tr><td style="padding:10px 12px;background:#F0FDF4;border-radius:8px;">
+        <span style="font-size:16px;">3.</span>
+        <strong style="color:#1B2D5B;margin-left:6px;">Check the Library</strong>
+        <span style="display:block;font-size:13px;color:#6B7280;margin-left:22px;">Browse Do Nows, Word of the Day, On This Day history, and 60+ activities.</span>
+      </td></tr>
+    </table>
+    <a href="${APP_URL}/dashboard" style="display:inline-block;background:#F5A623;color:#1B2D5B;font-size:15px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;">Open Today's Meeting →</a>
+    <p style="margin:24px 0 0;font-size:13px;color:#9CA3AF;">
+      Questions? Reply to this email or reach us at <a href="mailto:hello@oftheday.net" style="color:#4DB896;">hello@oftheday.net</a>.
+    </p>
+  `);
+}
+
+const RESOURCE_PACK_ACTIVITIES = [
+  { cat: 'Greeting', title: 'Name + Gesture Greeting', desc: 'Each student says their name and invents a unique gesture. The class mirrors it back.' },
+  { cat: 'Greeting', title: 'Partner Greeting Remix', desc: 'Greet a partner by name, then add one kind sentence or question before switching.' },
+  { cat: 'Sharing', title: 'Weekend Highlight Share', desc: 'Share one moment from the weekend using the sentence starter: "One thing I did was…"' },
+  { cat: 'Sharing', title: 'Two Truths and a Wish', desc: 'Share two true things about yourself and one thing you wish were true. Class guesses the wish.' },
+  { cat: 'Group Activity', title: 'Commonality Circle', desc: 'Find one thing all students in a small group have in common. Groups share with the class.' },
+  { cat: 'Group Activity', title: 'Collaborative Counting', desc: 'The class counts to 20 together — but no two people can speak at the same time. Start over on overlap.' },
+  { cat: 'Morning Message', title: 'Riddle of the Day', desc: 'Display a grade-appropriate riddle. Students think quietly, then share guesses.' },
+  { cat: 'Morning Message', title: 'Connection Question', desc: 'Post a question on the board. Students write a one-sentence answer before the meeting begins.' },
+  { cat: 'SEL Prompt', title: 'Emoji Check-In', desc: 'Each student chooses an emoji that matches their energy this morning and briefly explains why.' },
+  { cat: 'Brain Teaser', title: 'What Comes Next?', desc: 'Show a visual or number pattern. Students identify the rule and predict what comes next.' },
+];
+
+function resourcePackHtml(email) {
+  const rows = RESOURCE_PACK_ACTIVITIES.map(a => `
+    <tr>
+      <td style="padding:10px 0;border-bottom:1px solid #F3F4F6;">
+        <span style="font-size:11px;font-weight:700;color:#4DB896;text-transform:uppercase;letter-spacing:0.06em;">${a.cat}</span>
+        <strong style="display:block;font-size:14px;color:#1B2D5B;margin:2px 0;">${a.title}</strong>
+        <span style="font-size:13px;color:#6B7280;line-height:1.5;">${a.desc}</span>
+      </td>
+    </tr>`).join('');
+
+  return emailBase(`
+    <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1B2D5B;">Your Morning Meeting Resource Pack 🎉</h1>
+    <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
+      Here are 10 ready-to-use activities — copy them straight into your morning meeting or
+      <a href="${APP_URL}/login?signup=1" style="color:#4DB896;font-weight:600;">create a free account</a>
+      to get a new complete routine every day.
+    </p>
+    <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
+      ${rows}
+    </table>
+    <a href="${APP_URL}/login?signup=1" style="display:inline-block;background:#F5A623;color:#1B2D5B;font-size:15px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;">Get Your Daily Routine Free →</a>
+    <p style="margin:24px 0 0;font-size:13px;color:#9CA3AF;">
+      You're receiving this because you signed up at oftheday.net with ${email}.
+      <a href="mailto:hello@oftheday.net?subject=Unsubscribe" style="color:#9CA3AF;">Unsubscribe</a>
+    </p>
+  `);
+}
+
 const MONTHS = [
   "january", "february", "march", "april", "may", "june",
   "july", "august", "september", "october", "november", "december"
@@ -203,6 +320,44 @@ exports.onUserCreate = functionsV1.auth.user().onCreate(async (user) => {
     }, { merge: true });
   } catch (err) {
     console.error('Failed to create user document on sign-up:', err);
+  }
+
+  if (!user.email) return;
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: user.email,
+      subject: 'Your morning meeting is ready 🌅',
+      html: welcomeEmailHtml(user.displayName || ''),
+    });
+  } catch (err) {
+    console.error('Failed to send welcome email:', err);
+  }
+});
+
+exports.sendLeadMagnet = onCall(async (request) => {
+  const email = (request.data?.email || '').trim().toLowerCase();
+  if (!email || !email.includes('@')) throw new Error('Valid email required');
+
+  const resend = getResend();
+  if (!resend) {
+    console.warn('RESEND_API_KEY not set — skipping lead magnet email');
+    return { sent: false };
+  }
+
+  try {
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: email,
+      subject: 'Your Morning Meeting Resource Pack is here 🎉',
+      html: resourcePackHtml(email),
+    });
+    return { sent: true };
+  } catch (err) {
+    console.error('Failed to send lead magnet email:', err);
+    return { sent: false };
   }
 });
 

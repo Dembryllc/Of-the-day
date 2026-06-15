@@ -1,6 +1,7 @@
 import { useState, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { db } from './lib/firebase';
 import './landing.css';
 
@@ -62,14 +63,21 @@ export default function LandingPage() {
 
   const handleCapture = async (e) => {
     e.preventDefault();
+    const email = captureEmail.trim().toLowerCase();
     try {
       await addDoc(collection(db, 'waitlist'), {
-        email: captureEmail.trim().toLowerCase(),
+        email,
         source: 'landing-page',
         submittedAt: serverTimestamp(),
       });
     } catch {
-      // Save failed silently — still show success so the user isn't confused
+      // Firestore save failed silently
+    }
+    try {
+      const sendLeadMagnet = httpsCallable(getFunctions(), 'sendLeadMagnet');
+      await sendLeadMagnet({ email });
+    } catch {
+      // Email send failed silently — submission still confirmed to user
     }
     setCaptureSubmitted(true);
   };
@@ -585,7 +593,7 @@ export default function LandingPage() {
           <h2>Get a Free Morning Meeting Resource Pack</h2>
           <p>10 ready-to-use activities — greetings, sharing prompts, group activities, and morning messages — sent straight to your inbox.</p>
           {captureSubmitted ? (
-            <div className="capture-success">🎉 On its way! Check your inbox in a few minutes.</div>
+            <div className="capture-success">🎉 Sent! Check your inbox — it should arrive in under a minute.</div>
           ) : (
             <form className="capture-form" onSubmit={handleCapture}>
               <input
