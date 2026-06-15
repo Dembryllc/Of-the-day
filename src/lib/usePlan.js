@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 const TRIAL_MS = 14 * 24 * 60 * 60 * 1000;
 
 function toMs(ts) {
+  if (typeof ts === 'number') return ts;
   return ts?.toMillis?.() ?? (ts?.seconds != null ? ts.seconds * 1000 : null);
 }
 

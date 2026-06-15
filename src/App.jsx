@@ -21,9 +21,9 @@ import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot
 import { usePlan, FREE_LIMITS } from './lib/usePlan';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
-const tsToMs = ts => ts?.toMillis?.() ?? (ts?.seconds != null ? ts.seconds * 1000 : null);
+const tsToMs = ts => { if (typeof ts === 'number') return ts; return ts?.toMillis?.() ?? (ts?.seconds != null ? ts.seconds * 1000 : null); };
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "984386798513-aprar4ehdq87dd4jtguigupaiva0pnr5.apps.googleusercontent.com";
-const LOGO_SRC = "/assets/oftheday-logo.png?v=20260608";
+const LOGO_SRC = "/assets/ofthedaylogi.png";
 
 /* ── data ── */
 const CAT_META = {
@@ -2547,7 +2547,7 @@ function UpgradeModal({ feature, onClose }) {
             <li>All grade bands &amp; category filters</li>
             <li>Custom vocabulary &amp; Do Now</li>
           </ul>
-          <div className="upgrade-price">$9 / month &nbsp;·&nbsp; $99 / year</div>
+          <div className="upgrade-price">$9 / month &nbsp;·&nbsp; $79 / year</div>
         </div>
         <div className="sheet-footer">
           <button className="btn-primary" type="button" onClick={() => { onClose(); window.location.href = '/upgrade'; }}>Upgrade to Pro</button>
@@ -2563,7 +2563,7 @@ function UpgradeModal({ feature, onClose }) {
 ════════════════════════════════ */
 function MainApp({ account, onSignOut }) {
   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-    "grade": account?.grade || "9–12",
+    "grade": account?.grade || "3–5",
     "time": "15 min",
     "energy": "Medium",
     "teacherName": "Mike"
