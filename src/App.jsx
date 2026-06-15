@@ -1006,15 +1006,16 @@ function Chip({ label, active, onClick }) {
 
 function GradePicker({ value, onChange }) {
   return (
-    <label className="grade-picker">
-      <span>Grade</span>
-      <select value={value} onChange={e => onChange(e.target.value)} aria-label="Grade level">
-        <option value="K–2">K–2</option>
-        <option value="3–5">3–5</option>
-        <option value="6–8">6–8</option>
-        <option value="9–12">9–12</option>
-      </select>
-    </label>
+    <div className="grade-chips-topbar" role="group" aria-label="Grade level">
+      {["K–2","3–5","6–8","9–12"].map(g => (
+        <button
+          key={g} type="button"
+          className={`grade-chip-topbar${value === g ? ' active' : ''}`}
+          onClick={() => onChange(g)}
+          aria-pressed={value === g}
+        >{g}</button>
+      ))}
+    </div>
   );
 }
 

@@ -832,29 +832,17 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
 
 
 
-/* ── grade picker and first-run tutorial ── */
-.grade-picker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+/* ── topbar grade chips ── */
+.grade-chips-topbar { display: flex; gap: 4px; }
+.grade-chip-topbar {
+  padding: 5px 9px;
+  border: 1.5px solid #D9D4CC; border-radius: 999px;
   background: var(--white);
-  border: 1.5px solid #D9D4CC;
-  border-radius: 999px;
-  padding: 6px 10px 6px 12px;
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
+  font: 700 12px/1 'Outfit', sans-serif;
+  color: var(--ink2); cursor: pointer; transition: all 0.14s; white-space: nowrap;
 }
-.grade-picker span { color: var(--muted); font-weight: 700; }
-.grade-picker select {
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  font: 800 13px/1.2 'Outfit', sans-serif;
-  outline: none;
-  cursor: pointer;
-}
+.grade-chip-topbar:hover { border-color: var(--teal); color: var(--teal); }
+.grade-chip-topbar.active { border-color: var(--teal); background: var(--teal); color: #fff; }
 .topbar-right.grade-control-wrap { display: flex; align-items: center; gap: 8px; }
 .auth-field select {
   border: 1.5px solid #D9D4CC;
@@ -864,11 +852,7 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
   background: var(--white);
   color: var(--ink);
 }
-.auth-field select:focus,
-.grade-picker:focus-within {
-  outline: 3px solid rgba(45,122,106,0.18);
-  border-color: var(--teal);
-}
+.auth-field select:focus { outline: 3px solid rgba(45,122,106,0.18); border-color: var(--teal); }
 .auth-note {
   background: #F6FAF8;
   border: 1px solid #DDEFE8;
@@ -882,7 +866,6 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
 @media (max-width: 900px) {
   .topbar-right.grade-control-wrap { display: flex; }
   .topbar { align-items: flex-start; }
-  .grade-picker { padding-block: 7px; }
 }
 
 button:focus-visible,
