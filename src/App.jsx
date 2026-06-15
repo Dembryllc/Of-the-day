@@ -2010,6 +2010,7 @@ function MainApp({ account, onSignOut }) {
       return s.count;
     } catch { return 1; }
   });
+  const STREAK_MILESTONES = { 3: "3 days in a row! A habit is forming. 🔥", 7: "One full week of great mornings! 🏆", 14: "14-day streak — two weeks strong. 💪", 30: "30 days! A full month of classroom magic. 🎉" };
   useEffect(() => {
     if (!showProBanner) return;
     window.history.replaceState({}, '', window.location.pathname);
@@ -2064,6 +2065,16 @@ function MainApp({ account, onSignOut }) {
   const [builderDraft, setBuilderDraft] = useState({ name: "My Classroom Routine", items: [] });
   const [replacementTarget, setReplacementTarget] = useState(null);
   const { toasts, show: showToast } = useToast();
+  useEffect(() => {
+    const msg = STREAK_MILESTONES[streakCount];
+    if (!msg) return;
+    try {
+      const seen = JSON.parse(localStorage.getItem('ofd:streakMilestones') || '[]');
+      if (seen.includes(streakCount)) return;
+      localStorage.setItem('ofd:streakMilestones', JSON.stringify([...seen, streakCount]));
+    } catch {}
+    showToast(`🔥 ${msg}`);
+  }, [streakCount, showToast]);
   const [cloudBusy, setCloudBusy] = useState(false);
   const [cloudStatus, setCloudStatus] = useState("");
   const [cloudAutoSave, setCloudAutoSave] = useState(() => localStorage.getItem("ofd:cloudAutoSave") === "true");
@@ -2690,6 +2701,18 @@ function MainApp({ account, onSignOut }) {
     showToast("Saved to Today");
   }, [routine, filters, allActivities, showToast]);
 
+  const sidebarGreeting = useMemo(() => {
+    const name = displayName || tweaks.teacherName || '';
+    const namePart = name ? `, ${name}` : '';
+    if (streakCount >= 30) return `🎉 Day ${streakCount} in a row${namePart}!`;
+    if (streakCount >= 14) return `💪 Day ${streakCount} in a row${namePart}!`;
+    if (streakCount >= 7) return `🏆 Day ${streakCount} in a row${namePart}!`;
+    if (streakCount >= 3) return `🔥 Day ${streakCount} in a row${namePart}`;
+    const h = new Date().getHours();
+    if (h >= 5 && h < 12) return `Good morning${namePart}`;
+    if (h >= 12 && h < 17) return `Good afternoon${namePart}`;
+    return `Good evening${namePart}`;
+  }, [displayName, tweaks.teacherName, streakCount]);
 
   return (
     <div className="app" style={{ "--home-accent": projectorStyle.homeAccent, "--home-soft": projectorStyle.homeSoft }}>
@@ -2730,7 +2753,7 @@ function MainApp({ account, onSignOut }) {
             ? <span className="sidebar-logo-mark">☀️</span>
             : <img className="sidebar-logo-img" src={LOGO_SRC} alt="Of The Day logo"/>
           }
-          {!sidebarCollapsed && <div className="logo-sub">Good morning, {displayName || tweaks.teacherName}</div>}
+          {!sidebarCollapsed && <div className="logo-sub">{sidebarGreeting}</div>}
         </div>
         <button
           type="button"
@@ -2815,7 +2838,7 @@ function MainApp({ account, onSignOut }) {
           <div className="topbar">
             <div className="topbar-left">
               <div className="topbar-title">Today’s Meeting</div>
-              <div className="topbar-date">{todayLabel} · {currentGrade} · Greeting, Sharing, Activity, Message · ~{totalMin} min</div>
+              <div className="topbar-date">{todayLabel} · {currentGrade} · Greeting, Sharing, Activity, Message · ~{totalMin} min{streakCount >= 2 && <span className="topbar-streak-pill">🔥 {streakCount}-day streak</span>}</div>
             </div>
             <div className="topbar-right grade-control-wrap">
               <GradePicker value={currentGrade} onChange={handleGradeChange}/>
