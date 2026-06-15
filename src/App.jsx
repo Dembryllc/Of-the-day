@@ -713,6 +713,26 @@ function readSavedRoutines() {
   }
 }
 
+function readUsedToday() {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const raw = localStorage.getItem('ofd:usedToday');
+    const obj = raw ? JSON.parse(raw) : {};
+    return new Set(obj.date === today ? (obj.ids || []) : []);
+  } catch { return new Set(); }
+}
+
+function recordUsedToday(ids) {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const raw = localStorage.getItem('ofd:usedToday');
+    const obj = raw ? JSON.parse(raw) : {};
+    const existing = new Set(obj.date === today ? (obj.ids || []) : []);
+    ids.forEach(id => existing.add(id));
+    localStorage.setItem('ofd:usedToday', JSON.stringify({ date: today, ids: [...existing] }));
+  } catch {}
+}
+
 function readCustomVocab() {
   try {
     return JSON.parse(localStorage.getItem("ofd:customVocab") || "{}") || {};
@@ -1020,16 +1040,17 @@ function GradePicker({ value, onChange }) {
 }
 
 /* ── Activity Card ── */
-function ActivityCard({ activity, selected, onSelect, onSwap, onFave, favorites, index, useNow = false }) {
+function ActivityCard({ activity, selected, onSelect, onSwap, onFave, favorites, usedToday, index, useNow = false }) {
   const cm = CAT_META[activity.cat] || { color: "#CCC" };
   const isFave = favorites?.has(activity.id) ?? false;
+  const usedNow = usedToday?.has(activity.id) ?? false;
   return (
     <div className={`card component-card${selected ? ' selected' : ''}${useNow ? ' use-now' : ''}`} role="button" tabIndex="0"
       onClick={() => onSelect(activity)}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(activity); } }}>
       {typeof index === "number" ? <div className="morning-card-index" style={{ background: cm.dark || cm.color }}>{index + 1}</div> : <div className="card-stripe" style={{ background: cm.color }}/>}
       <div className="card-inner">
-        <div className="card-cat">{activity.cat}</div>
+        <div className="card-cat">{activity.cat}{usedNow && !useNow && <span className="card-used-badge">✓ Today</span>}</div>
         <div className="card-title">{activity.title}</div>
         <div className="card-meta">{activity.meta}</div>
         <div className="card-actions">
@@ -1338,6 +1359,14 @@ function ProfileSheet({ account, displayName, trialDaysLeft, effectivePlan, onCl
   const [name, setName] = useState(displayName || account?.name || '');
   const [grade, setGrade] = useState(account?.grade || '3–5');
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    const msg = 'I use OfTheDay.net for my morning meetings — a complete, grade-appropriate routine in seconds. Try it free: https://oftheday.net';
+    try { navigator.clipboard.writeText(msg); } catch {}
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
+  };
 
   const initials = (name || account?.name || account?.email || '?')[0].toUpperCase();
 
@@ -1395,6 +1424,9 @@ function ProfileSheet({ account, displayName, trialDaysLeft, effectivePlan, onCl
         <div className="sheet-footer" style={{flexDirection:'column', gap: 10}}>
           <button className="btn-primary" type="button" style={{width:'100%'}} disabled={saving} onClick={handleSave}>
             {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+          <button className="btn-secondary" type="button" style={{width:'100%'}} onClick={handleShare}>
+            {copied ? '✓ Link copied — share it!' : '↗ Share OfTheDay with a Colleague'}
           </button>
           <button className="btn-danger" type="button" style={{width:'100%'}} onClick={() => { onClose(); onSignOut(); }}>
             Sign Out
@@ -1892,7 +1924,7 @@ function DisplayMode({ routine, startIndex=0, onExit, projectorStyle=DEFAULT_PRO
   );
 }
 /* ── Browse Screen ── */
-function BrowseScreen({ activities, grade, favorites, builderCount, replacementTarget, onCancelReplacement, onFave, onCreate, onAdd, onBuild, onDisplay, onReviewRoutine, onOpenTool, userTier = 'pro', onUpgradeNeeded }) {
+function BrowseScreen({ activities, grade, favorites, usedToday, builderCount, replacementTarget, onCancelReplacement, onFave, onCreate, onAdd, onBuild, onDisplay, onReviewRoutine, onOpenTool, userTier = 'pro', onUpgradeNeeded }) {
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {
     if (!q.trim()) return activities;
@@ -1981,7 +2013,7 @@ function BrowseScreen({ activities, grade, favorites, builderCount, replacementT
                   return (
                     <div key={a.id} className={`browse-card${locked ? ' browse-card--locked' : ''}`} style={{ borderTop: `3px solid ${cm.color}` }}>
                       <div style={{display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:8}}>
-                        <div className="browse-card-title">{a.title}</div>
+                        <div className="browse-card-title">{a.title}{usedToday?.has(a.id) && <span className="browse-card-used-badge">✓ Today</span>}</div>
                         {locked
                           ? <span className="browse-card-pro-badge">Pro</span>
                           : <button
@@ -2575,6 +2607,7 @@ function MainApp({ account, onSignOut }) {
   });
   const [customOpen, setCustomOpen] = useState(false);
   const [favorites, setFavorites] = useState(() => readStoredFavorites());
+  const [usedToday, setUsedToday] = useState(() => readUsedToday());
   const [projectorStyle, setProjectorStyle] = useState(() => readProjectorStyle(account));
   const todayLabel = useMemo(() => formatToday(), []);
   const currentGrade = filters.grade || account?.grade || tweaks.grade;
@@ -2603,6 +2636,19 @@ function MainApp({ account, onSignOut }) {
     setTrialBannerDismissed(true);
   }
   const [showProBanner, setShowProBanner] = useState(() => new URLSearchParams(window.location.search).get('upgraded') === 'true');
+
+  const [streakCount] = useState(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    try {
+      const raw = localStorage.getItem('ofd:streak');
+      let s = raw ? JSON.parse(raw) : { count: 0, lastDate: null };
+      if (s.lastDate === today) return s.count;
+      const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      s = s.lastDate === yest ? { count: s.count + 1, lastDate: today } : { count: 1, lastDate: today };
+      localStorage.setItem('ofd:streak', JSON.stringify(s));
+      return s.count;
+    } catch { return 1; }
+  });
   useEffect(() => {
     if (!showProBanner) return;
     window.history.replaceState({}, '', window.location.pathname);
@@ -2800,6 +2846,13 @@ function MainApp({ account, onSignOut }) {
     const timer = setTimeout(() => saveToCloud({ quiet: true }), 1800);
     return () => clearTimeout(timer);
   }, [cloudAutoSave, buildDataSnapshot, saveToCloud]);
+
+  useEffect(() => {
+    if (!routine.length) return;
+    const ids = routine.map(a => a.id);
+    recordUsedToday(ids);
+    setUsedToday(readUsedToday());
+  }, [routine]);
 
   const restoreFromCloud = useCallback(async () => {
     if (!confirm("Restore cloud data to this device? This will replace the local custom data currently in this browser.")) return;
@@ -3346,6 +3399,18 @@ function MainApp({ account, onSignOut }) {
             </React.Fragment>
           ))}
         </nav>
+        {!sidebarCollapsed && streakCount >= 2 && (
+          <div className="sidebar-streak">
+            <span className="sidebar-streak-flame">🔥</span>
+            <span className="sidebar-streak-label">{streakCount}-day streak</span>
+            {streakCount === 7 && <span className="sidebar-streak-badge">One week!</span>}
+            {streakCount === 14 && <span className="sidebar-streak-badge">Two weeks!</span>}
+            {streakCount === 30 && <span className="sidebar-streak-badge">One month!</span>}
+          </div>
+        )}
+        {sidebarCollapsed && streakCount >= 2 && (
+          <div className="sidebar-streak sidebar-streak--collapsed" title={`${streakCount}-day streak`}>🔥</div>
+        )}
         <div className="sidebar-actions">
           {!sidebarCollapsed && account?.tier !== 'pro' && (
             trialDaysLeft !== null ? (
@@ -3582,6 +3647,7 @@ function MainApp({ account, onSignOut }) {
               activities={libraryActivities}
               grade={currentGrade}
               favorites={favorites}
+              usedToday={usedToday}
               builderCount={(builderDraft.items || []).length}
               replacementTarget={replacementTarget}
               onCancelReplacement={cancelReplacement}

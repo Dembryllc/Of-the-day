@@ -173,6 +173,11 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
 }
 .sidebar-footer:hover { color: rgba(255,255,255,0.55); }
 .sidebar-actions { border-top: 1px solid rgba(255,255,255,0.07); }
+.sidebar-streak { display: flex; align-items: center; gap: 7px; padding: 8px 16px 2px; }
+.sidebar-streak-flame { font-size: 15px; line-height: 1; }
+.sidebar-streak-label { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.72); letter-spacing: 0.01em; }
+.sidebar-streak-badge { font-size: 10px; font-weight: 700; background: #F5A623; color: #1a1a1a; border-radius: 999px; padding: 1px 7px; margin-left: 2px; }
+.sidebar-streak--collapsed { justify-content: center; padding: 6px 0 2px; font-size: 16px; }
 .sidebar-upgrade-btn { display: flex; align-items: center; gap: 8px; margin: 10px 12px 4px; padding: 10px 14px; background: linear-gradient(135deg, #f5c842, #f0a500); color: #1a1a1a; font: 700 13px/1 'Outfit', sans-serif; border-radius: 10px; text-decoration: none; transition: opacity 0.14s; }
 .sidebar-upgrade-btn:hover { opacity: 0.88; }
 .sidebar-trial-card { margin: 10px 12px 4px; padding: 11px 12px; background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.3); border-radius: 10px; }
@@ -690,6 +695,8 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
 .browse-card--locked { opacity: 0.72; }
 .browse-card--locked:hover { transform: none; box-shadow: var(--shadow-card); border-color: var(--border); }
 .browse-card-pro-badge { font-size: 10px; font-weight: 700; color: #b87a0a; background: #FEF3E2; border: 1px solid #F5A623; border-radius: 4px; padding: 2px 6px; flex-shrink: 0; letter-spacing: 0.04em; align-self: flex-start; }
+.browse-card-used-badge { font-size: 10px; font-weight: 700; color: var(--teal); background: rgba(45,122,106,0.08); border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: middle; letter-spacing: 0.02em; }
+.card-used-badge { font-size: 10px; font-weight: 700; color: var(--teal); background: rgba(45,122,106,0.08); border-radius: 4px; padding: 1px 5px; margin-left: 6px; letter-spacing: 0.02em; }
 .browse-card-title { font-size: 15px; font-weight: 700; color: var(--ink); line-height: 1.2; }
 .browse-card-meta { font-size: 12.5px; color: var(--muted); font-weight: 500; }
 .browse-card-heart { font-size: 14px; color: #D4CFCA; cursor: pointer; margin-left: auto; transition: color 0.14s; }
