@@ -1942,7 +1942,7 @@ function BrowseScreen({ activities, grade, favorites, builderCount, replacementT
         )}
         {!replacementTarget && <div className="library-pill-wrap">
           <div className="library-pill-row" aria-label="Library shortcuts">
-            <button type="button" className="library-pill-btn primary" onClick={() => onOpenTool("Build")}>Build a Routine</button>
+            <button type="button" className="library-pill-btn primary" onClick={() => onOpenTool("Routines")}>Build a Routine</button>
             <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Word of the Day")}>Word of the Day</button>
             <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Do Now")}>Do Now</button>
             <button type="button" className="library-pill-btn" onClick={() => onOpenTool("On This Day")}>On This Day</button>
@@ -2846,7 +2846,7 @@ function MainApp({ account, onSignOut }) {
   }, [showToast]);
   const addActivityToRoutine = useCallback(activity => {
     startBuilderWithActivity(activity);
-    setActiveNav("Build");
+    setActiveNav("Routines");
   }, [startBuilderWithActivity]);
   const handleGradeChange = useCallback(grade => {
     const nextFilters = { ...filters, grade };
@@ -2995,7 +2995,7 @@ function MainApp({ account, onSignOut }) {
     setRoutine(r => r.some(a => a.id === activity.id) ? r.map(a => a.id === activity.id ? activity : a) : [...r, activity]);
     setSelected(activity);
     setEditingActivity(null);
-    setActiveNav(activeNav === "Build" ? "Build" : "Today");
+    setActiveNav(activeNav === "Routines" ? "Routines" : "Today");
     showToast(editingActivity ? "Saved: Activity updated" : "Saved: Activity created");
   }, [activeNav, customActivities, editingActivity, isPlanFree, showToast]);
 
@@ -3111,8 +3111,8 @@ function MainApp({ account, onSignOut }) {
       savedAt: saved.savedAt,
       items: (saved.items || []).map(item => ({ ...item, builderKey: "block-" + Date.now() + "-" + Math.random().toString(16).slice(2) }))
     });
-    setActiveNav("Build");
-    showToast("Routine opened in Build");
+    setActiveNav("Routines");
+    showToast("Routine opened for editing");
   }, [showToast]);
 
   const projectSavedRoutine = useCallback(saved => {
@@ -3253,12 +3253,12 @@ function MainApp({ account, onSignOut }) {
   const navItems = [
     { icon:"☀️", label:"Today" },
     { icon:"⊞",  label:"Library" },
-    { icon:"▦",  label:"Build" },
+    { icon:"▦",  label:"Routines" },
   ];
   const mobileNavItems = navItems.concat({ icon:"⚙", label:"Settings", modal:true });
   const libraryViews = ["Library", "Word of the Day", "Do Now", "On This Day", "My Activities", "Favorites"];
-  const buildViews = ["Build", "My Routines", "My Activities", "Routines"];
-  const navActive = label => label === activeNav || (label === "Library" && libraryViews.includes(activeNav)) || (label === "Build" && buildViews.includes(activeNav));
+  const buildViews = ["Routines", "My Routines", "My Activities"];
+  const navActive = label => label === activeNav || (label === "Library" && libraryViews.includes(activeNav)) || (label === "Routines" && buildViews.includes(activeNav));
 
   const totalMin = Math.round(routine.reduce((s,a) => s + a.time, 0) / 60);
   const addActivity = useCallback(() => {
@@ -3336,7 +3336,7 @@ function MainApp({ account, onSignOut }) {
                 <span className="nav-icon">{n.icon}</span>
                 {!sidebarCollapsed && <span>{n.label}</span>}
               </button>
-              {n.label === "Build" && (
+              {n.label === "Routines" && (
                 <button type="button" className="nav-item nav-item-sub" onClick={() => setSettingsOpen(true)} title={sidebarCollapsed ? 'Settings' : undefined}>
                   <span className="nav-icon">⚙</span>
                   {!sidebarCollapsed && <span>Settings</span>}
@@ -3415,10 +3415,10 @@ function MainApp({ account, onSignOut }) {
             <div className="topbar-right grade-control-wrap"><GradePicker value={currentGrade} onChange={handleGradeChange}/></div>
           </div>
         )}
-        {activeNav === "Build" && (
+        {activeNav === "Routines" && (
           <div className="topbar">
             <div className="topbar-left">
-              <div className="topbar-title">Build</div>
+              <div className="topbar-title">Routines</div>
               <div className="topbar-date">Create activities · edit your items · build routines · {savedRoutines.length} saved</div>
             </div>
             <div className="topbar-right grade-control-wrap"><GradePicker value={currentGrade} onChange={handleGradeChange}/></div>
@@ -3589,7 +3589,7 @@ function MainApp({ account, onSignOut }) {
               onAdd={addToToday}
               onBuild={startBuilderWithActivity}
               onDisplay={displaySingle}
-              onReviewRoutine={() => setActiveNav("Build")}
+              onReviewRoutine={() => setActiveNav("Routines")}
               onOpenTool={setActiveNav}
               userTier={userTier}
               onUpgradeNeeded={() => setUpgradeModalFor("Upgrade to Pro to unlock all activities.")}
@@ -3608,8 +3608,8 @@ function MainApp({ account, onSignOut }) {
             />
           )}
 
-          {/* BUILD */}
-          {activeNav === "Build" && (
+          {/* ROUTINES */}
+          {activeNav === "Routines" && (
             <BuildScreen
               customActivities={customActivities}
               onCreateActivity={() => { setEditingActivity(null); setCustomOpen(true); }}
