@@ -9,7 +9,7 @@ Morning meeting planner for K–12 teachers using Responsive Classroom. Teachers
 - **Hosting**: Firebase Hosting (serves `dist/`)
 - **Functions**: Firebase Cloud Functions mixed gen (`functions/index.js`) — `onthisday` + `createCheckoutSession` + `stripeWebhook` + `sendLeadMagnet` are Gen 2; `onUserCreate` is Gen 1
 - **Payments**: Stripe (test mode) — checkout sessions, webhooks, subscription lifecycle
-- **Email**: Resend (`functions/index.js`) — welcome email on signup, resource pack lead magnet delivery
+- **Email**: Mailgun (`functions/index.js`) — welcome email on signup, resource pack lead magnet delivery
 - **Build output**: `dist/` (gitignored)
 
 ## Architecture
@@ -96,11 +96,12 @@ Required in `functions/.env` (gitignored — never commit). See `functions/.env.
 ```
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-RESEND_API_KEY=re_...
+MAILGUN_API_KEY=key-...
+MAILGUN_DOMAIN=mg.oftheday.net
 ```
 
 **Security rules — never break these:**
-- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `RESEND_API_KEY` are server-side only (Firebase Functions)
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `MAILGUN_API_KEY`, and `MAILGUN_DOMAIN` are server-side only (Firebase Functions)
 - `VITE_*` vars are safe for the frontend bundle
 - `scripts/service-account.json` is gitignored — never commit it
 - `functions/.env` is gitignored — never commit it
@@ -192,12 +193,13 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
 - Events to register: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
 - Success URL: `https://oftheday.net/dashboard?upgraded=true` → shows "Welcome to Pro!" banner
 
-## Email delivery (Resend)
-- Provider: Resend (`resend` npm package in `functions/`)
-- `RESEND_API_KEY` in `functions/.env` — server-side only, never in frontend
-- From address: `OfTheDay <hello@oftheday.net>` — requires domain verified in Resend Console → Domains
-  - Until verified, use `from: 'OfTheDay <onboarding@resend.dev>'` for testing
-- `getResend()` helper in functions/index.js returns null if key not set — all sends fail silently
+## Email delivery (Mailgun)
+- Provider: Mailgun (`mailgun.js` + `form-data` npm packages in `functions/`)
+- `MAILGUN_API_KEY` and `MAILGUN_DOMAIN` in `functions/.env` — server-side only, never in frontend
+- `MAILGUN_DOMAIN`: your verified sending domain (e.g. `mg.oftheday.net`)
+- From address: `OfTheDay <hello@oftheday.net>` (configured as `EMAIL_FROM` in functions/index.js)
+- `getMailgun()` helper returns null if either key is missing — all sends fail silently
+- `sendEmail({ to, subject, html })` wraps the Mailgun client call
 - Email helper: `emailBase(bodyContent)` wraps any HTML in the brand template (navy header, white body, gray footer)
 
 ### Welcome email
@@ -536,7 +538,7 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 1. **Firebase Console** — Enable Email/Password + Google sign-in methods; add `oftheday.net` to Authorized Domains; set Support Email on Google provider
 2. **DNS** — Connect `oftheday.net` custom domain in Firebase Console → Hosting; update Netlify DNS A records to Firebase IPs
 3. **Stripe go-live** — Switch to live keys in `functions/.env`, register webhook in Stripe Dashboard, set `STRIPE_WEBHOOK_SECRET`
-4. **Resend setup** — Sign up at resend.com, verify `oftheday.net` domain, add `RESEND_API_KEY` to `functions/.env`, deploy functions. Until then update `EMAIL_FROM` in `functions/index.js` to use `onboarding@resend.dev` for testing.
+4. **Mailgun setup** — Add a sending domain in Mailgun Console (e.g. `mg.oftheday.net`), verify DNS records, add `MAILGUN_API_KEY` and `MAILGUN_DOMAIN` to `functions/.env`, deploy functions.
 5. **Demo mode** — Let unauthenticated teachers browse sample activities before signup; biggest conversion lever
 6. **Activity pool expansion** — Thin in some categories; repetition possible within weeks of daily use
 7. **Weekly activity history view** — Show teachers what they've used this week so they can plan variety

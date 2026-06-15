@@ -4,17 +4,31 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 // ── Email helpers ─────────────────────────────────────────────────────────────
-// Requires RESEND_API_KEY in functions/.env
-// From address requires a verified domain in Resend Console → Domains.
-// Until your domain is verified, use: from: 'OfTheDay <onboarding@resend.dev>'
+// Requires MAILGUN_API_KEY and MAILGUN_DOMAIN in functions/.env
+// MAILGUN_DOMAIN: your verified sending domain, e.g. mg.oftheday.net or oftheday.net
 const EMAIL_FROM = 'OfTheDay <hello@oftheday.net>';
 const APP_URL = 'https://oftheday.net';
 
-function getResend() {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  const { Resend } = require('resend');
-  return new Resend(key);
+function getMailgun() {
+  const key = process.env.MAILGUN_API_KEY;
+  const domain = process.env.MAILGUN_DOMAIN;
+  if (!key || !domain) return null;
+  const Mailgun = require('mailgun.js');
+  const FormData = require('form-data');
+  const mg = new Mailgun(FormData);
+  return { client: mg.client({ username: 'api', key }), domain };
+}
+
+async function sendEmail({ to, subject, html }) {
+  const mg = getMailgun();
+  if (!mg) return false;
+  await mg.client.messages.create(mg.domain, {
+    from: EMAIL_FROM,
+    to: [to],
+    subject,
+    html,
+  });
+  return true;
 }
 
 function emailBase(bodyContent) {
@@ -323,11 +337,8 @@ exports.onUserCreate = functionsV1.auth.user().onCreate(async (user) => {
   }
 
   if (!user.email) return;
-  const resend = getResend();
-  if (!resend) return;
   try {
-    await resend.emails.send({
-      from: EMAIL_FROM,
+    await sendEmail({
       to: user.email,
       subject: 'Your morning meeting is ready 🌅',
       html: welcomeEmailHtml(user.displayName || ''),
@@ -341,15 +352,13 @@ exports.sendLeadMagnet = onCall(async (request) => {
   const email = (request.data?.email || '').trim().toLowerCase();
   if (!email || !email.includes('@')) throw new Error('Valid email required');
 
-  const resend = getResend();
-  if (!resend) {
-    console.warn('RESEND_API_KEY not set — skipping lead magnet email');
+  if (!process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
+    console.warn('MAILGUN_API_KEY or MAILGUN_DOMAIN not set — skipping lead magnet email');
     return { sent: false };
   }
 
   try {
-    await resend.emails.send({
-      from: EMAIL_FROM,
+    await sendEmail({
       to: email,
       subject: 'Your Morning Meeting Resource Pack is here 🎉',
       html: resourcePackHtml(email),
