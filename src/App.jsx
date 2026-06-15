@@ -2053,6 +2053,11 @@ function MainApp({ account, onSignOut }) {
   const [selectedDoNowProblem, setSelectedDoNowProblem] = useState(null);
   const doNowProblem = selectedDoNowProblem || pickDailyDoNow(doNowSubject, currentGrade, doNowOffset, customDoNow);
   const [displayMode, setDisplayMode] = useState(null);
+  const [projectedToday, setProjectedToday] = useState(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    try { return localStorage.getItem('ofd:projectedToday') === today; } catch { return false; }
+  });
+  const isFriday = new Date().getDay() === 5;
   const [historyItems, setHistoryItems] = useState(() => getFallbackHistory());
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -2795,6 +2800,15 @@ function MainApp({ account, onSignOut }) {
         {sidebarCollapsed && streakCount >= 2 && (
           <div className="sidebar-streak sidebar-streak--collapsed" title={`${streakCount}-day streak`}>🔥</div>
         )}
+        {!sidebarCollapsed && historyItems[0] && (
+          <button type="button" className="sidebar-otd-teaser" onClick={() => setActiveNav("On This Day")}>
+            <span className="sidebar-otd-icon">⏳</span>
+            <span className="sidebar-otd-text">
+              <span className="sidebar-otd-label">On this day</span>
+              <span className="sidebar-otd-fact">{historyItems[0].year}: {historyItems[0].title}</span>
+            </span>
+          </button>
+        )}
         <div className="sidebar-actions">
           {!sidebarCollapsed && account?.tier !== 'pro' && (
             trialDaysLeft !== null ? (
@@ -2965,6 +2979,20 @@ function MainApp({ account, onSignOut }) {
                       >{g}</button>
                     ))}
                   </div>
+                </div>
+              )}
+              {projectedToday && (
+                <div className="completion-card">
+                  <span className="completion-icon">✓</span>
+                  <span className="completion-msg">
+                    Morning meeting complete{streakCount >= 2 ? ` · ${streakCount}-day streak 🔥` : ''} — see you tomorrow!
+                  </span>
+                  {isFriday && <span className="completion-friday">Have a great weekend — Monday's routine is ready. 🌅</span>}
+                </div>
+              )}
+              {!projectedToday && isFriday && (
+                <div className="friday-card">
+                  🌅 Have a great weekend! Come back Monday — your next routine will be ready.
                 </div>
               )}
               <div className="routine-header">
@@ -3260,7 +3288,12 @@ function MainApp({ account, onSignOut }) {
 
       {/* STUDENT DISPLAY */}
       {displayMode && (
-        <DisplayMode routine={displayMode.routine || routine} startIndex={displayMode.startIndex} projectorStyle={projectorStyle} initialView={presentationViewDefault} onExit={() => setDisplayMode(null)}/>
+        <DisplayMode routine={displayMode.routine || routine} startIndex={displayMode.startIndex} projectorStyle={projectorStyle} initialView={presentationViewDefault} onExit={() => {
+          const today = new Date().toISOString().slice(0, 10);
+          try { localStorage.setItem('ofd:projectedToday', today); } catch {}
+          setProjectedToday(true);
+          setDisplayMode(null);
+        }}/>
       )}
 
       {/* TOASTS */}
