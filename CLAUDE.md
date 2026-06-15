@@ -365,6 +365,29 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 - Muted gray (`#C8C3BA`) at rest, teal on `.card:hover` and `.card.selected`
 - Detail panel empty state shows a `←` icon + "Tap any activity to preview directions, the student prompt, and projector controls."
 
+## Usage streak system
+- Computed on `MainApp` mount via `useState` initializer — reads `localStorage('ofd:streak')` (`{ count, lastDate }`)
+- Logic: if `lastDate` is today → return existing count; if yesterday → increment; if older → reset to 1
+- `streakCount` state is read-only after mount (no setter exposed)
+- Sidebar shows `🔥 N-day streak` when `streakCount >= 2` and sidebar is expanded; collapsed shows `🔥` emoji only
+- Milestone labels appear at 7, 14, 30 days (`sidebar-streak-badge`, gold pill)
+- CSS classes: `.sidebar-streak`, `.sidebar-streak--collapsed`, `.sidebar-streak-flame`, `.sidebar-streak-label`, `.sidebar-streak-badge`
+
+## Activity history (used-today tracking)
+- `readUsedToday()` / `recordUsedToday(ids)` helpers in App.jsx use `localStorage('ofd:usedToday')` (`{ date, ids[] }`)
+- Object resets automatically when `date` !== today
+- `usedToday` state in `MainApp` initialized from `readUsedToday()`
+- `useEffect` on `[routine]` calls `recordUsedToday` + refreshes state whenever routine changes (load, swap, etc.)
+- `BrowseScreen` receives `usedToday` prop; Library browse-cards show a teal `✓ Today` badge if `usedToday.has(a.id)`
+- `ActivityCard` also accepts `usedToday` — shows `.card-used-badge` on the cat line when `usedNow && !useNow`
+  (badge hidden on Today view cards since they're obviously in today's routine)
+
+## Share with a colleague
+- `ProfileSheet` has `handleShare` that copies a referral message to clipboard via `navigator.clipboard.writeText`
+- Message: "I use OfTheDay.net for my morning meetings — a complete, grade-appropriate routine in seconds. Try it free: https://oftheday.net"
+- Local `copied` state flips button label to "✓ Link copied — share it!" for 3 seconds, then resets
+- Button: `.btn-secondary`, full-width, positioned between "Save Changes" and "Sign Out" in sheet footer
+
 ## Sidebar nav labels
 The sidebar nav uses these exact string labels (referenced throughout App.jsx as `activeNav` values):
 - "Today", "Library", **"Routines"** (was "Build" — renamed 2026-06-15), "Word of the Day",
@@ -386,9 +409,13 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 3. **Stripe go-live** — Switch to live keys in `functions/.env`, register webhook in Stripe Dashboard, set `STRIPE_WEBHOOK_SECRET`
 4. **Trial reminder emails** — No email drip at trial end; Day 12 nudge would improve conversion
 5. **Email capture delivery** — "Get a Free Morning Meeting Resource Pack" form collects emails but delivers nothing; build delivery or update copy
-6. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
-7. **Component extraction** — App.jsx is 4000+ lines; ProfileSheet, DisplayMode, AuthScreen are candidates
-8. **"5,000+ teachers" stat** — Unverifiable claim on landing page; could fail district procurement scrutiny
+6. **Demo mode** — Let unauthenticated teachers browse 5 sample activities before requiring signup; biggest conversion lever
+7. **Activity pool expansion** — 60 activities repeats in ~3 weeks of daily use; target 200+ per category for a full school year without repetition
+8. **Weekly/monthly activity history view** — Show teachers what they've used this week so they can plan variety
+9. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
+10. **Component extraction** — App.jsx is 4000+ lines; ProfileSheet, DisplayMode, AuthScreen are candidates
+11. **"5,000+ teachers" stat** — Unverifiable claim on landing page; could fail district procurement scrutiny
+12. **District/school admin panel** — No way to manage school licenses, view adoption, or onboard a department
 
 ## Git branch
 Active development: `main` (dev branch `claude/activity-of-day-app-2JlTT` merged)
