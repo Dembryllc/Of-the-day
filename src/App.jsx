@@ -588,6 +588,21 @@ function readSavedRoutines() {
   }
 }
 
+function readSeenActivities() {
+  try {
+    const raw = localStorage.getItem('ofd:seenActivities');
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch { return new Set(); }
+}
+
+function markActivitiesSeen(ids) {
+  try {
+    const existing = readSeenActivities();
+    ids.forEach(id => existing.add(id));
+    localStorage.setItem('ofd:seenActivities', JSON.stringify([...existing]));
+  } catch {}
+}
+
 function readUsedToday() {
   const today = new Date().toISOString().slice(0, 10);
   try {
@@ -672,10 +687,11 @@ function GradePicker({ value, onChange }) {
 }
 
 /* ── Activity Card ── */
-function ActivityCard({ activity, selected, onSelect, onSwap, onFave, favorites, usedToday, index, useNow = false }) {
+function ActivityCard({ activity, selected, onSelect, onSwap, onFave, favorites, usedToday, seenActivities, index, useNow = false }) {
   const cm = CAT_META[activity.cat] || { color: "#CCC" };
   const isFave = favorites?.has(activity.id) ?? false;
   const usedNow = usedToday?.has(activity.id) ?? false;
+  const isNew = seenActivities != null && !seenActivities.has(activity.id);
   return (
     <div className={`card component-card${selected ? ' selected' : ''}${useNow ? ' use-now' : ''}`} role="button" tabIndex="0"
       onClick={() => onSelect(activity)}
@@ -683,7 +699,7 @@ function ActivityCard({ activity, selected, onSelect, onSwap, onFave, favorites,
       {typeof index === "number" ? <div className="morning-card-index" style={{ background: cm.dark || cm.color }}>{index + 1}</div> : <div className="card-stripe" style={{ background: cm.color }}/>}
       <div className="card-inner">
         <div className="card-cat">{activity.cat}{usedNow && !useNow && <span className="card-used-badge">✓ Today</span>}</div>
-        <div className="card-title">{activity.title}</div>
+        <div className="card-title">{activity.title}{isNew && <span className="card-new-badge">New</span>}</div>
         <div className="card-meta">{activity.meta}</div>
         <div className="card-actions">
           <button className={`btn-heart${isFave ? ' saved' : ''}`} type="button" aria-label={isFave ? "Remove from favorites" : "Save to favorites"}
@@ -1969,6 +1985,7 @@ function MainApp({ account, onSignOut }) {
   const [customOpen, setCustomOpen] = useState(false);
   const [favorites, setFavorites] = useState(() => readStoredFavorites());
   const [usedToday, setUsedToday] = useState(() => readUsedToday());
+  const [seenActivities, setSeenActivities] = useState(() => readSeenActivities());
   const [projectorStyle, setProjectorStyle] = useState(() => readProjectorStyle(account));
   const todayLabel = useMemo(() => formatToday(), []);
   const currentGrade = filters.grade || account?.grade || tweaks.grade;
@@ -2704,6 +2721,7 @@ function MainApp({ account, onSignOut }) {
   const navActive = label => label === activeNav || (label === "Library" && libraryViews.includes(activeNav)) || (label === "Routines" && buildViews.includes(activeNav));
 
   const totalMin = Math.round(routine.reduce((s,a) => s + a.time, 0) / 60);
+  const newCountToday = routine.filter(a => !seenActivities.has(a.id)).length;
   const addActivity = useCallback(() => {
     const cats = filters.cats && filters.cats.length ? filters.cats : DEFAULT_CATS;
     const used = new Set(routine.map(a => a.id));
@@ -2811,6 +2829,15 @@ function MainApp({ account, onSignOut }) {
         )}
         {sidebarCollapsed && streakCount >= 2 && (
           <div className="sidebar-streak sidebar-streak--collapsed" title={`${streakCount}-day streak`}>🔥</div>
+        )}
+        {!sidebarCollapsed && vocabWord && (
+          <button type="button" className="sidebar-otd-teaser" onClick={() => setActiveNav("Word of the Day")}>
+            <span className="sidebar-otd-icon">📖</span>
+            <span className="sidebar-otd-text">
+              <span className="sidebar-otd-label">Word of the day · <span className="sidebar-otd-reset">{midnightResetLabel}</span></span>
+              <span className="sidebar-otd-fact"><strong>{vocabWord.word}</strong> — {vocabWord.meaning}</span>
+            </span>
+          </button>
         )}
         {!sidebarCollapsed && historyItems[0] && (
           <button type="button" className="sidebar-otd-teaser" onClick={() => setActiveNav("On This Day")}>
@@ -3011,7 +3038,7 @@ function MainApp({ account, onSignOut }) {
                   <div className="routine-header-row">
                     <div>
                       <div className="section-eyebrow">Responsive Classroom Meeting</div>
-                      <div className="routine-ready">Ready · {routine.length} components · ~{totalMin} min</div>
+                      <div className="routine-ready">Ready · {routine.length} components · ~{totalMin} min{newCountToday > 0 && <span className="routine-new-count"> · {newCountToday} new to you</span>}</div>
                     </div>
                     <button className="btn-secondary btn-compact teacher-filter-button" type="button" onClick={() => setFilterOpen(true)}>Filters</button>
                   </div>
@@ -3053,6 +3080,7 @@ function MainApp({ account, onSignOut }) {
                       onSwap={handleSwap}
                       onFave={handleFave}
                       favorites={favorites}
+                      seenActivities={seenActivities}
                       useNow={true}
                     />
                   ))}
@@ -3314,6 +3342,9 @@ function MainApp({ account, onSignOut }) {
           const today = new Date().toISOString().slice(0, 10);
           try { localStorage.setItem('ofd:projectedToday', today); } catch {}
           setProjectedToday(true);
+          const ids = (displayMode.routine || routine).map(a => a.id);
+          markActivitiesSeen(ids);
+          setSeenActivities(readSeenActivities());
           setDisplayMode(null);
         }}/>
       )}
