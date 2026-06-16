@@ -31,9 +31,6 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "984386798513-
 const LOGO_SRC = "/assets/ofthedaylogi.png";
 
 const PROJECTOR_STATE_KEY = 'ofd:projectorState';
-function projectorWindowUrl() {
-  return window.location.origin + window.location.pathname + '?projector=1';
-}
 
 function ProjectorReceiver() {
   const [state, setState] = React.useState(() => {
