@@ -1,8 +1,8 @@
 import { useState, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { db } from './lib/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from './lib/firebase';
 import './landing.css';
 
 const FAQ_ITEMS = [
@@ -74,7 +74,7 @@ export default function LandingPage() {
       // Firestore save failed silently
     }
     try {
-      const sendLeadMagnet = httpsCallable(getFunctions(), 'sendLeadMagnet');
+      const sendLeadMagnet = httpsCallable(functions, 'sendLeadMagnet');
       await sendLeadMagnet({ email });
     } catch {
       // Email send failed silently — submission still confirmed to user
