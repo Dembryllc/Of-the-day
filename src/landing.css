@@ -15,7 +15,7 @@
   --lp-muted:   #A1A1AA;
   --lp-border:  rgba(0,0,0,0.08);
   --lp-border-dark: rgba(255,255,255,0.08);
-  --lp-sand:    #FAFAFA;
+  --lp-sand:    #FAF8F4;
   --lp-white:   #ffffff;
   --lp-dark:    #0A0F1E;
   --lp-dark2:   #060910;
@@ -97,7 +97,7 @@
 .lp .container { max-width: 1100px; margin: 0 auto; }
 .lp .section-label {
   font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
-  color: #F5A623; margin-bottom: 12px;
+  color: #A1A1AA; margin-bottom: 12px;
 }
 .lp .section-title {
   font-size: clamp(28px, 4vw, 40px); font-weight: 800; line-height: 1.15;
@@ -241,7 +241,7 @@
 }
 
 /* ── PROBLEM ── */
-.lp .problem { background: #FAFAFA; border-top: 1px solid var(--lp-border); }
+.lp .problem { background: #FAF8F4; border-top: 1px solid var(--lp-border); }
 .lp .problem-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
 }
@@ -314,7 +314,7 @@
   padding: 28px 24px;
   transition: background 0.15s;
 }
-.lp .feature-card:hover { background: #FAFAFA; }
+.lp .feature-card:hover { background: #FAF8F4; }
 .lp .feature-icon {
   width: 40px; height: 40px; border-radius: 9px;
   background: var(--lp-navy-bg); color: var(--lp-ink);
@@ -325,13 +325,12 @@
 .lp .feature-card p { font-size: 13px; color: var(--lp-ink2); line-height: 1.65; }
 
 /* ── USE CASES ── */
-.lp #use-cases { background: #FAFAFA; border-top: 1px solid var(--lp-border); }
 .lp .cases-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
   margin-top: 48px;
 }
 .lp .case-card {
-  background: #FAFAFA; border-radius: var(--lp-radius);
+  background: #FAF8F4; border-radius: var(--lp-radius);
   padding: 28px 24px; border: 1px solid var(--lp-border);
 }
 .lp .case-quote {
@@ -479,7 +478,7 @@
 .lp .contact-line a:hover { color: var(--lp-ink); }
 
 /* ── FAQ ── */
-.lp .faq { background: #FAFAFA; border-top: 1px solid var(--lp-border); }
+.lp .faq { background: #FAF8F4; border-top: 1px solid var(--lp-border); }
 .lp .faq-list { max-width: 680px; margin: 48px auto 0; }
 .lp .faq-item { border-bottom: 1px solid var(--lp-border); }
 .lp .faq-question {
@@ -534,7 +533,7 @@
   display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
 }
 .lp .footer-logo { color: rgba(255,255,255,0.5); font-size: 14px; font-weight: 700; letter-spacing: 0.02em; }
-.lp .footer-logo span { color: #F5A623; }
+.lp .footer-logo span { color: rgba(255,255,255,0.2); }
 .lp .footer-links { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
 .lp .footer-links a { text-decoration: none; color: rgba(255,255,255,0.3); font-size: 12px; transition: color 0.15s; }
 .lp .footer-links a:hover { color: rgba(255,255,255,0.6); }
@@ -592,7 +591,7 @@
 }
 .lp-legal-table th {
   text-align: left; padding: 9px 12px;
-  background: #FAFAFA; color: var(--lp-ink); font-weight: 600;
+  background: #FAF8F4; color: var(--lp-ink); font-weight: 600;
   border-bottom: 1px solid var(--lp-border);
 }
 .lp-legal-table td {

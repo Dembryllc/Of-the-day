@@ -115,11 +115,11 @@ export default function LandingPage() {
             <div className="hero-badge">
               <span></span> Built for Responsive Classroom Teachers
             </div>
-            <h1>Your Morning Meeting,<br /><em>Ready in Seconds.</em></h1>
+            <h1>Your Morning Meeting,<br /><em>Ready Before First Bell.</em></h1>
             <p className="hero-sub">
-              Stop reinventing your morning meeting every day.
-              OfTheDay.net automatically builds a complete, grade-appropriate routine —
-              Greeting, Sharing, Group Activity, and Morning Message — the moment you open it.
+              Stop scrambling for activities every morning. OfTheDay.net builds a complete,
+              grade-appropriate routine — Greeting, Sharing, Group Activity, and Morning Message —
+              the moment you open it.
             </p>
             <div className="hero-ctas">
               <Link to="/login?signup=1" className="btn-primary-lg">Try It Free — No Credit Card</Link>
@@ -361,95 +361,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══════════ USE CASES ══════════ */}
-      <section id="use-cases">
-        <div className="container">
-          <div className="text-center">
-            <div className="section-label">Teacher Stories</div>
-            <h2 className="section-title">Built for the Way You Actually Teach</h2>
-          </div>
-          <div className="cases-grid">
-            <div className="case-card">
-              <div className="case-quote">"</div>
-              <blockquote>I use it every single morning. The projector mode is the best part — my kids walk in and see the greeting activity on the board before I even have my coffee.</blockquote>
-              <div className="case-persona">
-                <div className="case-avatar" style={{background:'#EBF5F2'}}>🍎</div>
-                <div>
-                  <div className="case-name">Elementary Teacher, Grade 3</div>
-                  <div className="case-role">Responsive Classroom practitioner, 8 years</div>
-                </div>
-              </div>
-            </div>
-            <div className="case-card">
-              <div className="case-quote">"</div>
-              <blockquote>I needed something that didn't require 20 minutes to set up the night before. Now I open it at 7:45am and I'm ready. That's it.</blockquote>
-              <div className="case-persona">
-                <div className="case-avatar" style={{background:'#EBF5F2'}}>📐</div>
-                <div>
-                  <div className="case-name">Middle School Math Teacher</div>
-                  <div className="case-role">Grades 6–8, uses morning meeting daily</div>
-                </div>
-              </div>
-            </div>
-            <div className="case-card">
-              <div className="case-quote">"</div>
-              <blockquote>I had no idea how to run a morning meeting in my first year. This gave me a real starting point and I learned what works for my class by experimenting with the library.</blockquote>
-              <div className="case-persona">
-                <div className="case-avatar" style={{background:'#EBF5F2'}}>⭐</div>
-                <div>
-                  <div className="case-name">First-Year Teacher, Grade 5</div>
-                  <div className="case-role">Just certified, building daily routines</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════ WHO IT'S FOR ══════════ */}
-      <section className="who">
-        <div className="container">
-          <div className="section-label" style={{color:'#F5A623'}}>Who It's For</div>
-          <h2 className="section-title">Made for K–12 Teachers Who Run Morning Meetings</h2>
-          <p className="section-sub">
-            OfTheDay.net is built for teachers who follow Responsive Classroom, PBIS,
-            or any SEL-first classroom culture — and want a consistent daily routine
-            without spending planning time building it from scratch.
-          </p>
-          <div className="grade-chips">
-            <div className="grade-chip">K–2</div>
-            <div className="grade-chip">3–5</div>
-            <div className="grade-chip">6–8</div>
-            <div className="grade-chip">9–12</div>
-          </div>
-          <div className="who-details">
-            <div className="who-point">
-              <div className="who-check">✓</div>
-              <p>Teachers familiar with Responsive Classroom, PBIS, or structured morning meeting formats</p>
-            </div>
-            <div className="who-point">
-              <div className="who-check">✓</div>
-              <p>Teachers who want to reduce daily prep without losing activity variety</p>
-            </div>
-            <div className="who-point">
-              <div className="who-check">✓</div>
-              <p>Teachers who project content to a classroom screen or smartboard</p>
-            </div>
-            <div className="who-point">
-              <div className="who-check">✓</div>
-              <p>Instructional coaches who curate routines for a team of teachers</p>
-            </div>
-            <div className="who-point">
-              <div className="who-check">✓</div>
-              <p>New teachers building daily classroom culture from the ground up</p>
-            </div>
-            <div className="who-point">
-              <div className="who-check">✓</div>
-              <p>Works in any modern browser — Chromebook, tablet, laptop, or desktop</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ══════════ PRICING ══════════ */}
       <section id="pricing">
@@ -581,11 +492,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* ══════════ CONTACT LINE ══════════ */}
-      <div className="contact-line">
-        Questions? Email us at <a href="mailto:hello@oftheday.net">hello@oftheday.net</a> — we respond within 1 business day.
-      </div>
 
       {/* ══════════ EMAIL CAPTURE ══════════ */}
       <section className="capture" id="waitlist">
