@@ -96,6 +96,7 @@ export default function LandingPage() {
             <li><a href="#how-it-works" onClick={() => setNavOpen(false)}>How It Works</a></li>
             <li><a href="#pricing" onClick={() => setNavOpen(false)}>Pricing</a></li>
             <li><a href="#faq" onClick={() => setNavOpen(false)}>FAQ</a></li>
+            <li><Link to="/district" onClick={() => setNavOpen(false)}>For Districts</Link></li>
             <li><Link to="/login?signup=1" onClick={() => setNavOpen(false)}>Get Started Free</Link></li>
           </ul>
           <div className="nav-actions">
@@ -458,6 +459,9 @@ export default function LandingPage() {
                   <button type="submit" className="pricing-cta pricing-cta-outline">Request School Pricing</button>
                 </form>
               )}
+              <div style={{textAlign:'center', marginTop:'12px'}}>
+                <Link to="/district" style={{fontSize:'0.8rem', color:'#6B7280'}}>Privacy &amp; compliance info for IT directors →</Link>
+              </div>
             </div>
 
           </div>
@@ -537,6 +541,7 @@ export default function LandingPage() {
           <a href="#pricing">Pricing</a>
           <a href="#faq">FAQ</a>
           <a href="mailto:hello@oftheday.net">Contact</a>
+          <Link to="/district">For Districts</Link>
           <Link to="/privacy">Privacy Policy</Link>
           <Link to="/terms">Terms of Service</Link>
           <Link to="/login">Sign In</Link>

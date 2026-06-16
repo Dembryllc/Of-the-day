@@ -4,6 +4,7 @@ import { useTweaks, TweaksPanel, TweakSection, TweakSelect, TweakText } from './
 import LandingPage from './LandingPage';
 import PrivacyPage from './PrivacyPage';
 import TermsPage from './TermsPage';
+import DistrictPage from './DistrictPage';
 import AuthScreen from './AuthScreen';
 import DisplayMode from './DisplayMode';
 import { CAT_META, MORNING_MEETING_CATS } from './lib/catMeta';
@@ -593,6 +594,13 @@ function readPresentationView() {
   try { return localStorage.getItem(PRESENTATION_VIEW_KEY) === 'guided' ? 'guided' : 'clean'; } catch { return 'clean'; }
 }
 
+function projectorWindowUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("projector", "1");
+  url.hash = "";
+  return url.toString();
+}
+
 function readSeenActivities() {
   try {
     const raw = localStorage.getItem('ofd:seenActivities');
@@ -625,6 +633,33 @@ function recordUsedToday(ids) {
     const existing = new Set(obj.date === today ? (obj.ids || []) : []);
     ids.forEach(id => existing.add(id));
     localStorage.setItem('ofd:usedToday', JSON.stringify({ date: today, ids: [...existing] }));
+  } catch {}
+}
+
+function getWeekStart() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(new Date(d).setDate(diff)).toISOString().slice(0, 10);
+}
+
+function readUsedThisWeek() {
+  const weekStart = getWeekStart();
+  try {
+    const raw = localStorage.getItem('ofd:usedThisWeek');
+    const obj = raw ? JSON.parse(raw) : {};
+    return new Set(obj.weekStart === weekStart ? (obj.ids || []) : []);
+  } catch { return new Set(); }
+}
+
+function recordUsedThisWeek(ids) {
+  const weekStart = getWeekStart();
+  try {
+    const raw = localStorage.getItem('ofd:usedThisWeek');
+    const obj = raw ? JSON.parse(raw) : {};
+    const existing = new Set(obj.weekStart === weekStart ? (obj.ids || []) : []);
+    ids.forEach(id => existing.add(id));
+    localStorage.setItem('ofd:usedThisWeek', JSON.stringify({ weekStart, ids: [...existing] }));
   } catch {}
 }
 
@@ -1363,6 +1398,7 @@ function BrowseScreen({ activities, grade, favorites, usedToday, builderCount, r
             <button type="button" className="library-pill-btn" onClick={() => onOpenTool("On This Day")}>On This Day</button>
             <button type="button" className="library-pill-btn" onClick={() => onOpenTool("My Activities")}>My Activities</button>
             <button type="button" className="library-pill-btn" onClick={() => onOpenTool("Favorites")}>Favorites</button>
+            <button type="button" className="library-pill-btn" onClick={() => onOpenTool("This Week")}>This Week</button>
           </div>
         </div>}
         {!replacementTarget && builderCount > 0 && (
@@ -1929,6 +1965,62 @@ function FavoritesScreen({ activities, favorites, onFave, onAdd, onBuild, onDisp
   );
 }
 
+/* ── This Week Screen ── */
+function ThisWeekScreen({ activities, usedThisWeek, onAdd, onBuild, onDisplay }) {
+  const weekItems = activities.filter(a => usedThisWeek?.has(a.id));
+  if (weekItems.length === 0) {
+    return (
+      <div className="routine-col">
+        <div className="routine-header">
+          <div className="section-eyebrow">This Week</div>
+        </div>
+        <div className="faves-empty">
+          <div className="faves-empty-icon">📅</div>
+          <div className="faves-empty-text">Activities you project this week will appear here — helps you plan variety and avoid repeats</div>
+        </div>
+      </div>
+    );
+  }
+  const byCat = {};
+  weekItems.forEach(a => { if (!byCat[a.cat]) byCat[a.cat] = []; byCat[a.cat].push(a); });
+  return (
+    <div className="routine-col" style={{ background: "var(--sand)" }}>
+      <div className="browse-header">
+        <div className="section-eyebrow">This Week</div>
+        <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 3 }}>
+          {weekItems.length} {weekItems.length === 1 ? "activity" : "activities"} used · resets Monday
+        </div>
+      </div>
+      <div className="browse-scroll">
+        {Object.entries(byCat).map(([cat, items]) => {
+          const cm = CAT_META[cat] || { color: "#CCC", emoji: "" };
+          return (
+            <div key={cat} className="browse-cat-section">
+              <div className="browse-cat-label">
+                <div className="browse-cat-dot" style={{ background: cm.color }} />
+                {cm.emoji} {cat}
+              </div>
+              <div className="browse-grid">
+                {items.map(a => (
+                  <div key={a.id} className="browse-card" style={{ borderTop: `3px solid ${cm.color}` }}>
+                    <div className="browse-card-title">{a.title}</div>
+                    <div className="browse-card-meta">{a.meta}</div>
+                    <div className="browse-card-actions">
+                      <button className="btn-secondary btn-compact" type="button" onClick={() => onAdd(a)}>Use Today</button>
+                      <button className="btn-secondary btn-compact" type="button" onClick={() => onBuild(a)}>Add to Routine</button>
+                      <button className="btn-secondary btn-compact" type="button" onClick={() => onDisplay(a)}>Project</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function UpgradeModal({ feature, onClose }) {
   return (
     <div className="overlay dialog-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -1990,6 +2082,7 @@ function MainApp({ account, onSignOut }) {
   const [customOpen, setCustomOpen] = useState(false);
   const [favorites, setFavorites] = useState(() => readStoredFavorites());
   const [usedToday, setUsedToday] = useState(() => readUsedToday());
+  const [usedThisWeek, setUsedThisWeek] = useState(() => readUsedThisWeek());
   const [seenActivities, setSeenActivities] = useState(() => readSeenActivities());
   const [projectorStyle, setProjectorStyle] = useState(() => readProjectorStyle(account));
   const todayLabel = useMemo(() => formatToday(), []);
@@ -2263,6 +2356,8 @@ function MainApp({ account, onSignOut }) {
     const ids = routine.map(a => a.id);
     recordUsedToday(ids);
     setUsedToday(readUsedToday());
+    recordUsedThisWeek(ids);
+    setUsedThisWeek(readUsedThisWeek());
   }, [routine]);
 
   const restoreFromCloud = useCallback(async () => {
@@ -2923,6 +3018,15 @@ function MainApp({ account, onSignOut }) {
             <div className="topbar-right grade-control-wrap"><GradePicker value={currentGrade} onChange={handleGradeChange}/></div>
           </div>
         )}
+        {activeNav === "This Week" && (
+          <div className="topbar">
+            <div className="topbar-left">
+              <div className="topbar-title">This Week</div>
+              <div className="topbar-date">{usedThisWeek.size} {usedThisWeek.size === 1 ? "activity" : "activities"} used · resets Monday</div>
+            </div>
+            <div className="topbar-right grade-control-wrap"><GradePicker value={currentGrade} onChange={handleGradeChange}/></div>
+          </div>
+        )}
         {activeNav === "Routines" && (
           <div className="topbar">
             <div className="topbar-left">
@@ -3136,6 +3240,17 @@ function MainApp({ account, onSignOut }) {
               activities={libraryActivities}
               favorites={favorites}
               onFave={handleFave}
+              onAdd={addToToday}
+              onBuild={startBuilderWithActivity}
+              onDisplay={displaySingle}
+            />
+          )}
+
+          {/* THIS WEEK */}
+          {activeNav === "This Week" && (
+            <ThisWeekScreen
+              activities={libraryActivities}
+              usedThisWeek={usedThisWeek}
               onAdd={addToToday}
               onBuild={startBuilderWithActivity}
               onDisplay={displaySingle}
@@ -3516,6 +3631,7 @@ function App() {
         } />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/district" element={<DistrictPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
