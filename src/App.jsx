@@ -588,6 +588,11 @@ function readSavedRoutines() {
   }
 }
 
+const PRESENTATION_VIEW_KEY = 'ofd:presentationView';
+function readPresentationView() {
+  try { return localStorage.getItem(PRESENTATION_VIEW_KEY) === 'guided' ? 'guided' : 'clean'; } catch { return 'clean'; }
+}
+
 function readSeenActivities() {
   try {
     const raw = localStorage.getItem('ofd:seenActivities');
