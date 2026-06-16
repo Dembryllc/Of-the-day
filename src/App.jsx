@@ -30,6 +30,41 @@ const tsToMs = ts => { if (typeof ts === 'number') return ts; return ts?.toMilli
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "984386798513-aprar4ehdq87dd4jtguigupaiva0pnr5.apps.googleusercontent.com";
 const LOGO_SRC = "/assets/ofthedaylogi.png";
 
+const PROJECTOR_STATE_KEY = 'ofd:projectorState';
+function projectorWindowUrl() {
+  return window.location.origin + window.location.pathname + '?projector=1';
+}
+
+function ProjectorReceiver() {
+  const [state, setState] = React.useState(() => {
+    try { const raw = localStorage.getItem(PROJECTOR_STATE_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  });
+  React.useEffect(() => {
+    const onStorage = e => {
+      if (e.key !== PROJECTOR_STATE_KEY) return;
+      try { setState(e.newValue ? JSON.parse(e.newValue) : null); } catch {}
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+  if (!state?.active) {
+    return (
+      <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'#0A0F1E',color:'rgba(255,255,255,0.4)',fontFamily:'Outfit,sans-serif',fontSize:'18px'}}>
+        Waiting for projection to start…
+      </div>
+    );
+  }
+  return (
+    <DisplayMode
+      routine={state.routine}
+      startIndex={state.startIndex ?? 0}
+      projectorStyle={state.projectorStyle}
+      initialView={state.presentationView ?? 'clean'}
+      onExit={() => window.close()}
+    />
+  );
+}
+
 const FREE_ACTIVITY_LIMIT = 3;
 function getAvailableActivities(activities, type, userTier) {
   const catActivities = activities.filter(a => a.cat === type);
