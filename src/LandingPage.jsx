@@ -338,12 +338,12 @@ export default function LandingPage() {
               <p>One-click full-screen display view for your classroom projector or smartboard. Four visual themes: Calm, Bright, Minimal, and Primary.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">Aa</div>
+              <div className="feature-icon">📖</div>
               <h3>Word of the Day</h3>
               <p>Grade-level vocabulary words ready every morning. Rotate through the bank or pick manually to match your current unit.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">∑</div>
+              <div className="feature-icon">✏️</div>
               <h3>Do Now Warm-Ups</h3>
               <p>Daily math and writing warm-up problems by grade band. Toggle between subjects. Build your own custom problems to match your curriculum.</p>
             </div>
@@ -353,7 +353,7 @@ export default function LandingPage() {
               <p>Classroom-appropriate historical facts for the current date — automatically filtered to remove content that isn't suitable for students.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">⊞</div>
+              <div className="feature-icon">🗂️</div>
               <h3>My Activities + Routines</h3>
               <p>Build your own activities and save your favourite routine combinations. Your custom content is stored and ready whenever you need it.</p>
             </div>
@@ -618,7 +618,7 @@ export default function LandingPage() {
           <p>Open OfTheDay.net and your morning meeting is ready in seconds.</p>
           <div className="final-cta-actions">
             <Link to="/login?signup=1" className="btn-primary-lg">Try It Free — No Credit Card</Link>
-            <Link to="/login" className="btn-ghost" style={{fontSize:'16px', color:'#4B5563'}}>Already have an account? Sign In →</Link>
+            <Link to="/login" className="btn-ghost" style={{fontSize:'16px'}}>Already have an account? Sign In →</Link>
           </div>
         </div>
       </section>

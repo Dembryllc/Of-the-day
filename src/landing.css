@@ -19,10 +19,10 @@
   --lp-white:   #ffffff;
   --lp-dark:    #0A0F1E;
   --lp-dark2:   #060910;
-  --lp-teal:    #1B2D5B;
-  --lp-teal-bg: rgba(27,45,91,0.07);
-  --lp-green:   #F5A623;
-  --lp-green2:  #D4891E;
+  --lp-navy:    #1B2D5B;
+  --lp-navy-bg: rgba(27,45,91,0.07);
+  --lp-gold:    #F5A623;
+  --lp-gold2:   #D4891E;
   --lp-radius:  10px;
 }
 
@@ -143,7 +143,7 @@
 }
 .lp .hero h1 em { color: #F5A623; font-style: normal; }
 .lp .hero-sub {
-  font-size: 17px; color: rgba(255,255,255,0.55); line-height: 1.7; margin-bottom: 36px;
+  font-size: 17px; color: rgba(255,255,255,0.68); line-height: 1.7; margin-bottom: 36px;
   max-width: 440px;
 }
 .lp .hero-ctas { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -226,8 +226,8 @@
   padding: 0 24px;
 }
 .lp .trust-num {
-  font-size: 28px; font-weight: 800; color: var(--lp-ink);
-  letter-spacing: -0.03em; line-height: 1;
+  font-size: 44px; font-weight: 800; color: var(--lp-ink);
+  letter-spacing: -0.04em; line-height: 1;
 }
 .lp .trust-label {
   font-size: 12px; color: var(--lp-muted); font-weight: 500;
@@ -269,7 +269,7 @@
 .lp .step { display: flex; gap: 18px; align-items: flex-start; }
 .lp .step-num {
   width: 34px; height: 34px; border-radius: 8px;
-  background: var(--lp-ink); color: #fff;
+  background: #F5A623; color: #0A0F1E;
   font-weight: 800; font-size: 14px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
@@ -317,7 +317,7 @@
 .lp .feature-card:hover { background: #FAFAFA; }
 .lp .feature-icon {
   width: 40px; height: 40px; border-radius: 9px;
-  background: var(--lp-teal-bg); color: var(--lp-ink);
+  background: var(--lp-navy-bg); color: var(--lp-ink);
   display: flex; align-items: center; justify-content: center;
   font-size: 19px; margin-bottom: 14px;
 }
@@ -325,6 +325,7 @@
 .lp .feature-card p { font-size: 13px; color: var(--lp-ink2); line-height: 1.65; }
 
 /* ── USE CASES ── */
+.lp #use-cases { background: #FAFAFA; border-top: 1px solid var(--lp-border); }
 .lp .cases-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
   margin-top: 48px;
@@ -413,12 +414,20 @@
   position: relative;
 }
 .lp .pricing-card.featured {
-  border-color: var(--lp-ink);
-  box-shadow: 0 4px 24px rgba(10,15,30,0.1);
+  background: #0A0F1E;
+  border-color: #0A0F1E;
+  box-shadow: 0 8px 32px rgba(10,15,30,0.25);
 }
+.lp .pricing-card.featured .pricing-tier { color: rgba(255,255,255,0.4); }
+.lp .pricing-card.featured .pricing-price { color: #fff; }
+.lp .pricing-card.featured .pricing-price span { color: rgba(255,255,255,0.4); }
+.lp .pricing-card.featured .pricing-desc { color: rgba(255,255,255,0.55); }
+.lp .pricing-card.featured .pricing-features li { color: rgba(255,255,255,0.7); }
+.lp .pricing-card.featured .pricing-features li::before { color: #F5A623; }
+.lp .pricing-card.featured .pricing-per-month { color: rgba(255,255,255,0.38); }
 .lp .pricing-badge {
   position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-  background: var(--lp-ink); color: #fff; font-size: 10px; font-weight: 800;
+  background: #F5A623; color: #0A0F1E; font-size: 10px; font-weight: 800;
   padding: 4px 12px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.09em;
   white-space: nowrap;
 }
@@ -441,8 +450,8 @@
   padding: 11px; border-radius: 7px; font-size: 14px; font-weight: 700;
   transition: all 0.15s;
 }
-.lp .pricing-cta-primary { background: var(--lp-ink); color: #fff; }
-.lp .pricing-cta-primary:hover { opacity: 0.85; }
+.lp .pricing-cta-primary { background: #F5A623; color: #0A0F1E; }
+.lp .pricing-cta-primary:hover { opacity: 0.88; }
 .lp .pricing-cta-outline { border: 1px solid var(--lp-border); color: var(--lp-ink); }
 .lp .pricing-cta-outline:hover { border-color: #A1A1AA; }
 .lp .school-inquiry-form { display: flex; flex-direction: column; gap: 7px; }
@@ -511,12 +520,12 @@
 .lp .capture-success { color: rgba(255,255,255,0.8); font-size: 16px; font-weight: 600; padding: 14px; }
 
 /* ── FINAL CTA ── */
-.lp .final-cta { text-align: center; padding: 112px 24px; }
-.lp .final-cta h2 { font-size: clamp(28px, 4.5vw, 48px); font-weight: 800; color: var(--lp-ink); margin-bottom: 12px; letter-spacing: -0.03em; }
-.lp .final-cta p { font-size: 17px; color: var(--lp-ink2); margin-bottom: 36px; }
+.lp .final-cta { text-align: center; padding: 112px 24px; background: #0A0F1E; }
+.lp .final-cta h2 { font-size: clamp(28px, 4.5vw, 48px); font-weight: 800; color: #fff; margin-bottom: 12px; letter-spacing: -0.03em; }
+.lp .final-cta p { font-size: 17px; color: rgba(255,255,255,0.55); margin-bottom: 36px; }
 .lp .final-cta-actions { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
-.lp .final-cta .btn-primary-lg { background: var(--lp-ink); color: #fff; }
-.lp .final-cta .btn-primary-lg:hover { opacity: 0.85; }
+.lp .final-cta .btn-primary-lg { background: #F5A623; color: #0A0F1E; }
+.lp .final-cta .btn-primary-lg:hover { opacity: 0.88; }
 
 /* ── FOOTER ── */
 .lp .footer {
@@ -542,8 +551,9 @@
   }
   .lp .nav-links.open a { display: block; padding: 14px 24px; font-size: 16px; color: rgba(255,255,255,0.7); }
   .lp .hamburger { display: block; }
-  .lp .hero-inner { grid-template-columns: 1fr; }
-  .lp .hero-visual { display: none; }
+  .lp .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+  .lp .app-mockup { max-width: 420px; margin: 0 auto; }
+  .lp .mockup-body { height: 200px; }
   .lp .problem-grid, .lp .solution-grid, .lp .who-details { grid-template-columns: 1fr; }
   .lp .features-grid { grid-template-columns: 1fr 1fr; }
   .lp .cases-grid, .lp .pricing-grid { grid-template-columns: 1fr; }
@@ -576,7 +586,7 @@
 .lp .lp-legal-page p { font-size: 14px; color: #374151; line-height: 1.8; margin-bottom: 14px; }
 .lp .lp-legal-page ul { font-size: 14px; color: #374151; line-height: 1.8; padding-left: 22px; margin-bottom: 14px; }
 .lp .lp-legal-page ul li { margin-bottom: 5px; }
-.lp .lp-legal-page a { color: var(--lp-green2); text-decoration: underline; }
+.lp .lp-legal-page a { color: var(--lp-gold2); text-decoration: underline; }
 .lp-legal-table {
   width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0 22px;
 }
