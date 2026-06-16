@@ -524,7 +524,7 @@ export default function LandingPage() {
           <p>Open OfTheDay.net and your morning meeting is ready in seconds.</p>
           <div className="final-cta-actions">
             <Link to="/login?signup=1" className="btn-primary-lg">Try It Free — No Credit Card</Link>
-            <Link to="/login" className="btn-ghost" style={{fontSize:'16px'}}>Already have an account? Sign In →</Link>
+            <Link to="/login" style={{fontSize:'15px', color:'rgba(255,255,255,0.5)', textDecoration:'none', fontWeight:500}}>Already have an account? Sign In →</Link>
           </div>
         </div>
       </section>

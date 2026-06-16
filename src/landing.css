@@ -29,9 +29,9 @@
 /* ── NAV ── */
 .lp .lp-nav {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(10,15,30,0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  background: #fff;
+  backdrop-filter: none;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
   padding: 0 24px;
 }
 .lp .nav-inner {
@@ -55,18 +55,18 @@
   list-style: none;
 }
 .lp .nav-links a {
-  text-decoration: none; color: rgba(255,255,255,0.55); font-size: 14px; font-weight: 500;
+  text-decoration: none; color: #52525B; font-size: 14px; font-weight: 500;
   transition: color 0.15s;
 }
-.lp .nav-links a:hover { color: rgba(255,255,255,0.9); }
+.lp .nav-links a:hover { color: #0A0F1E; }
 .lp .nav-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .lp .btn-ghost {
-  text-decoration: none; color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 500;
+  text-decoration: none; color: #52525B; font-size: 14px; font-weight: 500;
   padding: 7px 14px; border-radius: 7px;
   transition: background 0.15s, color 0.15s;
   cursor: pointer; background: none; border: none; font-family: inherit;
 }
-.lp .btn-ghost:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+.lp .btn-ghost:hover { background: rgba(0,0,0,0.05); color: #0A0F1E; }
 .lp .btn-primary {
   text-decoration: none; background: #F5A623; color: #0A0F1E;
   font-size: 14px; font-weight: 700; padding: 8px 18px; border-radius: 7px;
@@ -88,7 +88,7 @@
 }
 .lp .btn-secondary-lg:hover { background: rgba(255,255,255,0.07); color: #fff; border-color: rgba(255,255,255,0.25); }
 .lp .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
-.lp .hamburger span { display: block; width: 22px; height: 1.5px; background: rgba(255,255,255,0.7); margin: 5px 0; border-radius: 2px; transition: all 0.2s; }
+.lp .hamburger span { display: block; width: 22px; height: 1.5px; background: #52525B; margin: 5px 0; border-radius: 2px; transition: all 0.2s; }
 
 /* ── SECTIONS ── */
 .lp section { padding: 96px 24px; }
@@ -543,10 +543,10 @@
   .lp .nav-links.open {
     display: flex; flex-direction: column; gap: 0;
     position: fixed; top: 64px; left: 0; right: 0;
-    background: #0A0F1E; border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: #fff; border-bottom: 1px solid rgba(0,0,0,0.08);
     padding: 8px 0; z-index: 99;
   }
-  .lp .nav-links.open a { display: block; padding: 14px 24px; font-size: 16px; color: rgba(255,255,255,0.7); }
+  .lp .nav-links.open a { display: block; padding: 14px 24px; font-size: 16px; color: #52525B; }
   .lp .hamburger { display: block; }
   .lp .hero-inner { grid-template-columns: 1fr; gap: 40px; }
   .lp .app-mockup { max-width: 420px; margin: 0 auto; }
