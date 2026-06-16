@@ -22,6 +22,7 @@ Single-page app. One `index.html` entry, one JS/CSS bundle, React Router handles
 | `/login` | `AuthScreen` | Public (redirects to `/dashboard` if authed) |
 | `/dashboard` | `MainApp` | Protected (redirects to `/login` if unauthed) |
 | `/upgrade` | `UpgradePage` | Protected (redirects to `/login` if unauthed) |
+| `/district` | `DistrictPage` | Public |
 | `/privacy` | `PrivacyPage` | Public |
 | `/terms` | `TermsPage` | Public |
 | `?projector=1` | `ProjectorReceiver` | Public — checked before router |
@@ -36,9 +37,12 @@ src/
   AuthScreen.jsx   — extracted auth component (login/signup/Google/reset); fires onAuthed callback
   DisplayMode.jsx  — extracted projector overlay component; receives routine/style props, fires onExit
   LandingPage.jsx  — marketing landing page; calls sendLeadMagnet Cloud Function on email capture
+  DistrictPage.jsx — /district route; school/district sales page with FERPA/compliance info,
+                     pricing, IT FAQ, and inquiry form → Firestore waitlist (source:'district-inquiry')
   PrivacyPage.jsx  — /privacy route; full privacy policy with FERPA statement
   TermsPage.jsx    — /terms route; full terms of service
-  landing.css      — landing page styles (scoped under .lp to avoid conflicts with app CSS)
+  landing.css      — landing page styles (scoped under .lp); used by LandingPage, DistrictPage,
+                     PrivacyPage, TermsPage
   styles.css       — app styles (Outfit font, all component classes)
   main.jsx         — React entry, ErrorBoundary
   lib/
@@ -63,8 +67,8 @@ functions/
                      • stripeWebhook (Gen 2, onRequest) — handles subscription lifecycle events
                      • sendLeadMagnet (Gen 2, onCall) — sends resource pack email via Resend; called from
                        LandingPage after Firestore waitlist write; no-ops if RESEND_API_KEY not set
-  .env.example     — documents required env vars (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, RESEND_API_KEY)
-  package.json     — includes resend, stripe, firebase-admin, firebase-functions
+  .env.example     — documents required env vars (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, MAILGUN_API_KEY, MAILGUN_DOMAIN)
+  package.json     — includes mailgun.js, form-data, stripe, firebase-admin, firebase-functions
 
 scripts/
   seed.js          — seeds Firestore activities collection (requires service-account.json)
@@ -160,7 +164,8 @@ activities/{id}
   id, cat, title, meta, time, prompt, starter, directions, source, sourceUrl
 
 waitlist/{id}
-  email, name?, school?, source ('landing-page' | 'school-inquiry'), submittedAt
+  email, name?, school?, district?, title?, seats?,
+  source ('landing-page' | 'school-inquiry' | 'district-inquiry'), submittedAt
 ```
 
 ## Plan / tier resolution
@@ -239,24 +244,34 @@ Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger 
 
 ## Landing page structure (LandingPage.jsx)
 Sections in order:
-1. Nav — logo + links (Features, How It Works, Pricing, FAQ, Get Started Free) + Sign In / Try It Free buttons
-2. Hero — headline, sub, CTAs, app mockup
-3. Trust bar — "180 school days · 30s to a routine · Free to start"
-4. Problem — stats + teacher voice quote
-5. How It Works — 3-step walkthrough
-6. Features — 6 feature cards
-7. Use Cases (Teacher Stories) — 3 testimonials
-8. Who It's For — grade chips + checklist
-9. Pricing — billing toggle (Monthly/Annual, defaults Annual) + 3 cards
+1. Nav — white bg, colored logo; links (Features, How It Works, Pricing, FAQ, For Districts, Get Started Free) + Sign In / Try It Free
+2. Hero — dark (`#0A0F1E`) with gold/teal gradient mesh; h1 "Ready Before First Bell"; app mockup (visible on mobile)
+3. Trust bar — white; 3 stats at 44px (180 · 30s · Free)
+4. Problem — `#FAF8F4`; blockquote + 4 stat cards
+5. How It Works — white; 3 steps with gold-numbered circles + dark routine preview card
+6. Features — white; 6-card grid using 1px border gap technique (no box shadows)
+7. Pricing — white; billing toggle (Monthly/Annual, defaults Annual) + 3 cards
    - Free: basic access
-   - Pro: $79/year annual (default) / $9/month; "Start Annual Free Trial" CTA
+   - Pro: dark (`#0A0F1E`) featured card, $79/year annual / $9/month; gold "Start Free Trial" CTA
    - School: inline inquiry form (name + school + email → Firestore `waitlist` with `source:'school-inquiry'`)
-10. FAQ — 9 questions including "Does OfTheDay store student data?" and "Is a DPA available?"
-11. Contact line — "Questions? Email us at hello@oftheday.net"
-12. Email capture — "Get a Free Morning Meeting Resource Pack" → saves to Firestore `waitlist` + calls
-    `sendLeadMagnet` Cloud Function to deliver 10 activities via email; both fail silently
-13. Final CTA
-14. Footer — Features, Pricing, FAQ, Contact, Privacy Policy, Terms of Service, Sign In
+8. FAQ — `#FAF8F4`; 9 questions accordion
+9. Email capture — dark (`#0A0F1E`); "Get a Free Morning Meeting Resource Pack" → Firestore waitlist + `sendLeadMagnet`
+10. Final CTA — dark (`#0A0F1E`); gold primary button
+11. Footer — `#060910`; text mark logo + links
+
+**Removed sections** (do not re-add):
+- Testimonials / Use Cases — unattributed quotes hurt credibility
+- Who It's For — redundant with hero
+- Standalone contact line — now just a footer link
+
+## DistrictPage (/district)
+Targeted landing page for administrators and procurement:
+- No-student-data callout (green card, prominent)
+- FERPA / COPPA / DPA compliance explanations
+- School ($199/year, up to 50 seats) + District (custom) pricing cards
+- IT FAQ (SSO roadmap, pilot options, W-9, data export)
+- Inquiry form → Firestore `waitlist` with `source: 'district-inquiry'` (fields: name, title, district, email, seats)
+- Uses same `.lp` and `.lp-legal-page` CSS classes as other public pages
 
 ## First-run welcome card
 - Shows on first dashboard visit for each account (keyed by `localStorage('ofd:welcomed:{uid}')`)
@@ -269,7 +284,8 @@ Sections in order:
 ## CSS notes
 - App CSS lives in `src/styles.css` — uses Outfit font (woff2 in `public/fonts/`)
 - Landing page CSS in `src/landing.css` — all selectors scoped under `.lp` parent class
-- Legal pages (PrivacyPage, TermsPage) use `.lp-legal-page` class defined in `landing.css`
+- Used by: LandingPage, DistrictPage, PrivacyPage, TermsPage
+- Legal pages (PrivacyPage, TermsPage, DistrictPage) use `.lp-legal-page` class defined in `landing.css`
 - `.app` is `display: flex; flex-direction: column; height: 100vh; overflow: hidden`
 - `.app-shell` is the inner flex row containing `.sidebar` + `.main` — `flex: 1; overflow: hidden`
 - Trial banner + verify banner + pro success banner render in document flow (inside `.app`, above `.app-shell`) — NOT fixed position
@@ -386,7 +402,7 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 ### onUserCreate (Gen 1)
 - Fires on every new Firebase Auth user creation (email/password AND Google)
 - Writes `{ email, plan: 'trial', trialStartedAt: serverTimestamp(), createdAt: serverTimestamp() }` to `users/{uid}`
-- Also sends welcome email via Resend; fails silently if `RESEND_API_KEY` not set
+- Also sends welcome email via Mailgun; fails silently if `MAILGUN_API_KEY` / `MAILGUN_DOMAIN` not set
 - Wrapped in try-catch — never blocks signup; client-side `createUserDocument` is the fallback
 - **Why Gen 1:** `beforeUserCreated` (Gen 2 equivalent) requires Firebase Identity Platform (GCIP), which this project does not use
 
@@ -405,9 +421,9 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 ### sendLeadMagnet (Gen 2, callable)
 - Called from `LandingPage.jsx` after saving to Firestore waitlist
 - Params: `{ email }`
-- Sends resource pack email via Resend with 10 ready-to-use morning meeting activities
-- Returns `{ sent: true/false }` — returns false (not throws) if Resend fails
-- No-ops silently if `RESEND_API_KEY` not set
+- Sends resource pack email via Mailgun with 10 ready-to-use morning meeting activities
+- Returns `{ sent: true/false }` — returns false (not throws) if Mailgun fails
+- No-ops silently if `MAILGUN_API_KEY` / `MAILGUN_DOMAIN` not set
 
 ## Known bugs fixed (do not reintroduce)
 - **Timestamp arithmetic**: `trialStartedAt` is a Firestore Timestamp. `Date.now() - timestamp` = NaN.
@@ -426,6 +442,15 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
   Welcome card (`ofd:welcomed:{uid}`, in-page, per-account) is the sole onboarding experience.
 - **Logo whitespace**: `LOGO_SRC` now points to `ofthedaylogi.png` (clean crop). `oftheday-logo.png`
   (74% transparent whitespace) must never be used in the UI.
+- **`readPresentationView` crash**: Function was moved to `DisplayMode.jsx` during extraction but `App.jsx`
+  still called it on mount. Fixed by keeping both `PRESENTATION_VIEW_KEY` and `readPresentationView()` in `App.jsx`.
+- **`ProjectorReceiver` / `PROJECTOR_STATE_KEY` missing**: All three (`ProjectorReceiver` component,
+  `PROJECTOR_STATE_KEY = 'ofd:projectorState'`, `projectorWindowUrl()`) were deleted in a prior edit.
+  Restored in `App.jsx`. `projectorWindowUrl()` is defined at module scope (uses `URL` + searchParams);
+  do not add a second definition — duplicate function declarations crash the build.
+- **Landing page crash (`getFunctions` not initialized)**: `LandingPage.jsx` called `getFunctions()`
+  without the app instance. Fixed by exporting `functions = getFunctions(app)` from `firebase.js` and
+  importing it in `LandingPage.jsx`.
 
 ## Activity card discoverability
 - Cards with `useNow={true}` render a `.card-chevron` (`›`) on the right edge
@@ -527,18 +552,18 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 | `ofd:cloudAutoSave` | `'true'` | Cloud auto-save preference |
 
 ## Live site status
-**Last updated: 2026-06-15**
-- All code changes are on `main` and auto-deploy to Firebase Hosting via GitHub Actions
+**Last updated: 2026-06-16**
+- All code changes on `main` auto-deploy to Firebase Hosting via GitHub Actions (no manual deploy needed)
 - Firebase Hosting URL: `oftheday-c6490.web.app` (all deploys land here)
 - `oftheday.net` DNS still points to Netlify — custom domain not yet connected to Firebase Hosting
 - Firebase Console sign-in methods need enabling before auth works on live site
-- GitHub Actions secrets (VITE_FIREBASE_*) are set and confirmed working (runs show `***` not blank)
+- GitHub Actions secrets (VITE_FIREBASE_*) are set and confirmed working
 
 ## Pending work — in priority order
 1. **Firebase Console** — Enable Email/Password + Google sign-in methods; add `oftheday.net` to Authorized Domains; set Support Email on Google provider
 2. **DNS** — Connect `oftheday.net` custom domain in Firebase Console → Hosting; update Netlify DNS A records to Firebase IPs
 3. **Stripe go-live** — Switch to live keys in `functions/.env`, register webhook in Stripe Dashboard, set `STRIPE_WEBHOOK_SECRET`
-4. **Mailgun setup** — Add a sending domain in Mailgun Console (e.g. `mg.oftheday.net`), verify DNS records, add `MAILGUN_API_KEY` and `MAILGUN_DOMAIN` to `functions/.env`, deploy functions.
+4. **Mailgun setup** — Regenerate exposed API key; add `MAILGUN_API_KEY` + `MAILGUN_DOMAIN` to `functions/.env`; deploy functions
 5. **Demo mode** — Let unauthenticated teachers browse sample activities before signup; biggest conversion lever
 6. **Activity pool expansion** — Thin in some categories; repetition possible within weeks of daily use
 7. **Weekly activity history view** — Show teachers what they've used this week so they can plan variety
