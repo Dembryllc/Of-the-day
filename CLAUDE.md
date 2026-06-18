@@ -62,11 +62,11 @@ functions/
   index.js         — six Cloud Functions:
                      • onthisday (Gen 2, onRequest) — fetches from onthisday.com, filters for classrooms
                      • onUserCreate (Gen 1, auth.user().onCreate) — writes plan:'trial' to Firestore on
-                       signup AND sends welcome email via Resend (fails silently if key not set)
+                       signup AND sends welcome email via Mailgun (fails silently if keys not set)
                      • createCheckoutSession (Gen 2, onCall) — creates Stripe customer + checkout session
                      • stripeWebhook (Gen 2, onRequest) — handles subscription lifecycle events
-                     • sendLeadMagnet (Gen 2, onCall) — sends resource pack email via Resend; called from
-                       LandingPage after Firestore waitlist write; no-ops if RESEND_API_KEY not set
+                     • sendLeadMagnet (Gen 2, onCall) — sends resource pack email via Mailgun; called from
+                       LandingPage after Firestore waitlist write; no-ops if MAILGUN keys not set
   .env.example     — documents required env vars (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, MAILGUN_API_KEY, MAILGUN_DOMAIN)
   package.json     — includes mailgun.js, form-data, stripe, firebase-admin, firebase-functions
 
@@ -407,10 +407,11 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 - **Why Gen 1:** `beforeUserCreated` (Gen 2 equivalent) requires Firebase Identity Platform (GCIP), which this project does not use
 
 ### createCheckoutSession (Gen 2, callable)
-- Called from `UpgradePage` via `httpsCallable(getFunctions(), 'createCheckoutSession')`
+- Called from `UpgradePage` via `httpsCallable(functions, 'createCheckoutSession')` (uses the `functions` singleton exported from `firebase.js`)
 - Params: `{ priceId, userId }`
 - Creates Stripe customer if none exists, stores `stripeCustomerId` on user doc
 - Returns `{ url }` — client redirects to Stripe-hosted checkout
+- Hardcoded Stripe test price IDs in `UpgradePage`: monthly `price_1Te35JB2eRKsbhTpqJrBmNRE`, annual `price_1Te38IB2eRKsbhTp9GXJjxM0` — must be swapped for live IDs at go-live
 
 ### stripeWebhook (Gen 2, HTTP)
 - **Hard-rejects** requests if `STRIPE_WEBHOOK_SECRET` is not set (returns 400)
@@ -451,6 +452,12 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 - **Landing page crash (`getFunctions` not initialized)**: `LandingPage.jsx` called `getFunctions()`
   without the app instance. Fixed by exporting `functions = getFunctions(app)` from `firebase.js` and
   importing it in `LandingPage.jsx`.
+- **`UpgradePage` used `getFunctions()` directly**: Same pattern as the LandingPage bug — `UpgradePage`
+  imported `getFunctions` from `firebase/functions` and called it inline. Fixed by importing the
+  `functions` singleton from `firebase.js` and using `httpsCallable(functions, ...)` instead.
+- **`UpgradePage` copy said projector mode is Pro-only**: Sub-copy read "Unlock all activities, every
+  grade band, and projector mode." Projector mode is available to all users (Free and Pro). Fixed to
+  "Unlock all activities, unlimited saved routines, and custom activities."
 
 ## Activity card discoverability
 - Cards with `useNow={true}` render a `.card-chevron` (`›`) on the right edge
@@ -552,7 +559,7 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 | `ofd:cloudAutoSave` | `'true'` | Cloud auto-save preference |
 
 ## Live site status
-**Last updated: 2026-06-16**
+**Last updated: 2026-06-18**
 - All code changes on `main` auto-deploy to Firebase Hosting via GitHub Actions (no manual deploy needed)
 - Firebase Hosting URL: `oftheday-c6490.web.app` (all deploys land here)
 - `oftheday.net` DNS still points to Netlify — custom domain not yet connected to Firebase Hosting
