@@ -21,10 +21,10 @@ import {
   signInWithPopup,
   getRedirectResult,
 } from 'firebase/auth';
-import { auth } from './lib/firebase';
+import { auth, functions } from './lib/firebase';
 import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade, updateUserProfile } from './lib/firestore';
 import { usePlan, FREE_LIMITS } from './lib/usePlan';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 
 const tsToMs = ts => { if (typeof ts === 'number') return ts; return ts?.toMillis?.() ?? (ts?.seconds != null ? ts.seconds * 1000 : null); };
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "984386798513-aprar4ehdq87dd4jtguigupaiva0pnr5.apps.googleusercontent.com";
@@ -3537,7 +3537,7 @@ function UpgradePage({ account }) {
     setBusy(true);
     setError('');
     try {
-      const fn = httpsCallable(getFunctions(), 'createCheckoutSession');
+      const fn = httpsCallable(functions, 'createCheckoutSession');
       const { data } = await fn({ priceId, userId: account.uid });
       window.location.href = data.url;
     } catch {
@@ -3551,7 +3551,7 @@ function UpgradePage({ account }) {
       <div className="upgrade-page-inner">
         <img src={LOGO_SRC} alt="Of The Day" className="upgrade-page-logo" />
         <h1 className="upgrade-page-title">Upgrade to Pro</h1>
-        <p className="upgrade-page-sub">Unlock all activities, every grade band, and projector mode.</p>
+        <p className="upgrade-page-sub">Unlock all activities, unlimited saved routines, and custom activities.</p>
         <div className="upgrade-pricing-cards">
           <div className="upgrade-pricing-card">
             <div className="upgrade-pricing-label">Monthly</div>
