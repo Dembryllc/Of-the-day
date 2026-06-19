@@ -16,17 +16,18 @@ jobs:
           node-version: 20
           cache: npm
 
-      - run: npm ci
+      - name: Install frontend dependencies
+        run: npm ci
 
       - name: Verify required secrets are present
         run: |
           MISSING=0
-          [ -z "$VITE_FIREBASE_API_KEY" ]            && echo "MISSING: VITE_FIREBASE_API_KEY"            && MISSING=1
-          [ -z "$VITE_FIREBASE_AUTH_DOMAIN" ]        && echo "MISSING: VITE_FIREBASE_AUTH_DOMAIN"        && MISSING=1
-          [ -z "$VITE_FIREBASE_PROJECT_ID" ]         && echo "MISSING: VITE_FIREBASE_PROJECT_ID"         && MISSING=1
-          [ -z "$VITE_FIREBASE_STORAGE_BUCKET" ]     && echo "MISSING: VITE_FIREBASE_STORAGE_BUCKET"     && MISSING=1
+          [ -z "$VITE_FIREBASE_API_KEY" ]             && echo "MISSING: VITE_FIREBASE_API_KEY"             && MISSING=1
+          [ -z "$VITE_FIREBASE_AUTH_DOMAIN" ]         && echo "MISSING: VITE_FIREBASE_AUTH_DOMAIN"         && MISSING=1
+          [ -z "$VITE_FIREBASE_PROJECT_ID" ]          && echo "MISSING: VITE_FIREBASE_PROJECT_ID"          && MISSING=1
+          [ -z "$VITE_FIREBASE_STORAGE_BUCKET" ]      && echo "MISSING: VITE_FIREBASE_STORAGE_BUCKET"      && MISSING=1
           [ -z "$VITE_FIREBASE_MESSAGING_SENDER_ID" ] && echo "MISSING: VITE_FIREBASE_MESSAGING_SENDER_ID" && MISSING=1
-          [ -z "$VITE_FIREBASE_APP_ID" ]             && echo "MISSING: VITE_FIREBASE_APP_ID"             && MISSING=1
+          [ -z "$VITE_FIREBASE_APP_ID" ]              && echo "MISSING: VITE_FIREBASE_APP_ID"              && MISSING=1
           if [ $MISSING -eq 1 ]; then
             echo "ERROR: One or more required Firebase secrets are not set in GitHub Actions."
             echo "Go to: GitHub repo → Settings → Secrets and variables → Actions"
@@ -41,7 +42,7 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
-      - name: Build
+      - name: Build frontend
         run: npm run build
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
@@ -51,6 +52,30 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
+      - name: Write functions/.env
+        run: |
+          {
+            echo "STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}"
+            echo "STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}"
+            echo "MAILGUN_API_KEY=${MAILGUN_API_KEY}"
+            echo "MAILGUN_DOMAIN=${MAILGUN_DOMAIN}"
+            echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}"
+          } > functions/.env
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Install functions dependencies
+        run: npm ci --prefix functions
+
+      - name: Write service account credentials
+        run: echo "$SERVICE_ACCOUNT_JSON" > /tmp/firebase-sa.json
+        env:
+          SERVICE_ACCOUNT_JSON: ${{ secrets.oftheday }}
+
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -58,3 +83,8 @@ jobs:
           firebaseServiceAccount: ${{ secrets.oftheday }}
           channelId: live
           projectId: oftheday-c6490
+
+      - name: Deploy Cloud Functions
+        run: npx firebase-tools deploy --only functions --project oftheday-c6490 --non-interactive
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-sa.json

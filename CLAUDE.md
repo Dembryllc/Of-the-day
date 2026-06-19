@@ -620,7 +620,9 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 
 ## Live site status
 **Last updated: 2026-06-19**
-- All code changes on `main` auto-deploy to Firebase Hosting via GitHub Actions (no manual deploy needed)
+- All code changes on `main` auto-deploy to Firebase Hosting AND Cloud Functions via GitHub Actions
+- Frontend build uses `VITE_FIREBASE_*` secrets from GitHub Actions settings
+- Cloud Functions env is written from GitHub Actions secrets (`STRIPE_*`, `MAILGUN_*`, `ANTHROPIC_API_KEY`) at deploy time — never stored in the repo
 - Firebase Hosting URL: `oftheday-c6490.web.app` (all deploys land here)
 - `oftheday.net` DNS still points to Netlify — custom domain not yet connected to Firebase Hosting
 - Firebase Console sign-in methods need enabling before auth works on live site
@@ -629,14 +631,14 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 ## Pending work — in priority order
 1. **Firebase Console** — Enable Email/Password + Google sign-in methods; add `oftheday.net` to Authorized Domains; set Support Email on Google provider
 2. **DNS** — Connect `oftheday.net` custom domain in Firebase Console → Hosting; update Netlify DNS A records to Firebase IPs
-3. **Stripe go-live** — Switch to live keys in `functions/.env`, register webhook in Stripe Dashboard, set `STRIPE_WEBHOOK_SECRET`
-4. **Mailgun setup** — Regenerate exposed API key; add `MAILGUN_API_KEY` + `MAILGUN_DOMAIN` to `functions/.env`; deploy functions
-5. **Anthropic API key** — Add `ANTHROPIC_API_KEY=sk-ant-...` to `functions/.env`; deploy functions to activate Lesson Slide Creator AI generation
+3. **Stripe go-live** — Switch to live keys in GitHub Actions secrets (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`); register webhook in Stripe Dashboard
+4. **Mailgun setup** — Regenerate exposed API key; add `MAILGUN_API_KEY` + `MAILGUN_DOMAIN` to GitHub Actions secrets
+5. **Anthropic API key** — Add `ANTHROPIC_API_KEY` to GitHub Actions secrets to activate Lesson Slide Creator AI generation (workflow auto-deploys functions on push)
 6. **Demo mode** — Let unauthenticated teachers browse sample activities before signup; biggest conversion lever
 7. **Activity pool expansion** — Thin in some categories; repetition possible within weeks of daily use
 8. **Weekly activity history view** — Show teachers what they've used this week so they can plan variety
 9. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
-10. **Lesson Slide Creator functions deploy** — `firebase deploy --only functions` after adding `ANTHROPIC_API_KEY` to `functions/.env`
+10. **Lesson Slide Creator functions deploy** — Will auto-deploy once `ANTHROPIC_API_KEY` is added to GitHub Actions secrets and a push is made to `main`
 
 ## Code architecture
 `src/App.jsx` is ~3,400 lines. `AuthScreen` and `DisplayMode` have been extracted to separate files. Shared data/logic lives in `src/lib/`.
