@@ -7,7 +7,7 @@ Morning meeting planner for K–12 teachers using Responsive Classroom. Teachers
 - **Frontend**: React 19, Vite 8, react-router-dom 7
 - **Auth + DB**: Firebase Auth (email/password + Google) + Firestore (`oftheday-c6490`)
 - **Hosting**: Firebase Hosting (serves `dist/`)
-- **Functions**: Firebase Cloud Functions mixed gen (`functions/index.js`) — `onthisday` + `createCheckoutSession` + `stripeWebhook` + `sendLeadMagnet` are Gen 2; `onUserCreate` is Gen 1
+- **Functions**: Firebase Cloud Functions mixed gen (`functions/index.js`) — `onthisday` + `createCheckoutSession` + `stripeWebhook` + `sendLeadMagnet` + `generateLessonSlide` + `simplifyLessonSlide` are Gen 2; `onUserCreate` is Gen 1
 - **Payments**: Stripe (test mode) — checkout sessions, webhooks, subscription lifecycle
 - **Email**: Mailgun (`functions/index.js`) — welcome email on signup, resource pack lead magnet delivery
 - **Build output**: `dist/` (gitignored)
@@ -26,16 +26,19 @@ Single-page app. One `index.html` entry, one JS/CSS bundle, React Router handles
 | `/privacy` | `PrivacyPage` | Public |
 | `/terms` | `TermsPage` | Public |
 | `?projector=1` | `ProjectorReceiver` | Public — checked before router |
+| `?slideProjector=1` | `LessonSlideReceiver` | Public — checked before router |
 | `*` | Redirect to `/` | — |
 
 ## Key files
 ```
 src/
-  App.jsx          — main app logic (~3,400 lines); MainApp, UpgradePage, ProfileSheet, modals,
-                     ActivityCard, BrowseScreen, BuildScreen, FavoritesScreen, etc.
-                     AuthScreen and DisplayMode have been extracted to separate files.
-  AuthScreen.jsx   — extracted auth component (login/signup/Google/reset); fires onAuthed callback
-  DisplayMode.jsx  — extracted projector overlay component; receives routine/style props, fires onExit
+  App.jsx               — main app logic (~3,500 lines); MainApp, UpgradePage, ProfileSheet, modals,
+                          ActivityCard, BrowseScreen, BuildScreen, FavoritesScreen, LessonSlideReceiver, etc.
+                          AuthScreen and DisplayMode have been extracted to separate files.
+  AuthScreen.jsx        — extracted auth component (login/signup/Google/reset); fires onAuthed callback
+  DisplayMode.jsx       — extracted projector overlay component; receives routine/style props, fires onExit
+  LessonSlideCreator.jsx — Lesson Slide Creator feature; AI generation + manual form + My Slides library
+  LessonSlideDisplay.jsx — pure display component; renders a slide in preview (16:9) or projector (fullscreen)
   LandingPage.jsx  — marketing landing page; calls sendLeadMagnet Cloud Function on email capture
   DistrictPage.jsx — /district route; school/district sales page with FERPA/compliance info,
                      pricing, IT FAQ, and inquiry form → Firestore waitlist (source:'district-inquiry')
@@ -102,6 +105,7 @@ STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 MAILGUN_API_KEY=key-...
 MAILGUN_DOMAIN=mg.oftheday.net
+ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 **Security rules — never break these:**
@@ -160,6 +164,11 @@ users/{uid}/data/main
   version, exportedAt, favorites[], customActivities[], savedRoutines[],
   customVocab{}, customDoNow{}, projectorStyle{}
 
+users/{uid}/slides/{slideId}
+  id, lessonName, learningTarget, outcomes[], expectations[], steps[], theme, subject, grade,
+  savedAt (serverTimestamp) — pure JSON, ~1KB per slide, no binary assets
+  Ordered by savedAt desc. Owner-only Firestore rules.
+
 activities/{id}
   id, cat, title, meta, time, prompt, starter, directions, source, sourceUrl
 
@@ -188,6 +197,8 @@ waitlist/{id}
 | Saved routines | 3 | Unlimited |
 | Custom activities | 1 | Unlimited |
 | Projector mode | Full access | Full access |
+| Lesson Slide Creator (AI generate) | 1 free use | Unlimited |
+| Lesson Slide Creator (save/project/simplify) | Locked | Full access |
 
 Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger the upgrade modal which links to `/upgrade`.
 
@@ -426,6 +437,53 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 - Returns `{ sent: true/false }` — returns false (not throws) if Mailgun fails
 - No-ops silently if `MAILGUN_API_KEY` / `MAILGUN_DOMAIN` not set
 
+### generateLessonSlide (Gen 2, callable)
+- Called from `LessonSlideCreator.jsx` via `httpsCallable(functions, 'generateLessonSlide')`
+- Params: `{ subject, grade, topic, preserveLanguage? }`
+- Uses Claude Haiku (`claude-haiku-4-5-20251001`), max_tokens 512 — ~300–400 tokens/call
+- Returns structured JSON: `{ lessonName, learningTarget, outcomes[], expectations[], steps[] }`
+- Retries once on JSON parse failure; throws on second failure (client falls back to manual entry)
+- Requires `ANTHROPIC_API_KEY` in `functions/.env`
+- Hard character limits enforced in system prompt (LT 120, outcomes/expectations/steps 60 chars each)
+
+### simplifyLessonSlide (Gen 2, callable)
+- Called from `LessonSlideCreator.jsx` — Pro-only "Simplify Language" action
+- Params: `{ grade, learningTarget, outcomes[] }`
+- Uses Claude Haiku, max_tokens 256 — rewrites LT + outcomes in simpler grade-level language
+- Returns `{ learningTarget, outcomes[] }`
+- Requires `ANTHROPIC_API_KEY` in `functions/.env`
+
+## Lesson Slide Creator
+A Pro feature (1 free AI generation on trial/free) for building presentation-ready lesson slides.
+
+### Architecture
+- **Creator form** (`LessonSlideCreator.jsx`): two-panel layout — left form col (380px) + right live preview (1fr)
+- **Display** (`LessonSlideDisplay.jsx`): pure display component; preview mode (16:9 aspect ratio) or projector mode (position fixed, fullscreen)
+- **Projector bridge**: `SLIDE_PROJECTOR_KEY = 'ofd:slideProjectorState'` — same localStorage+popup pattern as activity projector
+- **Receiver**: `LessonSlideReceiver` component in `App.jsx`; detected via `?slideProjector=1` URL param
+
+### Free-tier gate
+- 1 free AI generation tracked via `localStorage('ofd:usedFreeSlide')` key
+- After first free use: generate button prompts upgrade for free/trial users
+- Manual form editing and slide preview always available regardless of plan
+- Save, Project, Simplify actions require Pro
+
+### Themes
+Three slide themes: **calm** (white bg, navy/teal), **warm** (cream bg, amber), **bold** (dark bg, gold)
+
+### Behavioral expectation memory
+- Teacher's expectations auto-saved to `users/{uid}.behavioralExpectations` on every save
+- Pre-filled on every new slide (saves re-typing the same classroom norms)
+
+### Character limits (hard, enforced in both form UI and AI system prompt)
+| Field | Max |
+|-------|-----|
+| lessonName | 60 |
+| learningTarget | 120 |
+| Each outcome/expectation/step | 60 |
+| Topic (AI input) | 200 |
+| preserveLanguage (AI input) | 100 |
+
 ## Known bugs fixed (do not reintroduce)
 - **Timestamp arithmetic**: `trialStartedAt` is a Firestore Timestamp. `Date.now() - timestamp` = NaN.
   Fixed in both `App.jsx` (`tsToMs`) and `usePlan.js` (`toMs`). Never use raw subtraction.
@@ -557,9 +615,11 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 | `ofd:projectorState` | `{...}` | Cross-window projector state bridge |
 | `ofd:presentationView` | `'clean'` or `'guided'` | Last projector view mode |
 | `ofd:cloudAutoSave` | `'true'` | Cloud auto-save preference |
+| `ofd:usedFreeSlide` | `'1'` | Whether free AI slide generation has been used |
+| `ofd:slideProjectorState` | `{...}` | Cross-window bridge for Lesson Slide projector |
 
 ## Live site status
-**Last updated: 2026-06-18**
+**Last updated: 2026-06-19**
 - All code changes on `main` auto-deploy to Firebase Hosting via GitHub Actions (no manual deploy needed)
 - Firebase Hosting URL: `oftheday-c6490.web.app` (all deploys land here)
 - `oftheday.net` DNS still points to Netlify — custom domain not yet connected to Firebase Hosting
@@ -571,10 +631,12 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 2. **DNS** — Connect `oftheday.net` custom domain in Firebase Console → Hosting; update Netlify DNS A records to Firebase IPs
 3. **Stripe go-live** — Switch to live keys in `functions/.env`, register webhook in Stripe Dashboard, set `STRIPE_WEBHOOK_SECRET`
 4. **Mailgun setup** — Regenerate exposed API key; add `MAILGUN_API_KEY` + `MAILGUN_DOMAIN` to `functions/.env`; deploy functions
-5. **Demo mode** — Let unauthenticated teachers browse sample activities before signup; biggest conversion lever
-6. **Activity pool expansion** — Thin in some categories; repetition possible within weeks of daily use
-7. **Weekly activity history view** — Show teachers what they've used this week so they can plan variety
-8. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
+5. **Anthropic API key** — Add `ANTHROPIC_API_KEY=sk-ant-...` to `functions/.env`; deploy functions to activate Lesson Slide Creator AI generation
+6. **Demo mode** — Let unauthenticated teachers browse sample activities before signup; biggest conversion lever
+7. **Activity pool expansion** — Thin in some categories; repetition possible within weeks of daily use
+8. **Weekly activity history view** — Show teachers what they've used this week so they can plan variety
+9. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
+10. **Lesson Slide Creator functions deploy** — `firebase deploy --only functions` after adding `ANTHROPIC_API_KEY` to `functions/.env`
 
 ## Code architecture
 `src/App.jsx` is ~3,400 lines. `AuthScreen` and `DisplayMode` have been extracted to separate files. Shared data/logic lives in `src/lib/`.

@@ -3,6 +3,40 @@ const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 admin.initializeApp();
 
+// ── Lesson Slide AI ───────────────────────────────────────────────────────────
+// Requires ANTHROPIC_API_KEY in functions/.env
+
+const SLIDE_SYSTEM_PROMPT = `You are an assistant that helps K-12 teachers create structured lesson display slides.
+Return ONLY valid JSON. No preamble, explanation, or markdown. No code fences.
+
+Grade band language registers:
+- K-2: Very simple sentences. Max 8 words per line. Use "We will" or "I can" with everyday words.
+- 3-5: Clear direct sentences. Academic vocabulary introduced but accessible. Max 12 words per line.
+- 6-8: Standard academic language appropriate for middle school. Max 15 words per line.
+- 9-12: Formal academic language appropriate for high school. Max 15 words per line.
+
+HARD character limits — never exceed these:
+- lessonName: 60 characters
+- learningTarget: 120 characters
+- Each outcome: 60 characters (include 2-3 outcomes)
+- Each expectation: 60 characters (include 2-3 expectations)
+- Each step: 60 characters (include 3-6 steps)
+
+Return exactly this JSON structure:
+{"lessonName":"string","learningTarget":"string","outcomes":["string","string"],"expectations":["string","string","string"],"steps":["string","string","string","string"]}
+
+For expectations: positive behavioral language only (what TO do, not what not to do).
+For learning targets: always "I can..." or "We will..." format.
+For steps: imperative verbs, short and scannable. Teachers read these aloud.
+
+EXAMPLE — Grade 3-5, Math, Adding fractions with like denominators:
+{"lessonName":"Adding Fractions","learningTarget":"I can add fractions with the same denominator.","outcomes":["I can write the sum of two fractions.","I can explain why the denominator stays the same."],"expectations":["Show your thinking on your whiteboard.","Raise your hand to share ideas.","Use math vocabulary when you explain."],"steps":["Review: what does a denominator tell us?","Watch: adding fraction strips together.","Try it: solve 3 problems with a partner.","Share: explain one solution to the class."]}
+
+EXAMPLE — Grade K-2, ELA, Letter sounds:
+{"lessonName":"Letter Sounds","learningTarget":"I can match letters to their sounds.","outcomes":["I can say the sound a letter makes.","I can find words that start with it."],"expectations":["Sit with legs crossed and hands in lap.","Raise your hand when you know the answer.","Listen when a friend is talking."],"steps":["Sing our alphabet song together.","Look at today's special letter.","Say the sound three times with me.","Find things in the room that start with it."]}`;
+
+const SIMPLIFY_SYSTEM_PROMPT = `Rewrite learning targets and outcomes using simpler words for the given grade level. Same meaning, simpler language. Return ONLY valid JSON with no preamble: {"learningTarget":"string","outcomes":["string"]}. Hard limits: learningTarget 120 chars, each outcome 60 chars.`;
+
 // ── Email helpers ─────────────────────────────────────────────────────────────
 // Requires MAILGUN_API_KEY and MAILGUN_DOMAIN in functions/.env
 // MAILGUN_DOMAIN: your verified sending domain, e.g. mg.oftheday.net or oftheday.net
@@ -509,4 +543,62 @@ exports.stripeWebhook = onRequest(async (req, res) => {
     console.error('Webhook handler error:', err);
     res.status(500).json({ error: err.message });
   }
+});
+
+// ── Lesson Slide: AI generation ───────────────────────────────────────────────
+exports.generateLessonSlide = onCall(async (request) => {
+  const { subject, grade, topic, preserveLanguage } = request.data || {};
+  if (!subject || !grade || !topic) throw new Error('subject, grade, and topic are required');
+  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
+
+  const Anthropic = require('@anthropic-ai/sdk');
+  const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  let userMsg = `Subject: ${String(subject).slice(0, 60)}\nGrade: ${String(grade).slice(0, 10)}\nTopic: ${String(topic).slice(0, 200)}`;
+  if (preserveLanguage?.trim()) {
+    userMsg += `\nPreserve this specific language if relevant: "${String(preserveLanguage).slice(0, 100)}"`;
+  }
+
+  const run = async () => {
+    const resp = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 512,
+      system: SLIDE_SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: userMsg }],
+    });
+    const raw = (resp.content[0]?.text || '').trim();
+    const parsed = JSON.parse(raw);
+    if (!parsed.learningTarget || !Array.isArray(parsed.outcomes) || !Array.isArray(parsed.steps)) {
+      throw new Error('Invalid structure');
+    }
+    return parsed;
+  };
+
+  try { return await run(); } catch {
+    try { return await run(); } catch (err) {
+      throw new Error('Generation failed — please fill in manually');
+    }
+  }
+});
+
+// ── Lesson Slide: simplify language ──────────────────────────────────────────
+exports.simplifyLessonSlide = onCall(async (request) => {
+  const { grade, learningTarget, outcomes } = request.data || {};
+  if (!grade || !learningTarget) throw new Error('grade and learningTarget are required');
+  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
+
+  const Anthropic = require('@anthropic-ai/sdk');
+  const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  const resp = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 256,
+    system: SIMPLIFY_SYSTEM_PROMPT,
+    messages: [{
+      role: 'user',
+      content: `Grade: ${grade}\nLearning target: ${learningTarget}\nOutcomes: ${(outcomes || []).join(' | ')}`,
+    }],
+  });
+  const raw = (resp.content[0]?.text || '').trim();
+  return JSON.parse(raw);
 });

@@ -7,6 +7,8 @@ import TermsPage from './TermsPage';
 import DistrictPage from './DistrictPage';
 import AuthScreen from './AuthScreen';
 import DisplayMode from './DisplayMode';
+import LessonSlideCreator from './LessonSlideCreator';
+import LessonSlideDisplay from './LessonSlideDisplay';
 import { CAT_META, MORNING_MEETING_CATS } from './lib/catMeta';
 import {
   PROJECTOR_THEMES, THEME_BACKGROUND_PRESETS, PROJECTOR_BACKGROUNDS, DEFAULT_PROJECTOR_STYLE,
@@ -22,7 +24,7 @@ import {
   getRedirectResult,
 } from 'firebase/auth';
 import { auth, functions } from './lib/firebase';
-import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade, updateUserProfile } from './lib/firestore';
+import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade, updateUserProfile, saveBehavioralExpectations } from './lib/firestore';
 import { usePlan, FREE_LIMITS } from './lib/usePlan';
 import { httpsCallable } from 'firebase/functions';
 
@@ -31,6 +33,27 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "984386798513-
 const LOGO_SRC = "/assets/ofthedaylogi.png";
 
 const PROJECTOR_STATE_KEY = 'ofd:projectorState';
+const SLIDE_PROJECTOR_KEY = 'ofd:slideProjectorState';
+
+function LessonSlideReceiver() {
+  const [slide, setSlide] = React.useState(() => {
+    try { const r = localStorage.getItem(SLIDE_PROJECTOR_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
+  });
+  React.useEffect(() => {
+    const onStorage = e => {
+      if (e.key !== SLIDE_PROJECTOR_KEY) return;
+      try { setSlide(e.newValue ? JSON.parse(e.newValue) : null); } catch {}
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+  if (!slide) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'#0A0F1E', color:'rgba(255,255,255,0.4)', fontFamily:'Outfit,sans-serif', fontSize:18 }}>
+      Waiting for slide projection…
+    </div>
+  );
+  return <LessonSlideDisplay slide={slide} projectorMode onExit={() => window.close()} />;
+}
 
 function ProjectorReceiver() {
   const [state, setState] = React.useState(() => {
@@ -2244,7 +2267,11 @@ function MainApp({ account, onSignOut }) {
   const [cloudAutoSave, setCloudAutoSave] = useState(() => localStorage.getItem("ofd:cloudAutoSave") === "true");
   const cloudReadyRef = useRef(false);
   const projectorRef = useRef(null);
+  const slideProjectorRef = useRef(null);
   const [projectorConnected, setProjectorConnected] = useState(false);
+  const [savedBehavioralExpectations, setSavedBehavioralExpectations] = useState(
+    () => (account?.behavioralExpectations || [])
+  );
   const [presentationChoice, setPresentationChoice] = useState(null);
   const [presentationViewDefault, setPresentationViewDefault] = useState(() => readPresentationView());
 
@@ -2301,6 +2328,23 @@ function MainApp({ account, onSignOut }) {
     projectorRef.current = null;
     setProjectorConnected(false);
     showToast("Projector stopped");
+  }, [showToast]);
+
+  const projectSlideToWindow = useCallback((slide) => {
+    try { localStorage.setItem(SLIDE_PROJECTOR_KEY, JSON.stringify(slide)); } catch {}
+    const url = new URL(window.location.href);
+    url.searchParams.set('slideProjector', '1');
+    url.hash = '';
+    const existing = slideProjectorRef.current;
+    if (!existing || existing.closed) {
+      const opened = window.open(url.toString(), 'ofdSlideProjector', 'popup=yes,width=1280,height=800');
+      if (!opened) { showToast('Allow popups to open the projector'); return; }
+      slideProjectorRef.current = opened;
+    } else {
+      try { localStorage.setItem(SLIDE_PROJECTOR_KEY, JSON.stringify(slide)); } catch {}
+      existing.focus();
+    }
+    showToast('Slide projected');
   }, [showToast]);
 
   useEffect(() => {
@@ -2846,6 +2890,7 @@ function MainApp({ account, onSignOut }) {
     { icon:"☀️", label:"Today" },
     { icon:"⊞",  label:"Library" },
     { icon:"▦",  label:"Routines" },
+    { icon:"🖼️", label:"Lesson Slides" },
   ];
   const mobileNavItems = navItems.concat({ icon:"⚙", label:"Settings", modal:true });
   const libraryViews = ["Library", "Word of the Day", "Do Now", "On This Day", "My Activities", "Favorites"];
@@ -3066,6 +3111,19 @@ function MainApp({ account, onSignOut }) {
               <div className="topbar-date">Create activities · edit your items · build routines · {savedRoutines.length} saved</div>
             </div>
             <div className="topbar-right grade-control-wrap"><GradePicker value={currentGrade} onChange={handleGradeChange}/></div>
+          </div>
+        )}
+        {activeNav === "Lesson Slides" && (
+          <div className="topbar">
+            <div className="topbar-left">
+              <div className="topbar-title">Lesson Slides</div>
+              <div className="topbar-date">AI-generated classroom display slides · learning targets, outcomes, steps</div>
+            </div>
+            {isPlanFree && (
+              <div className="topbar-right">
+                <a href="/upgrade" className="btn-primary btn-compact" style={{ textDecoration: 'none' }}>⭐ Upgrade for unlimited</a>
+              </div>
+            )}
           </div>
         )}
         {activeNav === "Word of the Day" && (
@@ -3391,6 +3449,21 @@ function MainApp({ account, onSignOut }) {
             />
           )}
 
+          {/* LESSON SLIDES */}
+          {activeNav === "Lesson Slides" && (
+            <LessonSlideCreator
+              account={account}
+              isPlanFree={isPlanFree}
+              onUpgradeNeeded={() => setUpgradeModalFor("Upgrade to Pro to create, save, and project unlimited lesson slides.")}
+              onProjectSlide={projectSlideToWindow}
+              savedBehavioralExpectations={savedBehavioralExpectations}
+              onSaveBehavioralExpectations={exps => {
+                setSavedBehavioralExpectations(exps);
+                if (account?.uid) saveBehavioralExpectations(account.uid, exps).catch(() => {});
+              }}
+            />
+          )}
+
         </div>
 
         {/* MOBILE BOTTOM NAV */}
@@ -3579,10 +3652,11 @@ function UpgradePage({ account }) {
 
 function App() {
   const isProjectorWindow = new URLSearchParams(window.location.search).get("projector") === "1";
+  const isSlideProjectorWindow = new URLSearchParams(window.location.search).get("slideProjector") === "1";
   const [authState, setAuthState] = useState({ loading: true, account: null });
 
   useEffect(() => {
-    if (isProjectorWindow) {
+    if (isProjectorWindow || isSlideProjectorWindow) {
       setAuthState({ loading: false, account: null });
       return;
     }
@@ -3618,6 +3692,7 @@ function App() {
           plan: userDoc?.plan || "trial",
           trialStartedAt: tsToMs(userDoc?.trialStartedAt),
           tier: userDoc?.tier || null,
+          behavioralExpectations: userDoc?.behavioralExpectations || [],
         };
         await migrateFromLocalStorage(user.uid);
         setAuthState({ loading: false, account });
@@ -3626,7 +3701,7 @@ function App() {
       }
     });
     return unsubscribe;
-  }, [isProjectorWindow]);
+  }, [isProjectorWindow, isSlideProjectorWindow]);
 
   const signOut = useCallback(async () => {
     await firebaseSignOut(auth);
@@ -3634,6 +3709,7 @@ function App() {
   }, []);
 
   if (isProjectorWindow) return <ProjectorReceiver />;
+  if (isSlideProjectorWindow) return <LessonSlideReceiver />;
 
   const loading = <div className="auth-loading">Loading…</div>;
   const authed = authState.account;

@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
 export async function createUserDocument(uid, { name, email, grade }) {
@@ -67,4 +67,25 @@ export async function fetchActivities() {
     // Restore numeric id so existing filter logic (GRADE_RITUAL_ACTIVITY_IDS) still works.
     return { ...data, id: isNaN(Number(data.id)) ? data.id : Number(data.id) };
   });
+}
+
+// ── Lesson Slides ─────────────────────────────────────────────────────────────
+
+export async function saveLessonSlide(uid, slide) {
+  const ref = doc(db, 'users', uid, 'slides', slide.id);
+  await setDoc(ref, { ...slide, savedAt: serverTimestamp() });
+}
+
+export async function loadLessonSlides(uid) {
+  const q = query(collection(db, 'users', uid, 'slides'), orderBy('savedAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+}
+
+export async function deleteLessonSlide(uid, slideId) {
+  await deleteDoc(doc(db, 'users', uid, 'slides', slideId));
+}
+
+export async function saveBehavioralExpectations(uid, expectations) {
+  await setDoc(doc(db, 'users', uid), { behavioralExpectations: expectations }, { merge: true });
 }
