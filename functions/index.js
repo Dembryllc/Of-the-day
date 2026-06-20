@@ -1,3 +1,4 @@
+// env: 2026-06-20
 const { onRequest, onCall } = require("firebase-functions/v2/https");
 const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
@@ -225,17 +226,17 @@ function categorize(text = "", fallback = "History") {
 
 function isElementaryFriendly(text = "") {
   const value = text.toLowerCase();
-  const heavy = /\b(killed|murder|assassinat|execut|massacre|bomb|attack|terror|warplane|invasion|ambush|battle|siege|kidnap|hostage|genocide|disaster|crash|pandemic|plague|slavery|nazi|hitler|atomic bomb|shooting|dead|death|died|conquer|condemned|heretic)\b/;
-  const tooPolitical = /\b(coup|dictator|troops|military|missile|nuclear accident|trial|sentenced|prison|riot|monastic|papal|treaty of|kingdom of|empire|pope|emperor|scripture|shrine)\b/;
+  const heavy = /(killed|murder|assassinat|execut|massacre|bomb|attack|terror|warplane|invasion|ambush|battle|siege|kidnap|hostage|genocide|disaster|crash|pandemic|plague|slavery|nazi|hitler|atomic bomb|shooting|dead|death|died|conquer|condemned|heretic)/;
+  const tooPolitical = /(coup|dictator|troops|military|missile|nuclear accident|trial|sentenced|prison|riot|monastic|papal|treaty of|kingdom of|empire|pope|emperor|scripture|shrine)/;
   return !heavy.test(value) && !tooPolitical.test(value);
 }
 
 function isClassroomUseful(description = "", category = "History", year = "") {
   const value = description.toLowerCase();
-  const useful = /\b(space|nasa|moon|mars|planet|telescope|invent|patent|computer|web|internet|telephone|book|author|music|art|artist|museum|baseball|basketball|soccer|olympic|scientist|animal|earth|ocean|national park|president|constitution|rights|school|first woman|first black|born)\b/;
+  const useful = /(space|nasa|moon|mars|planet|telescope|invent|patent|computer|web|internet|telephone|book|author|music|art|artist|museum|baseball|basketball|soccer|olympic|scientist|animal|earth|ocean|national park|president|constitution|rights|school|first woman|first black|born)/;
   const numericYear = Number(year);
   if (!useful.test(value)) return false;
-  if ((category === "History" || category === "Civics") && numericYear && numericYear < 1800 && !/\bbook|artist|scientist|invent|telescope|planet|music\b/.test(value)) {
+  if ((category === "History" || category === "Civics") && numericYear && numericYear < 1800 && !/book|artist|scientist|invent|telescope|planet|music/.test(value)) {
     return false;
   }
   return true;
@@ -247,10 +248,10 @@ function makeKidFriendly(description = "", category = "History") {
     .replace(/\s+\([^)]*d\.\s*\d{3,4}[^)]*\)/gi, "")
     .replace(/\s+\([^)]*aged\s+\d+[^)]*\)/gi, "")
     .replace(/\s+\([^)]*\)/g, "")
-    .replace(/\bwas sworn into office\b/gi, "began serving")
-    .replace(/\bsucceeded\b/gi, "became")
-    .replace(/\bpatented\b/gi, "received a patent for")
-    .replace(/\bdebuts?\b/gi, "first appeared")
+    .replace(/was sworn into office/gi, "began serving")
+    .replace(/succeeded/gi, "became")
+    .replace(/patented/gi, "received a patent for")
+    .replace(/debuts?/gi, "first appeared")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -301,7 +302,7 @@ function parseListItems(html, type = "events", limit = 8) {
     let category = "History";
     if (type === "birthdays") {
       category = "Famous People";
-      if (!/^born\b/i.test(description)) description = "Born: " + description;
+      if (!/^born/i.test(description)) description = "Born: " + description;
     } else {
       category = categorize(description, "History");
     }
@@ -554,9 +555,12 @@ exports.generateLessonSlide = onCall(async (request) => {
   const Anthropic = require('@anthropic-ai/sdk');
   const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  let userMsg = `Subject: ${String(subject).slice(0, 60)}\nGrade: ${String(grade).slice(0, 10)}\nTopic: ${String(topic).slice(0, 200)}`;
+  let userMsg = `Subject: ${String(subject).slice(0, 60)}
+Grade: ${String(grade).slice(0, 10)}
+Topic: ${String(topic).slice(0, 200)}`;
   if (preserveLanguage?.trim()) {
-    userMsg += `\nPreserve this specific language if relevant: "${String(preserveLanguage).slice(0, 100)}"`;
+    userMsg += `
+Preserve this specific language if relevant: "${String(preserveLanguage).slice(0, 100)}"`;
   }
 
   const run = async () => {
@@ -596,7 +600,9 @@ exports.simplifyLessonSlide = onCall(async (request) => {
     system: SIMPLIFY_SYSTEM_PROMPT,
     messages: [{
       role: 'user',
-      content: `Grade: ${grade}\nLearning target: ${learningTarget}\nOutcomes: ${(outcomes || []).join(' | ')}`,
+      content: `Grade: ${grade}
+Learning target: ${learningTarget}
+Outcomes: ${(outcomes || []).join(' | ')}`,
     }],
   });
   const raw = (resp.content[0]?.text || '').trim();
