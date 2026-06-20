@@ -41,7 +41,6 @@
       { "source": "/api/on-this-day", "function": "onthisday" },
       { "source": "/api/generate-slide", "function": "generateLessonSlide" },
       { "source": "/api/simplify-slide", "function": "simplifyLessonSlide" },
-      { "source": "/api/ping", "function": "generateLessonSlidePing" },
       { "source": "**", "destination": "/index.html" }
     ]
   },
