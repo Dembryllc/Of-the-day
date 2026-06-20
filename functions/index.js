@@ -210,8 +210,8 @@ const CLASSROOM_KID_FACTS = [
 
 function stripHtml(value = "") {
   return value
-    .replace(/<script[sS]*?</script>/gi, "")
-    .replace(/<style[sS]*?</style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
