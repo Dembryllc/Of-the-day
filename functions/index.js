@@ -1,6 +1,7 @@
 // env: 2026-06-20
 const { onRequest, onCall } = require("firebase-functions/v2/https");
 const functionsV1 = require("firebase-functions/v1");
+const httpsV1 = functionsV1.https;
 const admin = require("firebase-admin");
 const https = require("https");
 admin.initializeApp();
@@ -498,7 +499,7 @@ exports.stripeWebhook = onRequest(async (req, res) => {
 
 
 // ── Lesson Slide: AI generation (onRequest, new name to avoid type-change error) ───────
-exports.generateSlide = onRequest({invoker: "private"}, async (req, res) => {
+exports.generateSlide = httpsV1.onRequest(async (req, res) => {
   setCors(res);
   if (req.method === "OPTIONS") return res.status(204).send("");
 
@@ -557,7 +558,7 @@ exports.generateSlide = onRequest({invoker: "private"}, async (req, res) => {
 });
 
 // ── Lesson Slide: simplify language (onRequest, new name) ───────────────────────────────
-exports.simplifySlide = onRequest({invoker: "private"}, async (req, res) => {
+exports.simplifySlide = httpsV1.onRequest(async (req, res) => {
   setCors(res);
   if (req.method === "OPTIONS") return res.status(204).send("");
 
