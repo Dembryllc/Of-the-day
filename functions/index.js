@@ -496,12 +496,6 @@ exports.stripeWebhook = onRequest(async (req, res) => {
   }
 });
 
-// ── Lesson Slide: ping diagnostic ────────────────────────────────────────────
-exports.generateLessonSlidePing = onRequest(async (req, res) => {
-  setCors(res);
-  if (req.method === "OPTIONS") return res.status(204).send("");
-  res.status(200).json({ ok: true, apiKey: !!process.env.ANTHROPIC_API_KEY });
-});
 
 // ── Lesson Slide: AI generation (onRequest — bypasses onCall framework) ───────
 exports.generateLessonSlide = onRequest(async (req, res) => {
