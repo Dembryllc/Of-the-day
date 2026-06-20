@@ -1,37 +1,44 @@
 // env: 2026-06-20
-const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onRequest, onCall } = require("firebase-functions/v2/https");
 const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 const https = require("https");
 admin.initializeApp();
 
+// ── CORS helper ───────────────────────────────────────────────────────────────
+function setCors(res) {
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+}
+
 function anthropicPost(apiKey, payload) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify(payload);
     const req = https.request({
-      hostname: 'api.anthropic.com',
+      hostname: "api.anthropic.com",
       port: 443,
-      path: '/v1/messages',
-      method: 'POST',
+      path: "/v1/messages",
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(body),
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(body),
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
       },
     }, (res) => {
-      let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
+      let data = "";
+      res.on("data", chunk => { data += chunk; });
+      res.on("end", () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           try { resolve(JSON.parse(data)); }
-          catch (e) { reject(new Error(`JSON parse: ${data.slice(0, 100)}`)); }
+          catch (e) { reject(new Error("JSON parse: " + data.slice(0, 100))); }
         } else {
-          reject(new Error(`Anthropic ${res.statusCode}: ${data.slice(0, 200)}`));
+          reject(new Error("Anthropic " + res.statusCode + ": " + data.slice(0, 200)));
         }
       });
     });
-    req.on('error', reject);
+    req.on("error", reject);
     req.write(body);
     req.end();
   });
@@ -73,18 +80,17 @@ const SIMPLIFY_SYSTEM_PROMPT = `Rewrite learning targets and outcomes using simp
 
 // ── Email helpers ─────────────────────────────────────────────────────────────
 // Requires MAILGUN_API_KEY and MAILGUN_DOMAIN in functions/.env
-// MAILGUN_DOMAIN: your verified sending domain, e.g. mg.oftheday.net or oftheday.net
-const EMAIL_FROM = 'OfTheDay <hello@oftheday.net>';
-const APP_URL = 'https://oftheday.net';
+const EMAIL_FROM = "OfTheDay <hello@oftheday.net>";
+const APP_URL = "https://oftheday.net";
 
 function getMailgun() {
   const key = process.env.MAILGUN_API_KEY;
   const domain = process.env.MAILGUN_DOMAIN;
   if (!key || !domain) return null;
-  const Mailgun = require('mailgun.js');
-  const FormData = require('form-data');
+  const Mailgun = require("mailgun.js");
+  const FormData = require("form-data");
   const mg = new Mailgun(FormData);
-  return { client: mg.client({ username: 'api', key }), domain };
+  return { client: mg.client({ username: "api", key }), domain };
 }
 
 async function sendEmail({ to, subject, html }) {
@@ -108,18 +114,18 @@ function emailBase(bodyContent) {
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#F8F9FC;padding:32px 16px;">
 <tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
-  <tr><td style="background:#1B2D5B;padding:24px 32px;">
-    <span style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.3px;">of<span style="color:#F5A623;">·</span>the<span style="color:#F5A623;">·</span>day</span>
-  </td></tr>
-  <tr><td style="padding:32px;">
-    ${bodyContent}
-  </td></tr>
-  <tr><td style="background:#F3F4F6;padding:16px 32px;text-align:center;">
-    <p style="margin:0;font-size:12px;color:#9CA3AF;">
-      OfTheDay.net · Built for teachers ·
-      <a href="${APP_URL}" style="color:#4DB896;text-decoration:none;">Open the app</a>
-    </p>
-  </td></tr>
+<tr><td style="background:#1B2D5B;padding:24px 32px;">
+<span style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.3px;">of<span style="color:#F5A623;">&#183;</span>the<span style="color:#F5A623;">&#183;</span>day</span>
+</td></tr>
+<tr><td style="padding:32px;">
+${bodyContent}
+</td></tr>
+<tr><td style="background:#F3F4F6;padding:16px 32px;text-align:center;">
+<p style="margin:0;font-size:12px;color:#9CA3AF;">
+OfTheDay.net &middot; Built for teachers &middot;
+<a href="${APP_URL}" style="color:#4DB896;text-decoration:none;">Open the app</a>
+</p>
+</td></tr>
 </table>
 </td></tr>
 </table>
@@ -127,84 +133,56 @@ function emailBase(bodyContent) {
 }
 
 function welcomeEmailHtml(name) {
-  const first = name ? name.split(' ')[0] : 'Teacher';
+  const first = name ? name.split(" ")[0] : "Teacher";
   return emailBase(`
-    <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1B2D5B;">Welcome, ${first}! 👋</h1>
-    <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">
-      Your morning meeting is already built. Open OfTheDay any morning and you'll find a complete,
-      grade-appropriate Greeting, Sharing, Group Activity, and Morning Message — ready in seconds.
-    </p>
-    <h3 style="margin:0 0 10px;font-size:14px;font-weight:700;color:#1B2D5B;text-transform:uppercase;letter-spacing:0.05em;">Three things to try first</h3>
-    <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;width:100%;">
-      <tr><td style="padding:10px 12px;background:#F0FDF4;border-radius:8px;margin-bottom:8px;">
-        <span style="font-size:16px;">1.</span>
-        <strong style="color:#1B2D5B;margin-left:6px;">Set your grade level</strong>
-        <span style="display:block;font-size:13px;color:#6B7280;margin-left:22px;">Activities, vocabulary, and Do Now problems auto-adjust.</span>
-      </td></tr>
-      <tr><td style="height:6px;"></td></tr>
-      <tr><td style="padding:10px 12px;background:#F0FDF4;border-radius:8px;">
-        <span style="font-size:16px;">2.</span>
-        <strong style="color:#1B2D5B;margin-left:6px;">Hit "Project Today"</strong>
-        <span style="display:block;font-size:13px;color:#6B7280;margin-left:22px;">Opens a full-screen view for your smartboard or projector.</span>
-      </td></tr>
-      <tr><td style="height:6px;"></td></tr>
-      <tr><td style="padding:10px 12px;background:#F0FDF4;border-radius:8px;">
-        <span style="font-size:16px;">3.</span>
-        <strong style="color:#1B2D5B;margin-left:6px;">Check the Library</strong>
-        <span style="display:block;font-size:13px;color:#6B7280;margin-left:22px;">Browse Do Nows, Word of the Day, On This Day history, and 60+ activities.</span>
-      </td></tr>
-    </table>
-    <a href="${APP_URL}/dashboard" style="display:inline-block;background:#F5A623;color:#1B2D5B;font-size:15px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;">Open Today's Meeting →</a>
-    <p style="margin:24px 0 0;font-size:13px;color:#9CA3AF;">
-      Questions? Reply to this email or reach us at <a href="mailto:hello@oftheday.net" style="color:#4DB896;">hello@oftheday.net</a>.
-    </p>
-  `);
+<h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1B2D5B;">Welcome, ${first}! 👋</h1>
+<p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">
+Your morning meeting is already built. Open OfTheDay any morning and you'll find a complete,
+grade-appropriate Greeting, Sharing, Group Activity, and Morning Message — ready in seconds.
+</p>
+<a href="${APP_URL}/dashboard" style="display:inline-block;background:#F5A623;color:#1B2D5B;font-size:15px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;">Open Today's Meeting &rarr;</a>
+<p style="margin:24px 0 0;font-size:13px;color:#9CA3AF;">
+Questions? Reply to this email or reach us at <a href="mailto:hello@oftheday.net" style="color:#4DB896;">hello@oftheday.net</a>.
+</p>
+`);
 }
 
 const RESOURCE_PACK_ACTIVITIES = [
-  { cat: 'Greeting', title: 'Name + Gesture Greeting', desc: 'Each student says their name and invents a unique gesture. The class mirrors it back.' },
-  { cat: 'Greeting', title: 'Partner Greeting Remix', desc: 'Greet a partner by name, then add one kind sentence or question before switching.' },
-  { cat: 'Sharing', title: 'Weekend Highlight Share', desc: 'Share one moment from the weekend using the sentence starter: "One thing I did was…"' },
-  { cat: 'Sharing', title: 'Two Truths and a Wish', desc: 'Share two true things about yourself and one thing you wish were true. Class guesses the wish.' },
-  { cat: 'Group Activity', title: 'Commonality Circle', desc: 'Find one thing all students in a small group have in common. Groups share with the class.' },
-  { cat: 'Group Activity', title: 'Collaborative Counting', desc: 'The class counts to 20 together — but no two people can speak at the same time. Start over on overlap.' },
-  { cat: 'Morning Message', title: 'Riddle of the Day', desc: 'Display a grade-appropriate riddle. Students think quietly, then share guesses.' },
-  { cat: 'Morning Message', title: 'Connection Question', desc: 'Post a question on the board. Students write a one-sentence answer before the meeting begins.' },
-  { cat: 'SEL Prompt', title: 'Emoji Check-In', desc: 'Each student chooses an emoji that matches their energy this morning and briefly explains why.' },
-  { cat: 'Brain Teaser', title: 'What Comes Next?', desc: 'Show a visual or number pattern. Students identify the rule and predict what comes next.' },
+  { cat: "Greeting", title: "Name + Gesture Greeting", desc: "Each student says their name and invents a unique gesture. The class mirrors it back." },
+  { cat: "Greeting", title: "Partner Greeting Remix", desc: "Greet a partner by name, then add one kind sentence or question before switching." },
+  { cat: "Sharing", title: "Weekend Highlight Share", desc: 'Share one moment from the weekend using the sentence starter: "One thing I did was…"' },
+  { cat: "Sharing", title: "Two Truths and a Wish", desc: "Share two true things about yourself and one thing you wish were true. Class guesses the wish." },
+  { cat: "Group Activity", title: "Commonality Circle", desc: "Find one thing all students in a small group have in common. Groups share with the class." },
+  { cat: "Group Activity", title: "Collaborative Counting", desc: "The class counts to 20 together — but no two people can speak at the same time. Start over on overlap." },
+  { cat: "Morning Message", title: "Riddle of the Day", desc: "Display a grade-appropriate riddle. Students think quietly, then share guesses." },
+  { cat: "Morning Message", title: "Connection Question", desc: "Post a question on the board. Students write a one-sentence answer before the meeting begins." },
+  { cat: "SEL Prompt", title: "Emoji Check-In", desc: "Each student chooses an emoji that matches their energy this morning and briefly explains why." },
+  { cat: "Brain Teaser", title: "What Comes Next?", desc: "Show a visual or number pattern. Students identify the rule and predict what comes next." },
 ];
 
 function resourcePackHtml(email) {
   const rows = RESOURCE_PACK_ACTIVITIES.map(a => `
-    <tr>
-      <td style="padding:10px 0;border-bottom:1px solid #F3F4F6;">
-        <span style="font-size:11px;font-weight:700;color:#4DB896;text-transform:uppercase;letter-spacing:0.06em;">${a.cat}</span>
-        <strong style="display:block;font-size:14px;color:#1B2D5B;margin:2px 0;">${a.title}</strong>
-        <span style="font-size:13px;color:#6B7280;line-height:1.5;">${a.desc}</span>
-      </td>
-    </tr>`).join('');
-
+<tr>
+<td style="padding:10px 0;border-bottom:1px solid #F3F4F6;">
+<span style="font-size:11px;font-weight:700;color:#4DB896;text-transform:uppercase;letter-spacing:0.06em;">${a.cat}</span>
+<strong style="display:block;font-size:14px;color:#1B2D5B;margin:2px 0;">${a.title}</strong>
+<span style="font-size:13px;color:#6B7280;line-height:1.5;">${a.desc}</span>
+</td>
+</tr>`).join("");
   return emailBase(`
-    <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1B2D5B;">Your Morning Meeting Resource Pack 🎉</h1>
-    <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
-      Here are 10 ready-to-use activities — copy them straight into your morning meeting or
-      <a href="${APP_URL}/login?signup=1" style="color:#4DB896;font-weight:600;">create a free account</a>
-      to get a new complete routine every day.
-    </p>
-    <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
-      ${rows}
-    </table>
-    <a href="${APP_URL}/login?signup=1" style="display:inline-block;background:#F5A623;color:#1B2D5B;font-size:15px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;">Get Your Daily Routine Free →</a>
-    <p style="margin:24px 0 0;font-size:13px;color:#9CA3AF;">
-      You're receiving this because you signed up at oftheday.net with ${email}.
-      <a href="mailto:hello@oftheday.net?subject=Unsubscribe" style="color:#9CA3AF;">Unsubscribe</a>
-    </p>
-  `);
+<h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1B2D5B;">Your Morning Meeting Resource Pack 🎉</h1>
+<table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">${rows}</table>
+<a href="${APP_URL}/login?signup=1" style="display:inline-block;background:#F5A623;color:#1B2D5B;font-size:15px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;">Get Your Daily Routine Free &rarr;</a>
+<p style="margin:24px 0 0;font-size:13px;color:#9CA3AF;">
+You're receiving this because you signed up at oftheday.net with ${email}.
+<a href="mailto:hello@oftheday.net?subject=Unsubscribe" style="color:#9CA3AF;">Unsubscribe</a>
+</p>
+`);
 }
 
 const MONTHS = [
-  "january", "february", "march", "april", "may", "june",
-  "july", "august", "september", "october", "november", "december"
+  "january","february","march","april","may","june",
+  "july","august","september","october","november","december"
 ];
 
 const CLASSROOM_KID_FACTS = [
@@ -232,8 +210,8 @@ const CLASSROOM_KID_FACTS = [
 
 function stripHtml(value = "") {
   return value
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[sS]*?</script>/gi, "")
+    .replace(/<style[sS]*?</style>/gi, "")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
@@ -259,17 +237,17 @@ function categorize(text = "", fallback = "History") {
 
 function isElementaryFriendly(text = "") {
   const value = text.toLowerCase();
-  const heavy = /(killed|murder|assassinat|execut|massacre|bomb|attack|terror|warplane|invasion|ambush|battle|siege|kidnap|hostage|genocide|disaster|crash|pandemic|plague|slavery|nazi|hitler|atomic bomb|shooting|dead|death|died|conquer|condemned|heretic)/;
-  const tooPolitical = /(coup|dictator|troops|military|missile|nuclear accident|trial|sentenced|prison|riot|monastic|papal|treaty of|kingdom of|empire|pope|emperor|scripture|shrine)/;
+  const heavy = /(killed|murder|assassinat|execut|massacre|bomb|attack|terror|warplane|invasion|ambush|battle|siege|kidnap|hostage|genocide|disaster|crash|pandemic|plague|slavery|nazi|hitler|atomic bomb|shooting|dead|death|died|conquer|condemned|heretic)/;
+  const tooPolitical = /(coup|dictator|troops|military|missile|nuclear accident|trial|sentenced|prison|riot|monastic|papal|treaty of|kingdom of|empire|pope|emperor|scripture|shrine)/;
   return !heavy.test(value) && !tooPolitical.test(value);
 }
 
 function isClassroomUseful(description = "", category = "History", year = "") {
   const value = description.toLowerCase();
-  const useful = /(space|nasa|moon|mars|planet|telescope|invent|patent|computer|web|internet|telephone|book|author|music|art|artist|museum|baseball|basketball|soccer|olympic|scientist|animal|earth|ocean|national park|president|constitution|rights|school|first woman|first black|born)/;
+  const useful = /(space|nasa|moon|mars|planet|telescope|invent|patent|computer|web|internet|telephone|book|author|music|art|artist|museum|baseball|basketball|soccer|olympic|scientist|animal|earth|ocean|national park|president|constitution|rights|school|first woman|first black|born)/;
   const numericYear = Number(year);
   if (!useful.test(value)) return false;
-  if ((category === "History" || category === "Civics") && numericYear && numericYear < 1800 && !/book|artist|scientist|invent|telescope|planet|music/.test(value)) {
+  if ((category === "History" || category === "Civics") && numericYear && numericYear < 1800 && !/book|artist|scientist|invent|telescope|planet|music/.test(value)) {
     return false;
   }
   return true;
@@ -281,17 +259,17 @@ function makeKidFriendly(description = "", category = "History") {
     .replace(/\s+\([^)]*d\.\s*\d{3,4}[^)]*\)/gi, "")
     .replace(/\s+\([^)]*aged\s+\d+[^)]*\)/gi, "")
     .replace(/\s+\([^)]*\)/g, "")
-    .replace(/was sworn into office/gi, "began serving")
-    .replace(/succeeded/gi, "became")
-    .replace(/patented/gi, "received a patent for")
-    .replace(/debuts?/gi, "first appeared")
+    .replace(/was sworn into office/gi, "began serving")
+    .replace(/succeeded/gi, "became")
+    .replace(/patented/gi, "received a patent for")
+    .replace(/debuts?/gi, "first appeared")
     .replace(/\s+/g, " ")
     .trim();
 
   if (/^born:/i.test(text)) {
     text = text.replace(/^Born:\s*/i, "");
     const name = text.split(",")[0].trim();
-    if (name) text = `${name} was born. What might students want to learn about this person's life or work?`;
+    if (name) text = name + " was born. What might students want to learn about this person's life or work?";
   }
 
   if (text.length > 155) {
@@ -319,35 +297,27 @@ function parseListItems(html, type = "events", limit = 8) {
   const seen = new Set();
   const itemPattern = /<li[^>]*>([\s\S]*?)<\/li>/gi;
   let match;
-
   while ((match = itemPattern.exec(html)) && items.length < limit) {
-    const text = stripHtml(match[1])
-      .replace(/\s+more$/i, "")
-      .replace(/\s+»$/i, "")
-      .trim();
+    const text = stripHtml(match[1]).replace(/\s+more$/i, "").replace(/\s+»$/i, "").trim();
     const itemMatch = text.match(/^(\d{3,4}|[1-9]\d?)\s+(.{16,})$/);
     if (!itemMatch) continue;
-
     const year = itemMatch[1];
     let description = itemMatch[2].trim();
     if (description.length < 18 || !isElementaryFriendly(description)) continue;
-
     let category = "History";
     if (type === "birthdays") {
       category = "Famous People";
-      if (!/^born/i.test(description)) description = "Born: " + description;
+      if (!/^born/i.test(description)) description = "Born: " + description;
     } else {
       category = categorize(description, "History");
     }
     if (!["Science", "Technology", "Famous People", "Sports"].includes(category)) continue;
     if (!isClassroomUseful(description, category, year)) continue;
-
     const key = year + "|" + description.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
     items.push({ year, title: makeKidFriendly(description, category), category, classroomSafe: true });
   }
-
   return items;
 }
 
@@ -358,82 +328,67 @@ async function fetchPage(path, type, limit) {
       "Accept": "text/html"
     }
   });
-  if (!response.ok) throw new Error(`OnThisDay returned ${response.status} for ${path}`);
+  if (!response.ok) throw new Error("OnThisDay returned " + response.status + " for " + path);
   const html = await response.text();
   return parseListItems(html, type, limit);
 }
 
 function prioritize(items) {
-  const order = ["Nature", "Space", "Science", "Famous People", "Inventions", "Technology", "Arts & Culture", "Sports", "Geography", "Transportation", "Civics", "History"];
+  const order = ["Nature","Space","Science","Famous People","Inventions","Technology","Arts & Culture","Sports","Geography","Transportation","Civics","History"];
   const picked = [];
   const seen = new Set();
-
   for (const category of order) {
     const next = items.find(item => item.category === category && !seen.has(item.year + item.title));
-    if (next) {
-      picked.push(next);
-      seen.add(next.year + next.title);
-    }
+    if (next) { picked.push(next); seen.add(next.year + next.title); }
   }
-
   for (const item of items) {
     const key = item.year + item.title;
     if (picked.length >= 8) break;
-    if (!seen.has(key)) {
-      picked.push(item);
-      seen.add(key);
-    }
+    if (!seen.has(key)) { picked.push(item); seen.add(key); }
   }
-
   return picked;
 }
 
-// Write trial plan when a new Firebase Auth user is created.
-// beforeUserCreated fires before signup completes. Wrapped in try-catch so a
-// Firestore failure never blocks sign-up — client-side createUserDocument is a fallback.
-// Gen 1 auth trigger — beforeUserCreated (v2) requires GCIP which this project doesn't use.
+// ── Auth trigger ──────────────────────────────────────────────────────────────
 exports.onUserCreate = functionsV1.auth.user().onCreate(async (user) => {
   try {
-    await admin.firestore().collection('users').doc(user.uid).set({
-      email: user.email || '',
-      plan: 'trial',
+    await admin.firestore().collection("users").doc(user.uid).set({
+      email: user.email || "",
+      plan: "trial",
       trialStartedAt: admin.firestore.FieldValue.serverTimestamp(),
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
   } catch (err) {
-    console.error('Failed to create user document on sign-up:', err);
+    console.error("Failed to create user document on sign-up:", err);
   }
-
   if (!user.email) return;
   try {
     await sendEmail({
       to: user.email,
-      subject: 'Your morning meeting is ready 🌅',
-      html: welcomeEmailHtml(user.displayName || ''),
+      subject: "Your morning meeting is ready 🌅",
+      html: welcomeEmailHtml(user.displayName || ""),
     });
   } catch (err) {
-    console.error('Failed to send welcome email:', err);
+    console.error("Failed to send welcome email:", err);
   }
 });
 
 exports.sendLeadMagnet = onCall(async (request) => {
-  const email = (request.data?.email || '').trim().toLowerCase();
-  if (!email || !email.includes('@')) throw new Error('Valid email required');
-
+  const email = (request.data?.email || "").trim().toLowerCase();
+  if (!email || !email.includes("@")) throw new Error("Valid email required");
   if (!process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
-    console.warn('MAILGUN_API_KEY or MAILGUN_DOMAIN not set — skipping lead magnet email');
+    console.warn("MAILGUN_API_KEY or MAILGUN_DOMAIN not set — skipping lead magnet email");
     return { sent: false };
   }
-
   try {
     await sendEmail({
       to: email,
-      subject: 'Your Morning Meeting Resource Pack is here 🎉',
+      subject: "Your Morning Meeting Resource Pack is here 🎉",
       html: resourcePackHtml(email),
     });
     return { sent: true };
   } catch (err) {
-    console.error('Failed to send lead magnet email:', err);
+    console.error("Failed to send lead magnet email:", err);
     return { sent: false };
   }
 });
@@ -443,206 +398,212 @@ exports.onthisday = onRequest(async (req, res) => {
   const month = MONTHS[now.getUTCMonth()];
   const day = now.getUTCDate();
   const base = "https://www.onthisday.com";
-  const sourceUrl = `${base}/events/${month}/${day}`;
-
+  const sourceUrl = base + "/events/" + month + "/" + day;
   try {
     const [events, birthdays] = await Promise.allSettled([
-      fetchPage(`${base}/events/${month}/${day}`, "events", 12),
-      fetchPage(`${base}/birthdays/${month}/${day}`, "birthdays", 8)
+      fetchPage(base + "/events/" + month + "/" + day, "events", 12),
+      fetchPage(base + "/birthdays/" + month + "/" + day, "birthdays", 8)
     ]);
-
     const combined = [
       ...classroomFactsForDate(now, 8),
       ...(events.status === "fulfilled" ? events.value : []),
       ...(birthdays.status === "fulfilled" ? birthdays.value : []),
     ];
     const items = prioritize(combined);
-
     if (!items.length) throw new Error("No OnThisDay items parsed");
-
     res.set("Cache-Control", "public, max-age=21600");
-    res.status(200).json({
-      date: now.toISOString(),
-      source: "Kid-friendly classroom facts + OnThisDay.com",
-      sourceUrl,
-      events: items
-    });
+    res.status(200).json({ date: now.toISOString(), source: "Kid-friendly classroom facts + OnThisDay.com", sourceUrl, events: items });
   } catch (error) {
     res.set("Cache-Control", "public, max-age=900");
-    res.status(200).json({
-      date: now.toISOString(),
-      source: "Classroom kid fact bank",
-      sourceUrl,
-      events: classroomFactsForDate(now, 8),
-      warning: error.message
-    });
+    res.status(200).json({ date: now.toISOString(), source: "Classroom kid fact bank", sourceUrl, events: classroomFactsForDate(now, 8), warning: error.message });
   }
 });
 
-// ── Stripe: create Checkout Session ──────────────────────────────────────────
+// ── Stripe ────────────────────────────────────────────────────────────────────
 exports.createCheckoutSession = onCall(async (request) => {
   const { priceId, userId } = request.data;
-  if (!priceId || !userId) throw new Error('priceId and userId are required');
-
-  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  if (!priceId || !userId) throw new Error("priceId and userId are required");
+  const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
   const db = admin.firestore();
-  const userRef = db.collection('users').doc(userId);
+  const userRef = db.collection("users").doc(userId);
   const userSnap = await userRef.get();
   const userData = userSnap.data() || {};
-
   let stripeCustomerId = userData.stripeCustomerId;
   if (!stripeCustomerId) {
-    const customer = await stripe.customers.create({
-      email: userData.email || '',
-      metadata: { firebaseUserId: userId },
-    });
+    const customer = await stripe.customers.create({ email: userData.email || "", metadata: { firebaseUserId: userId } });
     stripeCustomerId = customer.id;
     await userRef.set({ stripeCustomerId }, { merge: true });
   }
-
   const session = await stripe.checkout.sessions.create({
     customer: stripeCustomerId,
-    payment_method_types: ['card'],
+    payment_method_types: ["card"],
     line_items: [{ price: priceId, quantity: 1 }],
-    mode: 'subscription',
+    mode: "subscription",
     subscription_data: { trial_period_days: 14 },
-    success_url: 'https://oftheday.net/dashboard?upgraded=true',
-    cancel_url: 'https://oftheday.net/upgrade',
+    success_url: "https://oftheday.net/dashboard?upgraded=true",
+    cancel_url: "https://oftheday.net/upgrade",
   });
-
   return { url: session.url };
 });
 
-// ── Stripe: webhook handler ───────────────────────────────────────────────────
 exports.stripeWebhook = onRequest(async (req, res) => {
-  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
   if (!webhookSecret) {
-    console.error('STRIPE_WEBHOOK_SECRET is not configured — rejecting webhook');
-    return res.status(400).send('Webhook secret not configured');
+    console.error("STRIPE_WEBHOOK_SECRET is not configured — rejecting webhook");
+    return res.status(400).send("Webhook secret not configured");
   }
-
   let event;
   try {
-    event = stripe.webhooks.constructEvent(req.rawBody, req.headers['stripe-signature'], webhookSecret);
+    event = stripe.webhooks.constructEvent(req.rawBody, req.headers["stripe-signature"], webhookSecret);
   } catch (err) {
-    console.error('Webhook signature error:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    console.error("Webhook signature error:", err.message);
+    return res.status(400).send("Webhook Error: " + err.message);
   }
-
   const db = admin.firestore();
-
   const userByCustomer = async (customerId) => {
-    const snap = await db.collection('users').where('stripeCustomerId', '==', customerId).limit(1).get();
+    const snap = await db.collection("users").where("stripeCustomerId", "==", customerId).limit(1).get();
     return snap.empty ? null : snap.docs[0].ref;
   };
-
   try {
     switch (event.type) {
-      case 'checkout.session.completed': {
+      case "checkout.session.completed": {
         const session = event.data.object;
         const ref = await userByCustomer(session.customer);
         if (ref) {
           const sub = await stripe.subscriptions.retrieve(session.subscription);
-          await ref.set({
-            tier: 'pro',
-            subscriptionId: session.subscription,
-            stripeCustomerId: session.customer,
-            currentPeriodEnd: sub.current_period_end,
-          }, { merge: true });
+          await ref.set({ tier: "pro", subscriptionId: session.subscription, stripeCustomerId: session.customer, currentPeriodEnd: sub.current_period_end }, { merge: true });
         }
         break;
       }
-      case 'customer.subscription.updated': {
+      case "customer.subscription.updated": {
         const sub = event.data.object;
         const ref = await userByCustomer(sub.customer);
-        if (ref) {
-          await ref.set({
-            tier: sub.status === 'active' || sub.status === 'trialing' ? 'pro' : 'free',
-            currentPeriodEnd: sub.current_period_end,
-          }, { merge: true });
-        }
+        if (ref) await ref.set({ tier: sub.status === "active" || sub.status === "trialing" ? "pro" : "free", currentPeriodEnd: sub.current_period_end }, { merge: true });
         break;
       }
-      case 'customer.subscription.deleted': {
+      case "customer.subscription.deleted": {
         const sub = event.data.object;
         const ref = await userByCustomer(sub.customer);
-        if (ref) await ref.set({ tier: 'free' }, { merge: true });
+        if (ref) await ref.set({ tier: "free" }, { merge: true });
         break;
       }
     }
     res.status(200).json({ received: true });
   } catch (err) {
-    console.error('Webhook handler error:', err);
+    console.error("Webhook handler error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ── Lesson Slide: AI generation ───────────────────────────────────────────────
-exports.generateLessonSlide = onCall(async (request) => {
-  try {
-    const { subject, grade, topic, preserveLanguage } = request.data || {};
-    if (!subject || !grade || !topic) throw new HttpsError('invalid-argument', 'subject, grade, and topic are required');
-    if (!process.env.ANTHROPIC_API_KEY) throw new HttpsError('failed-precondition', 'ANTHROPIC_API_KEY not configured');
-
-    let userMsg = `Subject: ${String(subject).slice(0, 60)}
-Grade: ${String(grade).slice(0, 10)}
-Topic: ${String(topic).slice(0, 200)}`;
-    if (preserveLanguage?.trim()) {
-      userMsg += `\nPreserve this specific language if relevant: "${String(preserveLanguage).slice(0, 100)}"`;
-    }
-
-    const run = async () => {
-      const data = await anthropicPost(process.env.ANTHROPIC_API_KEY, {
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
-        system: SLIDE_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userMsg }],
-      });
-      const raw = (data.content[0]?.text || '').trim();
-      const parsed = JSON.parse(raw);
-      if (!parsed.learningTarget || !Array.isArray(parsed.outcomes) || !Array.isArray(parsed.steps)) {
-        throw new Error('Invalid slide structure');
-      }
-      return parsed;
-    };
-
-    try { return await run(); } catch (e1) {
-      console.warn('generateLessonSlide attempt 1:', e1?.message);
-      try { return await run(); } catch (e2) {
-        console.warn('generateLessonSlide attempt 2:', e2?.message);
-        throw new HttpsError('unavailable', 'fill in manually');
-      }
-    }
-  } catch (err) {
-    if (err instanceof HttpsError) throw err;
-    console.error('generateLessonSlide unhandled:', err?.message, err?.stack);
-    throw new HttpsError('unknown', err?.message || 'unknown error');
-  }
+// ── Lesson Slide: ping diagnostic ────────────────────────────────────────────
+exports.generateLessonSlidePing = onRequest(async (req, res) => {
+  setCors(res);
+  if (req.method === "OPTIONS") return res.status(204).send("");
+  res.status(200).json({ ok: true, apiKey: !!process.env.ANTHROPIC_API_KEY });
 });
 
-// ── Lesson Slide: simplify language ──────────────────────────────────────────
-exports.simplifyLessonSlide = onCall(async (request) => {
-  const { grade, learningTarget, outcomes } = request.data || {};
-  if (!grade || !learningTarget) throw new HttpsError('invalid-argument', 'grade and learningTarget are required');
-  if (!process.env.ANTHROPIC_API_KEY) throw new HttpsError('failed-precondition', 'ANTHROPIC_API_KEY not configured');
+// ── Lesson Slide: AI generation (onRequest — bypasses onCall framework) ───────
+exports.generateLessonSlide = onRequest(async (req, res) => {
+  setCors(res);
+  if (req.method === "OPTIONS") return res.status(204).send("");
+
+  // Verify Firebase ID token
+  const authHeader = req.headers.authorization || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return res.status(401).json({ error: "Missing Authorization header" });
+  try {
+    await admin.auth().verifyIdToken(idToken);
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: "AI generation is not configured — contact support." });
+  }
+
+  const { subject, grade, topic, preserveLanguage } = req.body || {};
+  if (!subject || !grade || !topic) {
+    return res.status(400).json({ error: "subject, grade, and topic are required" });
+  }
+
+  let userMsg = "Subject: " + String(subject).slice(0, 60) + "\nGrade: " + String(grade).slice(0, 10) + "\nTopic: " + String(topic).slice(0, 200);
+  if (preserveLanguage && String(preserveLanguage).trim()) {
+    userMsg += "\nPreserve this specific language if relevant: \"" + String(preserveLanguage).slice(0, 100) + "\"";
+  }
 
   const run = async () => {
     const data = await anthropicPost(process.env.ANTHROPIC_API_KEY, {
-      model: 'claude-haiku-4-5-20251001',
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 512,
+      system: SLIDE_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userMsg }],
+    });
+    const raw = (data.content[0]?.text || "").trim();
+    const parsed = JSON.parse(raw);
+    if (!parsed.learningTarget || !Array.isArray(parsed.outcomes) || !Array.isArray(parsed.steps)) {
+      throw new Error("Invalid slide structure");
+    }
+    return parsed;
+  };
+
+  try {
+    const result = await run();
+    return res.status(200).json(result);
+  } catch (e1) {
+    console.warn("generateLessonSlide attempt 1:", e1?.message);
+    try {
+      const result = await run();
+      return res.status(200).json(result);
+    } catch (e2) {
+      console.warn("generateLessonSlide attempt 2:", e2?.message);
+      return res.status(503).json({ error: "Generation unavailable right now — fill in the fields below." });
+    }
+  }
+});
+
+// ── Lesson Slide: simplify language (onRequest) ───────────────────────────────
+exports.simplifyLessonSlide = onRequest(async (req, res) => {
+  setCors(res);
+  if (req.method === "OPTIONS") return res.status(204).send("");
+
+  // Verify Firebase ID token
+  const authHeader = req.headers.authorization || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return res.status(401).json({ error: "Missing Authorization header" });
+  try {
+    await admin.auth().verifyIdToken(idToken);
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: "AI simplification is not configured." });
+  }
+
+  const { grade, learningTarget, outcomes } = req.body || {};
+  if (!grade || !learningTarget) {
+    return res.status(400).json({ error: "grade and learningTarget are required" });
+  }
+
+  const run = async () => {
+    const data = await anthropicPost(process.env.ANTHROPIC_API_KEY, {
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 256,
       system: SIMPLIFY_SYSTEM_PROMPT,
       messages: [{
-        role: 'user',
-        content: `Grade: ${grade}\nLearning target: ${learningTarget}\nOutcomes: ${(outcomes || []).join(' | ')}`,
+        role: "user",
+        content: "Grade: " + grade + "\nLearning target: " + learningTarget + "\nOutcomes: " + (outcomes || []).join(" | "),
       }],
     });
-    const raw = (data.content[0]?.text || '').trim();
+    const raw = (data.content[0]?.text || "").trim();
     return JSON.parse(raw);
   };
 
-  try { return await run(); } catch {
-    throw new HttpsError('unavailable', 'simplify unavailable');
+  try {
+    const result = await run();
+    return res.status(200).json(result);
+  } catch {
+    return res.status(503).json({ error: "Simplification unavailable right now." });
   }
 });
