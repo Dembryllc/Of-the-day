@@ -497,8 +497,8 @@ exports.stripeWebhook = onRequest(async (req, res) => {
 });
 
 
-// ── Lesson Slide: AI generation (onRequest — bypasses onCall framework) ───────
-exports.generateLessonSlide = onRequest(async (req, res) => {
+// ── Lesson Slide: AI generation (onRequest, new name to avoid type-change error) ───────
+exports.generateSlide = onRequest(async (req, res) => {
   setCors(res);
   if (req.method === "OPTIONS") return res.status(204).send("");
 
@@ -556,8 +556,8 @@ exports.generateLessonSlide = onRequest(async (req, res) => {
   }
 });
 
-// ── Lesson Slide: simplify language (onRequest) ───────────────────────────────
-exports.simplifyLessonSlide = onRequest(async (req, res) => {
+// ── Lesson Slide: simplify language (onRequest, new name) ───────────────────────────────
+exports.simplifySlide = onRequest(async (req, res) => {
   setCors(res);
   if (req.method === "OPTIONS") return res.status(204).send("");
 
