@@ -79,13 +79,13 @@ jobs:
           channelId: live
           projectId: oftheday-c6490
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.oftheday }}
+
       - name: Install firebase-tools
         run: npm install -g firebase-tools
 
       - name: Deploy Cloud Functions
-        run: |
-          echo "$SA_JSON" > /tmp/firebase-sa.json
-          gcloud auth activate-service-account --key-file=/tmp/firebase-sa.json
-          firebase deploy --only functions --project oftheday-c6490 --non-interactive
-        env:
-          SA_JSON: ${{ secrets.Firebase_sa_functionz }}
+        run: firebase deploy --only functions --project oftheday-c6490 --non-interactive
