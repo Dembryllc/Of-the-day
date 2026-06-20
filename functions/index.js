@@ -498,7 +498,7 @@ exports.stripeWebhook = onRequest(async (req, res) => {
 
 
 // ── Lesson Slide: AI generation (onRequest, new name to avoid type-change error) ───────
-exports.generateSlide = onRequest(async (req, res) => {
+exports.generateSlide = onRequest({invoker: "private"}, async (req, res) => {
   setCors(res);
   if (req.method === "OPTIONS") return res.status(204).send("");
 
@@ -557,7 +557,7 @@ exports.generateSlide = onRequest(async (req, res) => {
 });
 
 // ── Lesson Slide: simplify language (onRequest, new name) ───────────────────────────────
-exports.simplifySlide = onRequest(async (req, res) => {
+exports.simplifySlide = onRequest({invoker: "private"}, async (req, res) => {
   setCors(res);
   if (req.method === "OPTIONS") return res.status(204).send("");
 
