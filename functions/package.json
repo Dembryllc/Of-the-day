@@ -8,7 +8,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
     "firebase-admin": "^13.0.0",
-    "firebase-functions": "^7.0.0",
+    "firebase-functions": "^6.0.0",
     "form-data": "^4.0.6",
     "mailgun.js": "^13.2.0",
     "stripe": "^22.2.0"
