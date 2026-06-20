@@ -561,32 +561,44 @@ Topic: ${String(topic).slice(0, 200)}`;
     }
 
     const run = async () => {
-      const Anthropic = require('@anthropic-ai/sdk');
-      const AnthropicClient = Anthropic.default ?? Anthropic;
-      const client = new AnthropicClient({ apiKey: process.env.ANTHROPIC_API_KEY });
-      const resp = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
-        system: SLIDE_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userMsg }],
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 512,
+          system: SLIDE_SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: userMsg }],
+        }),
       });
-      const raw = (resp.content[0]?.text || '').trim();
+      if (!resp.ok) {
+        const errBody = await resp.text();
+        throw new Error(`Anthropic API ${resp.status}: ${errBody.slice(0, 200)}`);
+      }
+      const data = await resp.json();
+      const raw = (data.content[0]?.text || '').trim();
       const parsed = JSON.parse(raw);
       if (!parsed.learningTarget || !Array.isArray(parsed.outcomes) || !Array.isArray(parsed.steps)) {
-        throw new Error('Invalid structure');
+        throw new Error('Invalid slide structure');
       }
       return parsed;
     };
 
-    try { return await run(); } catch {
-      try { return await run(); } catch {
+    try { return await run(); } catch (e1) {
+      console.warn('generateLessonSlide attempt 1:', e1?.message);
+      try { return await run(); } catch (e2) {
+        console.warn('generateLessonSlide attempt 2:', e2?.message);
         throw new HttpsError('unavailable', 'fill in manually');
       }
     }
   } catch (err) {
     if (err instanceof HttpsError) throw err;
     console.error('generateLessonSlide unhandled:', err?.message, err?.stack);
-    throw new HttpsError('internal', `[debug] ${err?.message || 'unknown'}`);
+    throw new HttpsError('unknown', err?.message || 'unknown error');
   }
 });
 
@@ -597,21 +609,29 @@ exports.simplifyLessonSlide = onCall(async (request) => {
   if (!process.env.ANTHROPIC_API_KEY) throw new HttpsError('failed-precondition', 'ANTHROPIC_API_KEY not configured');
 
   const run = async () => {
-    const Anthropic = require('@anthropic-ai/sdk');
-    const AnthropicClient = Anthropic.default ?? Anthropic;
-    const client = new AnthropicClient({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const resp = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 256,
-      system: SIMPLIFY_SYSTEM_PROMPT,
-      messages: [{
-        role: 'user',
-        content: `Grade: ${grade}
-Learning target: ${learningTarget}
-Outcomes: ${(outcomes || []).join(' | ')}`,
-      }],
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 256,
+        system: SIMPLIFY_SYSTEM_PROMPT,
+        messages: [{
+          role: 'user',
+          content: `Grade: ${grade}\nLearning target: ${learningTarget}\nOutcomes: ${(outcomes || []).join(' | ')}`,
+        }],
+      }),
     });
-    const raw = (resp.content[0]?.text || '').trim();
+    if (!resp.ok) {
+      const errBody = await resp.text();
+      throw new Error(`Anthropic API ${resp.status}: ${errBody.slice(0, 200)}`);
+    }
+    const data = await resp.json();
+    const raw = (data.content[0]?.text || '').trim();
     return JSON.parse(raw);
   };
 
