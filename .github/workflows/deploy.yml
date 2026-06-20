@@ -90,4 +90,7 @@ jobs:
         run: npm install -g firebase-tools
 
       - name: Deploy Cloud Functions
-        run: firebase deploy --only functions --project oftheday-c6490 --non-interactive
+        run: |
+          # Deploy all functions except the Gen1 conflicting stubs that need manual deletion
+          # See: https://github.com/Dembryllc/Of-the-day/blob/main/HANDOFF.md
+          firebase deploy --only functions:onUserCreate,functions:sendLeadMagnet,functions:onthisday,functions:createCheckoutSession,functions:stripeWebhook,functions:generateSlide,functions:simplifySlide --project oftheday-c6490 --non-interactive
