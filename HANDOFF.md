@@ -1,46 +1,18 @@
 # OfTheDay.net — Claude Code Terminal Handoff
 
-## 🚨 ACTION REQUIRED: Deploy generateSlide + simplifySlide functions
+## AI Slide Generation — Architecture (2026-06-20)
 
-**Date added:** 2026-06-20
-
-The AI lesson slide generation has been refactored from broken Gen 2 onCall (was returning
-`functions/internal`) to new onRequest functions (`generateSlide` and `simplifySlide`).
-
-### Root cause of functions/internal
-The deployed `generateLessonSlide` and `simplifyLessonSlide` were Gen 1 Cloud Functions,
-but the code was using `firebase-functions/v2/https` onCall which is incompatible with Gen 1 deployments.
+The AI lesson slide generation uses Gen 1 `onRequest` functions (`generateSlide` and `simplifySlide`).
 
 ### What was done
-- Converted to `onRequest` (bypasses the onCall framework entirely)
-- New function names: `generateSlide` and `simplifySlide`  
-- Client updated: `src/LessonSlideCreator.jsx` now uses `fetch('/api/generate-slide')` with Bearer token
-- CORS headers added (allows oftheday.net on Netlify)
-- ID token verification via `admin.auth().verifyIdToken()`
+- Converted from broken Gen 2 onCall (`functions/internal` error) to `onRequest` with new names
+- Client: `src/LessonSlideCreator.jsx` uses `fetch('/api/generate-slide')` with Bearer token
+- Firebase Hosting rewrites: `/api/generate-slide` → `generateSlide`, `/api/simplify-slide` → `simplifySlide`
+- Auth via `admin.auth().verifyIdToken()` inside the function
 
-### One-time IAM grant needed (5 minutes)
-
-The deploy service account lacks `cloudfunctions.functions.setIamPolicy` to create new functions.
-A **project Owner** must run this ONCE:
-
-```bash
-# Option 1: Firebase Console
-# Go to: https://console.cloud.google.com/iam-admin/iam?project=oftheday-c6490
-# Find the service account used in GitHub secret "oftheday"
-# Add role: Cloud Functions Admin
-
-# Option 2: gcloud CLI (if you have Owner access)
-gcloud projects add-iam-policy-binding oftheday-c6490 \
-  --member="serviceAccount:YOUR_SERVICE_ACCOUNT@oftheday-c6490.iam.gserviceaccount.com" \
-  --role="roles/cloudfunctions.admin"
-```
-
-After granting, **re-run the latest GitHub Actions workflow** and both `generateSlide` and
-`simplifySlide` will deploy successfully.
-
-### Current workaround
-The client at `/api/generate-slide` will return 404 until the functions are deployed.
-Teachers will see "Something went wrong" when trying to generate slides.
+### Status: ✅ Deployed
+- IAM grant (`roles/cloudfunctions.admin`) granted 2026-06-20
+- All functions deploy together in a single `firebase deploy --only functions` step
 
 ---
 
