@@ -552,18 +552,17 @@ exports.generateLessonSlide = onCall(async (request) => {
   if (!subject || !grade || !topic) throw new HttpsError('invalid-argument', 'subject, grade, and topic are required');
   if (!process.env.ANTHROPIC_API_KEY) throw new HttpsError('failed-precondition', 'ANTHROPIC_API_KEY not configured');
 
-  const Anthropic = require('@anthropic-ai/sdk');
-  const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
-
   let userMsg = `Subject: ${String(subject).slice(0, 60)}
 Grade: ${String(grade).slice(0, 10)}
 Topic: ${String(topic).slice(0, 200)}`;
   if (preserveLanguage?.trim()) {
-    userMsg += `
-Preserve this specific language if relevant: "${String(preserveLanguage).slice(0, 100)}"`;
+    userMsg += `\nPreserve this specific language if relevant: "${String(preserveLanguage).slice(0, 100)}"`;
   }
 
   const run = async () => {
+    const Anthropic = require('@anthropic-ai/sdk');
+    const AnthropicClient = Anthropic.default ?? Anthropic;
+    const client = new AnthropicClient({ apiKey: process.env.ANTHROPIC_API_KEY });
     const resp = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 512,
@@ -591,20 +590,26 @@ exports.simplifyLessonSlide = onCall(async (request) => {
   if (!grade || !learningTarget) throw new HttpsError('invalid-argument', 'grade and learningTarget are required');
   if (!process.env.ANTHROPIC_API_KEY) throw new HttpsError('failed-precondition', 'ANTHROPIC_API_KEY not configured');
 
-  const Anthropic = require('@anthropic-ai/sdk');
-  const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-  const resp = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 256,
-    system: SIMPLIFY_SYSTEM_PROMPT,
-    messages: [{
-      role: 'user',
-      content: `Grade: ${grade}
+  const run = async () => {
+    const Anthropic = require('@anthropic-ai/sdk');
+    const AnthropicClient = Anthropic.default ?? Anthropic;
+    const client = new AnthropicClient({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const resp = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 256,
+      system: SIMPLIFY_SYSTEM_PROMPT,
+      messages: [{
+        role: 'user',
+        content: `Grade: ${grade}
 Learning target: ${learningTarget}
 Outcomes: ${(outcomes || []).join(' | ')}`,
-    }],
-  });
-  const raw = (resp.content[0]?.text || '').trim();
-  return JSON.parse(raw);
+      }],
+    });
+    const raw = (resp.content[0]?.text || '').trim();
+    return JSON.parse(raw);
+  };
+
+  try { return await run(); } catch {
+    throw new HttpsError('unavailable', 'simplify unavailable');
+  }
 });
