@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from './lib/firebase';
+import { getAuth } from 'firebase/auth';
 import { saveLessonSlide, loadLessonSlides, deleteLessonSlide, saveBehavioralExpectations } from './lib/firestore';
 import LessonSlideDisplay from './LessonSlideDisplay';
 
@@ -237,13 +236,26 @@ export default function LessonSlideCreator({
     setGenError('');
     setGenerating(true);
     try {
-      const fn = httpsCallable(functions, 'generateLessonSlide');
-      const { data } = await fn({
-        subject: slide.subject,
-        grade: slide.grade,
-        topic: topic.trim(),
-        preserveLanguage: preserveLanguage.trim(),
+      const token = await getAuth().currentUser?.getIdToken();
+      if (!token) throw new Error('Not signed in');
+      const resp = await fetch('/api/generate-slide', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          subject: slide.subject,
+          grade: slide.grade,
+          topic: topic.trim(),
+          preserveLanguage: preserveLanguage.trim(),
+        }),
       });
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
+        throw new Error(errData.error || 'Generation failed (' + resp.status + ')');
+      }
+      const data = await resp.json();
       setSlide(s => ({
         ...s,
         lessonName: data.lessonName || s.lessonName,
@@ -257,15 +269,14 @@ export default function LessonSlideCreator({
         setHasUsedFreeSlide(true);
       }
     } catch (err) {
-      const code = err?.code || '';
       setGenError(
-        code === 'functions/unavailable' || err?.message?.includes('fill in manually')
+        err?.message?.includes('fill in') || err?.message?.includes('unavailable')
           ? 'Generation unavailable right now — fill in the fields below.'
-          : code === 'functions/failed-precondition'
+          : err?.message?.includes('not configured')
           ? 'AI generation is not configured — contact support.'
           : err?.message
           ? err.message
-          : `Something went wrong (${code || 'no-code'}). Please try again.`
+          : 'Something went wrong. Please try again.'
       );
     } finally {
       setGenerating(false);
@@ -277,12 +288,22 @@ export default function LessonSlideCreator({
     if (!slide.learningTarget) return;
     setSimplifying(true);
     try {
-      const fn = httpsCallable(functions, 'simplifyLessonSlide');
-      const { data } = await fn({
-        grade: slide.grade,
-        learningTarget: slide.learningTarget,
-        outcomes: slide.outcomes.filter(Boolean),
+      const token = await getAuth().currentUser?.getIdToken();
+      if (!token) throw new Error('Not signed in');
+      const resp = await fetch('/api/simplify-slide', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          grade: slide.grade,
+          learningTarget: slide.learningTarget,
+          outcomes: slide.outcomes.filter(Boolean),
+        }),
       });
+      if (!resp.ok) return; // silent — simplification is a nice-to-have
+      const data = await resp.json();
       setSlide(s => ({
         ...s,
         learningTarget: data.learningTarget || s.learningTarget,
