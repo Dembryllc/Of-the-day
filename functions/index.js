@@ -1,5 +1,5 @@
 // env: 2026-06-20
-const { onRequest, onCall } = require("firebase-functions/v2/https");
+const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 admin.initializeApp();
@@ -549,8 +549,8 @@ exports.stripeWebhook = onRequest(async (req, res) => {
 // ── Lesson Slide: AI generation ───────────────────────────────────────────────
 exports.generateLessonSlide = onCall(async (request) => {
   const { subject, grade, topic, preserveLanguage } = request.data || {};
-  if (!subject || !grade || !topic) throw new Error('subject, grade, and topic are required');
-  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
+  if (!subject || !grade || !topic) throw new HttpsError('invalid-argument', 'subject, grade, and topic are required');
+  if (!process.env.ANTHROPIC_API_KEY) throw new HttpsError('failed-precondition', 'ANTHROPIC_API_KEY not configured');
 
   const Anthropic = require('@anthropic-ai/sdk');
   const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -579,8 +579,8 @@ Preserve this specific language if relevant: "${String(preserveLanguage).slice(0
   };
 
   try { return await run(); } catch {
-    try { return await run(); } catch (err) {
-      throw new Error('Generation failed — please fill in manually');
+    try { return await run(); } catch {
+      throw new HttpsError('unavailable', 'fill in manually');
     }
   }
 });
@@ -588,8 +588,8 @@ Preserve this specific language if relevant: "${String(preserveLanguage).slice(0
 // ── Lesson Slide: simplify language ──────────────────────────────────────────
 exports.simplifyLessonSlide = onCall(async (request) => {
   const { grade, learningTarget, outcomes } = request.data || {};
-  if (!grade || !learningTarget) throw new Error('grade and learningTarget are required');
-  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
+  if (!grade || !learningTarget) throw new HttpsError('invalid-argument', 'grade and learningTarget are required');
+  if (!process.env.ANTHROPIC_API_KEY) throw new HttpsError('failed-precondition', 'ANTHROPIC_API_KEY not configured');
 
   const Anthropic = require('@anthropic-ai/sdk');
   const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });

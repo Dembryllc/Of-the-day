@@ -257,9 +257,14 @@ export default function LessonSlideCreator({
         setHasUsedFreeSlide(true);
       }
     } catch (err) {
-      setGenError(err?.message?.includes('fill in manually')
-        ? 'Generation unavailable right now — fill in the fields below.'
-        : 'Something went wrong. Please try again.');
+      const code = err?.code || '';
+      setGenError(
+        code === 'functions/unavailable' || err?.message?.includes('fill in manually')
+          ? 'Generation unavailable right now — fill in the fields below.'
+          : code === 'functions/failed-precondition'
+          ? 'AI generation is not configured — contact support.'
+          : 'Something went wrong. Please try again.'
+      );
     } finally {
       setGenerating(false);
     }
