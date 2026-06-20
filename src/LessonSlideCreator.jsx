@@ -263,6 +263,8 @@ export default function LessonSlideCreator({
           ? 'Generation unavailable right now — fill in the fields below.'
           : code === 'functions/failed-precondition'
           ? 'AI generation is not configured — contact support.'
+          : err?.message
+          ? err.message
           : `Something went wrong (${code || 'no-code'}). Please try again.`
       );
     } finally {
