@@ -2,7 +2,40 @@
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
+const https = require("https");
 admin.initializeApp();
+
+function anthropicPost(apiKey, payload) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(payload);
+    const req = https.request({
+      hostname: 'api.anthropic.com',
+      port: 443,
+      path: '/v1/messages',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try { resolve(JSON.parse(data)); }
+          catch (e) { reject(new Error(`JSON parse: ${data.slice(0, 100)}`)); }
+        } else {
+          reject(new Error(`Anthropic ${res.statusCode}: ${data.slice(0, 200)}`));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
 
 // ── Lesson Slide AI ───────────────────────────────────────────────────────────
 // Requires ANTHROPIC_API_KEY in functions/.env
@@ -561,25 +594,12 @@ Topic: ${String(topic).slice(0, 200)}`;
     }
 
     const run = async () => {
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': process.env.ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 512,
-          system: SLIDE_SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: userMsg }],
-        }),
+      const data = await anthropicPost(process.env.ANTHROPIC_API_KEY, {
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 512,
+        system: SLIDE_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMsg }],
       });
-      if (!resp.ok) {
-        const errBody = await resp.text();
-        throw new Error(`Anthropic API ${resp.status}: ${errBody.slice(0, 200)}`);
-      }
-      const data = await resp.json();
       const raw = (data.content[0]?.text || '').trim();
       const parsed = JSON.parse(raw);
       if (!parsed.learningTarget || !Array.isArray(parsed.outcomes) || !Array.isArray(parsed.steps)) {
@@ -609,28 +629,15 @@ exports.simplifyLessonSlide = onCall(async (request) => {
   if (!process.env.ANTHROPIC_API_KEY) throw new HttpsError('failed-precondition', 'ANTHROPIC_API_KEY not configured');
 
   const run = async () => {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 256,
-        system: SIMPLIFY_SYSTEM_PROMPT,
-        messages: [{
-          role: 'user',
-          content: `Grade: ${grade}\nLearning target: ${learningTarget}\nOutcomes: ${(outcomes || []).join(' | ')}`,
-        }],
-      }),
+    const data = await anthropicPost(process.env.ANTHROPIC_API_KEY, {
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 256,
+      system: SIMPLIFY_SYSTEM_PROMPT,
+      messages: [{
+        role: 'user',
+        content: `Grade: ${grade}\nLearning target: ${learningTarget}\nOutcomes: ${(outcomes || []).join(' | ')}`,
+      }],
     });
-    if (!resp.ok) {
-      const errBody = await resp.text();
-      throw new Error(`Anthropic API ${resp.status}: ${errBody.slice(0, 200)}`);
-    }
-    const data = await resp.json();
     const raw = (data.content[0]?.text || '').trim();
     return JSON.parse(raw);
   };
