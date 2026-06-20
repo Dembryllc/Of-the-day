@@ -74,7 +74,7 @@ jobs:
       - name: Write service account credentials
         run: echo "$SERVICE_ACCOUNT_JSON" > /tmp/firebase-sa.json
         env:
-          SERVICE_ACCOUNT_JSON: ${{ secrets.oftheday }}
+          SERVICE_ACCOUNT_JSON: ${{ secrets.Firebase_sa_functionz }}
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
