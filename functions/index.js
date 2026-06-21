@@ -1,4 +1,4 @@
-// env: 2026-06-20
+// env: 2026-06-21
 const { onRequest, onCall } = require("firebase-functions/v2/https");
 const functionsV1 = require("firebase-functions/v1");
 const httpsV1 = functionsV1.https;
