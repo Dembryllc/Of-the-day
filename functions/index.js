@@ -79,6 +79,23 @@ EXAMPLE — Grade K-2, ELA, Letter sounds:
 
 const SIMPLIFY_SYSTEM_PROMPT = `Rewrite learning targets and outcomes using simpler words for the given grade level. Same meaning, simpler language. Return ONLY valid JSON with no preamble: {"learningTarget":"string","outcomes":["string"]}. Hard limits: learningTarget 120 chars, each outcome 60 chars.`;
 
+function parseModelJson(raw) {
+  const text = String(raw || "").trim();
+  if (!text) throw new Error("Empty AI response");
+  const fenced = text.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  const candidate = fenced ? fenced[1].trim() : text;
+  try {
+    return JSON.parse(candidate);
+  } catch (err) {
+    const start = candidate.indexOf("{");
+    const end = candidate.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      return JSON.parse(candidate.slice(start, end + 1));
+    }
+    throw err;
+  }
+}
+
 // ── Email helpers ─────────────────────────────────────────────────────────────
 // Requires MAILGUN_API_KEY and MAILGUN_DOMAIN in functions/.env
 const EMAIL_FROM = "OfTheDay <hello@oftheday.net>";
@@ -535,8 +552,8 @@ exports.generateSlide = httpsV1.onRequest(async (req, res) => {
       messages: [{ role: "user", content: userMsg }],
     });
     const raw = (data.content[0]?.text || "").trim();
-    const parsed = JSON.parse(raw);
-    if (!parsed.learningTarget || !Array.isArray(parsed.outcomes) || !Array.isArray(parsed.steps)) {
+    const parsed = parseModelJson(raw);
+    if (!parsed.learningTarget || !Array.isArray(parsed.outcomes) || !Array.isArray(parsed.expectations) || !Array.isArray(parsed.steps)) {
       throw new Error("Invalid slide structure");
     }
     return parsed;
@@ -592,7 +609,7 @@ exports.simplifySlide = httpsV1.onRequest(async (req, res) => {
       }],
     });
     const raw = (data.content[0]?.text || "").trim();
-    return JSON.parse(raw);
+    return parseModelJson(raw);
   };
 
   try {
