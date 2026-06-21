@@ -572,15 +572,27 @@ exports.saveSlide = httpsV1.onRequest(async (req, res) => {
   return res.status(200).json({ success: true });
 });
 
-// ── Lesson Slide: AI generation (onRequest, new name to avoid type-change error) ───────
-exports.generateLessonSlide = onCall(async (request) => {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    throw new Error("AI generation is not configured — contact support.");
+// ── Lesson Slide: AI generation (onRequest — Gen2 onCall is incompatible with Gen1 deployments) ──
+exports.generateSlide = httpsV1.onRequest(async (req, res) => {
+  setCors(res);
+  if (req.method === "OPTIONS") return res.status(204).send("");
+
+  const authHeader = req.headers.authorization || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return res.status(401).json({ error: "Missing Authorization header" });
+  try {
+    await admin.auth().verifyIdToken(idToken);
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid or expired token" });
   }
 
-  const { subject, grade, topic, preserveLanguage } = request.data || {};
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: "AI generation is not configured — contact support." });
+  }
+
+  const { subject, grade, topic, preserveLanguage } = req.body || {};
   if (!subject || !grade || !topic) {
-    throw new Error("subject, grade, and topic are required");
+    return res.status(400).json({ error: "subject, grade, and topic are required" });
   }
 
   let userMsg = "Subject: " + String(subject).slice(0, 60) + "\nGrade: " + String(grade).slice(0, 10) + "\nTopic: " + String(topic).slice(0, 200);
@@ -597,44 +609,57 @@ exports.generateLessonSlide = onCall(async (request) => {
     });
     const raw = (data.content[0]?.text || "").trim();
     const parsed = parseModelJson(raw);
-    if (!parsed.learningTarget || !Array.isArray(parsed.outcomes) || !Array.isArray(parsed.expectations) || !Array.isArray(parsed.steps)) {
+    if (!parsed.learningTarget || !Array.isArray(parsed.outcomes) || !Array.isArray(parsed.steps)) {
       throw new Error("Invalid slide structure");
     }
     return parsed;
   };
 
   try {
-    return await run();
+    return res.status(200).json(await run());
   } catch (e1) {
-    console.warn("generateLessonSlide attempt 1:", e1?.message);
+    console.warn("generateSlide attempt 1:", e1?.message);
     try {
-      return await run();
+      return res.status(200).json(await run());
     } catch (e2) {
-      console.warn("generateLessonSlide attempt 2:", e2?.message);
-      throw new Error("Generation failed — please fill in manually");
+      console.warn("generateSlide attempt 2:", e2?.message);
+      return res.status(503).json({ error: "Generation unavailable right now — fill in the fields below." });
     }
   }
 });
 
-exports.simplifyLessonSlide = onCall(async (request) => {
+// ── Lesson Slide: simplify language ──────────────────────────────────────────
+exports.simplifySlide = httpsV1.onRequest(async (req, res) => {
+  setCors(res);
+  if (req.method === "OPTIONS") return res.status(204).send("");
+
+  const authHeader = req.headers.authorization || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return res.status(401).json({ error: "Missing Authorization header" });
+  try {
+    await admin.auth().verifyIdToken(idToken);
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
-    throw new Error("AI simplification is not configured.");
+    return res.status(503).json({ error: "AI simplification is not configured." });
   }
 
-  const { grade, learningTarget, outcomes } = request.data || {};
+  const { grade, learningTarget, outcomes } = req.body || {};
   if (!grade || !learningTarget) {
-    throw new Error("grade and learningTarget are required");
+    return res.status(400).json({ error: "grade and learningTarget are required" });
   }
 
-  const data = await anthropicPost(process.env.ANTHROPIC_API_KEY, {
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 256,
-    system: SIMPLIFY_SYSTEM_PROMPT,
-    messages: [{
-      role: "user",
-      content: "Grade: " + grade + "\nLearning target: " + learningTarget + "\nOutcomes: " + (outcomes || []).join(" | "),
-    }],
-  });
-  const raw = (data.content[0]?.text || "").trim();
-  return parseModelJson(raw);
+  try {
+    const data = await anthropicPost(process.env.ANTHROPIC_API_KEY, {
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 256,
+      system: SIMPLIFY_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: "Grade: " + grade + "\nLearning target: " + learningTarget + "\nOutcomes: " + (outcomes || []).join(" | ") }],
+    });
+    return res.status(200).json(parseModelJson(data.content[0]?.text || ""));
+  } catch {
+    return res.status(503).json({ error: "Simplification unavailable right now." });
+  }
 });
