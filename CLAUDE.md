@@ -622,12 +622,13 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 | `ofd:slideProjectorState` | `{...}` | Cross-window bridge for Lesson Slide projector |
 
 ## Live site status
-**Last updated: 2026-06-20**
+**Last updated: 2026-06-21**
 - All code changes on `main` auto-deploy to Firebase Hosting AND Cloud Functions via GitHub Actions
 - Frontend build uses `VITE_FIREBASE_*` secrets from GitHub Actions settings
 - Cloud Functions env is written from GitHub Actions secrets (`STRIPE_*`, `MAILGUN_*`, `ANTHROPIC_API_KEY`) at deploy time — never stored in the repo
-- Firebase Hosting URL: `oftheday-c6490.web.app` (all deploys land here)
-- `oftheday.net` DNS still points to Netlify — custom domain not yet connected to Firebase Hosting
+- Firebase Hosting URL: `oftheday-c6490.web.app` (primary — all CI deploys land here)
+- `oftheday.net` domain is registered/DNS-managed through Netlify (registrar only — Netlify does NOT host the site)
+- Custom domain `oftheday.net` must be connected to Firebase Hosting via Firebase Console → Hosting → Add custom domain; DNS A records go in Netlify's DNS panel pointing to Firebase's IPs
 - GitHub Actions secrets (`VITE_FIREBASE_*`, `ANTHROPIC_API_KEY`) are set and confirmed working
 - Deploy SA: `firebase-adminsdk-fbsvc@oftheday-c6490.iam.gserviceaccount.com` (stored as `secrets.oftheday`) — requires `roles/cloudfunctions.admin` (granted 2026-06-20)
 - `FIREBASE_SA_FUNCTIONZ` secret exists in repo but is NOT used by the workflow
