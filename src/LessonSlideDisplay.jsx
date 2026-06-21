@@ -6,14 +6,14 @@ const s = (pm, big, small) => pm ? big : small;
 // ── Brand mark ─────────────────────────────────────────────────────────────
 // Gold dot + wordmark — appears in the header of every slide
 function BrandMark({ pm, invert = false }) {
-  const textCol = invert ? 'rgba(255,255,255,0.28)' : 'rgba(27,45,91,0.22)';
-  const dotCol  = invert ? 'rgba(245,166,35,0.55)' : 'rgba(245,166,35,0.8)';
+  const textCol = invert ? 'rgba(255,255,255,0.7)' : 'rgba(27,45,91,0.55)';
+  const dotCol  = '#F5A623';
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: s(pm, 5, 2.5), flexShrink: 0 }}>
-      <span style={{ fontSize: s(pm, 9, 4.5), color: dotCol, lineHeight: 1 }}>●</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: s(pm, 5, 3), flexShrink: 0 }}>
+      <span style={{ fontSize: s(pm, 10, 7), color: dotCol, lineHeight: 1 }}>●</span>
       <span style={{
-        fontSize: s(pm, 10, 5), fontWeight: 800, color: textCol,
-        letterSpacing: '0.07em', textTransform: 'lowercase', fontFamily: "'Outfit',sans-serif",
+        fontSize: s(pm, 12, 8), fontWeight: 800, color: textCol,
+        letterSpacing: '0.06em', textTransform: 'lowercase', fontFamily: "'Outfit',sans-serif",
       }}>
         of the day
       </span>
