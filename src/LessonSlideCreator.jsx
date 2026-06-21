@@ -5,8 +5,8 @@ import LessonSlideDisplay from './LessonSlideDisplay';
 
 const SUBJECTS = ['ELA', 'Math', 'Science', 'Social Studies', 'SEL', 'Art', 'Music', 'PE', 'Other'];
 const GRADES = ['K–2', '3–5', '6–8', '9–12'];
-const THEMES = ['calm', 'warm', 'bold'];
-const THEME_LABELS = { calm: 'Calm', warm: 'Warm', bold: 'Bold' };
+const THEMES = ['focus', 'soft', 'blocks', 'depth'];
+const THEME_LABELS = { focus: 'Clear Focus', soft: 'Soft Structure', blocks: 'Bold Blocks', depth: 'Layered Depth' };
 
 const LIMITS = {
   lessonName: 60,
@@ -23,7 +23,7 @@ const blankSlide = (grade = '3–5', savedExpectations = []) => ({
   lessonName: '',
   subject: 'Math',
   grade,
-  theme: 'calm',
+  theme: 'focus',
   learningTarget: '',
   outcomes: ['', ''],
   expectations: savedExpectations.length > 0 ? [...savedExpectations] : ['', '', ''],

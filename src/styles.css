@@ -1805,9 +1805,10 @@ select.slide-field-input { cursor: pointer; }
   flex: 1; padding: 6px 8px; border-radius: 7px; border: 1.5px solid var(--border);
   font: 600 12px 'Outfit',sans-serif; cursor: pointer; transition: all 0.13s;
 }
-.slide-theme-btn--calm { background: #fff; color: #1B2D5B; }
-.slide-theme-btn--warm { background: #FAF8F4; color: #3B2A1A; }
-.slide-theme-btn--bold { background: #0A0F1E; color: #fff; }
+.slide-theme-btn--focus { background: #fff; color: #1B2D5B; border-color: #CBD5E1; }
+.slide-theme-btn--soft { background: #FDF8F2; color: #5B3E2B; border-color: #E8D5C4; }
+.slide-theme-btn--blocks { background: #0D1B3E; color: #fff; border-color: #0D1B3E; }
+.slide-theme-btn--depth { background: #070C18; color: #E2E8F0; border-color: #1E2A40; }
 .slide-theme-btn.active { outline: 2px solid var(--teal); outline-offset: 1px; }
 
 /* AI section */
