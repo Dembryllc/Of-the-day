@@ -516,27 +516,14 @@ exports.stripeWebhook = onRequest(async (req, res) => {
 
 
 // ── Lesson Slide: AI generation (onRequest, new name to avoid type-change error) ───────
-exports.generateSlide = httpsV1.onRequest(async (req, res) => {
-  setCors(res);
-  if (req.method === "OPTIONS") return res.status(204).send("");
-
-  // Verify Firebase ID token
-  const authHeader = req.headers.authorization || "";
-  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  if (!idToken) return res.status(401).json({ error: "Missing Authorization header" });
-  try {
-    await admin.auth().verifyIdToken(idToken);
-  } catch (e) {
-    return res.status(401).json({ error: "Invalid or expired token" });
-  }
-
+exports.generateLessonSlide = onCall(async (request) => {
   if (!process.env.ANTHROPIC_API_KEY) {
-    return res.status(503).json({ error: "AI generation is not configured — contact support." });
+    throw new Error("AI generation is not configured — contact support.");
   }
 
-  const { subject, grade, topic, preserveLanguage } = req.body || {};
+  const { subject, grade, topic, preserveLanguage } = request.data || {};
   if (!subject || !grade || !topic) {
-    return res.status(400).json({ error: "subject, grade, and topic are required" });
+    throw new Error("subject, grade, and topic are required");
   }
 
   let userMsg = "Subject: " + String(subject).slice(0, 60) + "\nGrade: " + String(grade).slice(0, 10) + "\nTopic: " + String(topic).slice(0, 200);
@@ -560,62 +547,37 @@ exports.generateSlide = httpsV1.onRequest(async (req, res) => {
   };
 
   try {
-    const result = await run();
-    return res.status(200).json(result);
+    return await run();
   } catch (e1) {
     console.warn("generateLessonSlide attempt 1:", e1?.message);
     try {
-      const result = await run();
-      return res.status(200).json(result);
+      return await run();
     } catch (e2) {
       console.warn("generateLessonSlide attempt 2:", e2?.message);
-      return res.status(503).json({ error: "Generation unavailable right now — fill in the fields below." });
+      throw new Error("Generation failed — please fill in manually");
     }
   }
 });
 
-// ── Lesson Slide: simplify language (onRequest, new name) ───────────────────────────────
-exports.simplifySlide = httpsV1.onRequest(async (req, res) => {
-  setCors(res);
-  if (req.method === "OPTIONS") return res.status(204).send("");
-
-  // Verify Firebase ID token
-  const authHeader = req.headers.authorization || "";
-  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  if (!idToken) return res.status(401).json({ error: "Missing Authorization header" });
-  try {
-    await admin.auth().verifyIdToken(idToken);
-  } catch (e) {
-    return res.status(401).json({ error: "Invalid or expired token" });
-  }
-
+exports.simplifyLessonSlide = onCall(async (request) => {
   if (!process.env.ANTHROPIC_API_KEY) {
-    return res.status(503).json({ error: "AI simplification is not configured." });
+    throw new Error("AI simplification is not configured.");
   }
 
-  const { grade, learningTarget, outcomes } = req.body || {};
+  const { grade, learningTarget, outcomes } = request.data || {};
   if (!grade || !learningTarget) {
-    return res.status(400).json({ error: "grade and learningTarget are required" });
+    throw new Error("grade and learningTarget are required");
   }
 
-  const run = async () => {
-    const data = await anthropicPost(process.env.ANTHROPIC_API_KEY, {
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 256,
-      system: SIMPLIFY_SYSTEM_PROMPT,
-      messages: [{
-        role: "user",
-        content: "Grade: " + grade + "\nLearning target: " + learningTarget + "\nOutcomes: " + (outcomes || []).join(" | "),
-      }],
-    });
-    const raw = (data.content[0]?.text || "").trim();
-    return parseModelJson(raw);
-  };
-
-  try {
-    const result = await run();
-    return res.status(200).json(result);
-  } catch {
-    return res.status(503).json({ error: "Simplification unavailable right now." });
-  }
+  const data = await anthropicPost(process.env.ANTHROPIC_API_KEY, {
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 256,
+    system: SIMPLIFY_SYSTEM_PROMPT,
+    messages: [{
+      role: "user",
+      content: "Grade: " + grade + "\nLearning target: " + learningTarget + "\nOutcomes: " + (outcomes || []).join(" | "),
+    }],
+  });
+  const raw = (data.content[0]?.text || "").trim();
+  return parseModelJson(raw);
 });
