@@ -626,9 +626,9 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 - All code changes on `main` auto-deploy to Firebase Hosting AND Cloud Functions via GitHub Actions
 - Frontend build uses `VITE_FIREBASE_*` secrets from GitHub Actions settings
 - Cloud Functions env is written from GitHub Actions secrets (`STRIPE_*`, `MAILGUN_*`, `ANTHROPIC_API_KEY`) at deploy time — never stored in the repo
-- Firebase Hosting URL: `oftheday-c6490.web.app` (primary — all CI deploys land here)
-- `oftheday.net` domain is registered/DNS-managed through Netlify (registrar only — Netlify does NOT host the site)
-- Custom domain `oftheday.net` must be connected to Firebase Hosting via Firebase Console → Hosting → Add custom domain; DNS A records go in Netlify's DNS panel pointing to Firebase's IPs
+- Firebase Hosting URLs: `oftheday.net` and `www.oftheday.net` (custom, **Connected**); `oftheday-c6490.web.app` and `oftheday-c6490.firebaseapp.com` (defaults)
+- `oftheday.net` domain is registered/DNS-managed through Netlify (registrar only — Netlify does NOT host the site); DNS A records already point to Firebase Hosting
+- Every push to `main` → GitHub Actions deploys → live at `oftheday.net` within ~3 minutes
 - GitHub Actions secrets (`VITE_FIREBASE_*`, `ANTHROPIC_API_KEY`) are set and confirmed working
 - Deploy SA: `firebase-adminsdk-fbsvc@oftheday-c6490.iam.gserviceaccount.com` (stored as `secrets.oftheday`) — requires `roles/cloudfunctions.admin` (granted 2026-06-20)
 - `FIREBASE_SA_FUNCTIONZ` secret exists in repo but is NOT used by the workflow
