@@ -197,8 +197,8 @@ waitlist/{id}
 | Saved routines | 3 | Unlimited |
 | Custom activities | 1 | Unlimited |
 | Projector mode | Full access | Full access |
-| Lesson Slide Creator (AI generate) | 1 free use | Unlimited |
-| Lesson Slide Creator (save/project/simplify) | Locked | Full access |
+| Lesson Slide Creator (create + save up to 5 slides) | 5 lifetime active cap (deletion frees slot) | Unlimited |
+| Lesson Slide Creator (project/simplify) | Locked | Full access |
 
 Locked browse cards show a gold "Pro" badge; Use Today / Add to Routine trigger the upgrade modal which links to `/upgrade`.
 
@@ -463,10 +463,14 @@ A Pro feature (1 free AI generation on trial/free) for building presentation-rea
 - **Receiver**: `LessonSlideReceiver` component in `App.jsx`; detected via `?slideProjector=1` URL param
 
 ### Free-tier gate
-- 1 free AI generation tracked via `localStorage('ofd:usedFreeSlide')` key
-- After first free use: generate button prompts upgrade for free/trial users
-- Manual form editing and slide preview always available regardless of plan
-- Save, Project, Simplify actions require Pro
+- Free users can create and save up to **5 slides** (lifetime active cap; deletion frees a slot)
+- Count is the live document count in `users/{uid}/slides/` — no separate counter field
+- Server-side enforcement: `saveSlide` Cloud Function checks plan + count before writing
+- Editing an existing slide (same `slide.id`) never consumes a slot — always allowed
+- Generate is blocked at 5/5 for new slides; allowed for editing existing slides
+- Counter banner appears at 3/5 (neutral), 4/5 (amber), 5/5 (red) in the creator form
+- Project and Simplify still require Pro
+- Downgrade grandfathers existing slides; only new saves are blocked over the cap
 
 ### Themes
 Three slide themes: **calm** (white bg, navy/teal), **warm** (cream bg, amber), **bold** (dark bg, gold)
@@ -615,7 +619,6 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 | `ofd:projectorState` | `{...}` | Cross-window projector state bridge |
 | `ofd:presentationView` | `'clean'` or `'guided'` | Last projector view mode |
 | `ofd:cloudAutoSave` | `'true'` | Cloud auto-save preference |
-| `ofd:usedFreeSlide` | `'1'` | Whether free AI slide generation has been used |
 | `ofd:slideProjectorState` | `{...}` | Cross-window bridge for Lesson Slide projector |
 
 ## Live site status

@@ -515,6 +515,63 @@ exports.stripeWebhook = onRequest(async (req, res) => {
 });
 
 
+// ── Plan helper ───────────────────────────────────────────────────────────────
+function userIsPro(userData) {
+  if (userData.tier === "pro") return true;
+  if (userData.plan === "pro" || userData.plan === "school") return true;
+  if (userData.plan === "trial" && userData.trialStartedAt) {
+    const ts = userData.trialStartedAt;
+    const ms = typeof ts.toMillis === "function" ? ts.toMillis()
+             : typeof ts === "number" ? ts
+             : (ts._seconds || 0) * 1000;
+    return Date.now() - ms < 14 * 24 * 60 * 60 * 1000;
+  }
+  return false;
+}
+
+// ── Lesson Slide: save (enforces 5-slide free cap server-side) ────────────────
+exports.saveSlide = httpsV1.onRequest(async (req, res) => {
+  setCors(res);
+  if (req.method === "OPTIONS") return res.status(204).send("");
+
+  const authHeader = req.headers.authorization || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return res.status(401).json({ error: "Missing Authorization header" });
+
+  let uid;
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    uid = decoded.uid;
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+
+  const slide = req.body;
+  if (!slide || typeof slide.id !== "string" || !slide.id) {
+    return res.status(400).json({ error: "slide.id is required" });
+  }
+
+  const db = admin.firestore();
+  const userSnap = await db.collection("users").doc(uid).get();
+  const userData = userSnap.data() || {};
+
+  if (!userIsPro(userData)) {
+    const slideRef = db.collection("users").doc(uid).collection("slides").doc(slide.id);
+    const existingSnap = await slideRef.get();
+    if (!existingSnap.exists) {
+      const slidesSnap = await db.collection("users").doc(uid).collection("slides").get();
+      if (slidesSnap.size >= 5) {
+        return res.status(402).json({ error: "SLIDE_LIMIT_REACHED", count: slidesSnap.size });
+      }
+    }
+  }
+
+  await db.collection("users").doc(uid).collection("slides").doc(slide.id)
+    .set({ ...slide, savedAt: admin.firestore.FieldValue.serverTimestamp() });
+
+  return res.status(200).json({ success: true });
+});
+
 // ── Lesson Slide: AI generation (onRequest, new name to avoid type-change error) ───────
 exports.generateLessonSlide = onCall(async (request) => {
   if (!process.env.ANTHROPIC_API_KEY) {

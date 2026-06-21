@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { getAuth } from 'firebase/auth';
 import { saveLessonSlide, loadLessonSlides, deleteLessonSlide, saveBehavioralExpectations } from './lib/firestore';
 import LessonSlideDisplay from './LessonSlideDisplay';
@@ -205,30 +205,32 @@ export default function LessonSlideCreator({
   const [saveMsg, setSaveMsg] = useState('');
   const [savedSlides, setSavedSlides] = useState([]);
   const [slidesLoading, setSlidesLoading] = useState(false);
-  const [hasUsedFreeSlide, setHasUsedFreeSlide] = useState(
-    () => !!localStorage.getItem('ofd:usedFreeSlide')
-  );
   const [projecting, setProjecting] = useState(false);
 
-  // Track free-tier one-slide usage
-  const freeSlideUsed = isPlanFree && hasUsedFreeSlide;
+  // Whether the current slide is already saved (editing) vs. brand-new
+  const isExistingSlide = useMemo(
+    () => savedSlides.some(s => s.id === slide.id),
+    [savedSlides, slide.id]
+  );
+  // Free users are blocked from creating a 6th new slide
+  const atSlideLimit = isPlanFree && !isExistingSlide && savedSlides.length >= 5;
 
   const update = useCallback((field, value) => {
     setSlide(s => ({ ...s, [field]: value }));
   }, []);
 
-  // Load saved slides when switching to library view
+  // Load saved slides on mount (and uid change) — needed for count-based gate on create view
   useEffect(() => {
-    if (view !== 'slides' || !account?.uid) return;
+    if (!account?.uid) return;
     setSlidesLoading(true);
     loadLessonSlides(account.uid)
       .then(setSavedSlides)
       .catch(() => {})
       .finally(() => setSlidesLoading(false));
-  }, [view, account?.uid]);
+  }, [account?.uid]);
 
   const handleGenerate = useCallback(async () => {
-    if (isPlanFree && freeSlideUsed) { onUpgradeNeeded(); return; }
+    if (atSlideLimit) { onUpgradeNeeded(); return; }
     if (!slide.subject || !topic.trim()) {
       setGenError('Add a subject and describe your lesson first.');
       return;
@@ -264,10 +266,6 @@ export default function LessonSlideCreator({
         expectations: data.expectations?.length ? data.expectations : s.expectations,
         steps: data.steps?.length ? data.steps : s.steps,
       }));
-      if (isPlanFree) {
-        localStorage.setItem('ofd:usedFreeSlide', '1');
-        setHasUsedFreeSlide(true);
-      }
     } catch (err) {
       setGenError(
         err?.message?.includes('fill in') || err?.message?.includes('unavailable')
@@ -281,7 +279,7 @@ export default function LessonSlideCreator({
     } finally {
       setGenerating(false);
     }
-  }, [slide.subject, slide.grade, topic, preserveLanguage, isPlanFree, freeSlideUsed, onUpgradeNeeded]);
+  }, [slide.subject, slide.grade, topic, preserveLanguage, atSlideLimit, onUpgradeNeeded]);
 
   const handleSimplify = useCallback(async () => {
     if (isPlanFree) { onUpgradeNeeded(); return; }
@@ -317,8 +315,8 @@ export default function LessonSlideCreator({
   }, [slide.grade, slide.learningTarget, slide.outcomes, isPlanFree, onUpgradeNeeded]);
 
   const handleSave = useCallback(async () => {
-    if (isPlanFree) { onUpgradeNeeded(); return; }
     if (!account?.uid) return;
+    if (atSlideLimit) { onUpgradeNeeded(); return; }
     setSaving(true);
     setSaveMsg('');
     try {
@@ -328,14 +326,21 @@ export default function LessonSlideCreator({
         await saveBehavioralExpectations(account.uid, slide.expectations.filter(Boolean));
         onSaveBehavioralExpectations?.(slide.expectations.filter(Boolean));
       }
+      // Refresh slide list so count stays accurate
+      loadLessonSlides(account.uid).then(setSavedSlides).catch(() => {});
       setSaveMsg('Saved!');
       setTimeout(() => setSaveMsg(''), 2500);
-    } catch {
-      setSaveMsg('Save failed — try again.');
+    } catch (err) {
+      if (err.code === 'SLIDE_LIMIT_REACHED') {
+        loadLessonSlides(account.uid).then(setSavedSlides).catch(() => {});
+        onUpgradeNeeded();
+      } else {
+        setSaveMsg('Save failed — try again.');
+      }
     } finally {
       setSaving(false);
     }
-  }, [account?.uid, slide, isPlanFree, onUpgradeNeeded, onSaveBehavioralExpectations]);
+  }, [account?.uid, slide, atSlideLimit, onUpgradeNeeded, onSaveBehavioralExpectations]);
 
   const handleSaveNew = useCallback(() => {
     setSlide(s => ({ ...s, id: `slide-${Date.now()}`, createdAt: new Date().toISOString() }));
@@ -409,12 +414,12 @@ export default function LessonSlideCreator({
           {/* Left: form */}
           <div className="slide-form-col">
 
-            {/* Free tier banner */}
-            {isPlanFree && (
-              <div className="slide-free-banner">
-                {freeSlideUsed
-                  ? <>Upgrade to Pro to generate more slides and save them. <button type="button" className="slide-free-cta" onClick={onUpgradeNeeded}>Upgrade →</button></>
-                  : <>You have 1 free AI generation. <strong>Upgrade</strong> for unlimited slides, saving, and projecting.</>
+            {/* Free-tier slide count banner — shown at 3/5 and above */}
+            {isPlanFree && savedSlides.length >= 3 && (
+              <div className={`slide-free-banner${savedSlides.length >= 5 ? ' slide-free-banner--full' : savedSlides.length >= 4 ? ' slide-free-banner--warn' : ''}`}>
+                {savedSlides.length >= 5
+                  ? <>All 5 free slides used — <button type="button" className="slide-free-cta" onClick={onUpgradeNeeded}>Upgrade to save more →</button></>
+                  : <>{savedSlides.length} of 5 free slides used{savedSlides.length === 4 ? ' — 1 remaining' : ''}</>
                 }
               </div>
             )}

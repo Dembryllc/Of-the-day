@@ -1833,7 +1833,10 @@ select.slide-field-input { cursor: pointer; }
   background: rgba(245,166,35,0.09); border: 1px solid rgba(245,166,35,0.3);
   border-radius: 8px; padding: 8px 12px; font-size: 12.5px; color: #78624A;
 }
+.slide-free-banner--warn { background: #FEF3C7; border-color: #D97706; color: #92400E; }
+.slide-free-banner--full { background: #FEE2E2; border-color: #DC2626; color: #991B1B; }
 .slide-free-cta { background: none; border: none; color: var(--teal); font-weight: 700; cursor: pointer; font-size: inherit; padding: 0; text-decoration: underline; }
+.slide-free-banner--full .slide-free-cta { color: #DC2626; }
 
 /* My Slides Library */
 .slide-lib { display: flex; flex-direction: column; height: 100%; overflow: hidden; }

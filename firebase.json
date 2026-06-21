@@ -39,6 +39,7 @@
     ],
     "rewrites": [
       { "source": "/api/on-this-day", "function": "onthisday" },
+      { "source": "/api/save-slide", "function": "saveSlide" },
       { "source": "/api/generate-slide", "function": "generateSlide" },
       { "source": "/api/simplify-slide", "function": "simplifySlide" },
       { "source": "**", "destination": "/index.html" }

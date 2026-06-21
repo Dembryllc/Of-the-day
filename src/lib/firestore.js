@@ -1,5 +1,5 @@
 import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 
 export async function createUserDocument(uid, { name, email, grade }) {
   const ref = doc(db, 'users', uid);
@@ -71,9 +71,20 @@ export async function fetchActivities() {
 
 // ── Lesson Slides ─────────────────────────────────────────────────────────────
 
-export async function saveLessonSlide(uid, slide) {
-  const ref = doc(db, 'users', uid, 'slides', slide.id);
-  await setDoc(ref, { ...slide, savedAt: serverTimestamp() });
+export async function saveLessonSlide(_uid, slide) {
+  const token = await auth.currentUser?.getIdToken();
+  if (!token) throw new Error('Not signed in');
+  const resp = await fetch('/api/save-slide', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify(slide),
+  });
+  if (!resp.ok) {
+    const data = await resp.json().catch(() => ({}));
+    const err = new Error(data.error || 'Save failed');
+    err.code = data.error;
+    throw err;
+  }
 }
 
 export async function loadLessonSlides(uid) {
