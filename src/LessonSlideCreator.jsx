@@ -225,7 +225,7 @@ export default function LessonSlideCreator({
     setSlidesLoading(true);
     loadLessonSlides(account.uid)
       .then(setSavedSlides)
-      .catch(() => {})
+      .catch(err => { console.error('[Slides Load Error]', err?.code, err?.message); })
       .finally(() => setSlidesLoading(false));
   }, [account?.uid]);
 
@@ -322,11 +322,14 @@ export default function LessonSlideCreator({
     try {
       await saveLessonSlide(account.uid, slide);
     } catch (err) {
+      console.error('[Slide Save Error]', err?.code, err?.message, err);
       if (err.code === 'SLIDE_LIMIT_REACHED') {
         loadLessonSlides(account.uid).then(setSavedSlides).catch(() => {});
         onUpgradeNeeded();
+      } else if (err.code === 'permission-denied') {
+        setSaveMsg('Permission denied — try refreshing the page (Ctrl+Shift+R).');
       } else {
-        setSaveMsg(err.message || 'Save failed — try again.');
+        setSaveMsg((err.message || 'Save failed — try again.') + (err.code ? ` [${err.code}]` : ''));
       }
       setSaving(false);
       return;
@@ -337,7 +340,7 @@ export default function LessonSlideCreator({
       saveBehavioralExpectations(account.uid, slide.expectations.filter(Boolean)).catch(() => {});
       onSaveBehavioralExpectations?.(slide.expectations.filter(Boolean));
     }
-    loadLessonSlides(account.uid).then(setSavedSlides).catch(() => {});
+    loadLessonSlides(account.uid).then(setSavedSlides).catch(err => { console.error('[Slides Reload Error]', err?.code, err?.message); });
     setSaveMsg('Saved!');
     setTimeout(() => setSaveMsg(''), 2500);
     setSaving(false);
