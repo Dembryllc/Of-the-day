@@ -321,15 +321,6 @@ export default function LessonSlideCreator({
     setSaveMsg('');
     try {
       await saveLessonSlide(account.uid, slide);
-      const hasCustomExpectations = slide.expectations.some(e => e.trim());
-      if (hasCustomExpectations) {
-        await saveBehavioralExpectations(account.uid, slide.expectations.filter(Boolean));
-        onSaveBehavioralExpectations?.(slide.expectations.filter(Boolean));
-      }
-      // Refresh slide list so count stays accurate
-      loadLessonSlides(account.uid).then(setSavedSlides).catch(() => {});
-      setSaveMsg('Saved!');
-      setTimeout(() => setSaveMsg(''), 2500);
     } catch (err) {
       if (err.code === 'SLIDE_LIMIT_REACHED') {
         loadLessonSlides(account.uid).then(setSavedSlides).catch(() => {});
@@ -337,9 +328,19 @@ export default function LessonSlideCreator({
       } else {
         setSaveMsg('Save failed — try again.');
       }
-    } finally {
       setSaving(false);
+      return;
     }
+    // Slide saved — secondary operations are best-effort and must not fail the save
+    const hasCustomExpectations = slide.expectations.some(e => e.trim());
+    if (hasCustomExpectations) {
+      saveBehavioralExpectations(account.uid, slide.expectations.filter(Boolean)).catch(() => {});
+      onSaveBehavioralExpectations?.(slide.expectations.filter(Boolean));
+    }
+    loadLessonSlides(account.uid).then(setSavedSlides).catch(() => {});
+    setSaveMsg('Saved!');
+    setTimeout(() => setSaveMsg(''), 2500);
+    setSaving(false);
   }, [account?.uid, slide, atSlideLimit, onUpgradeNeeded, onSaveBehavioralExpectations]);
 
   const handleSaveNew = useCallback(() => {
@@ -556,7 +557,7 @@ export default function LessonSlideCreator({
                 onClick={handleSave}
                 disabled={saving}
               >
-                {saving ? 'Saving…' : saveMsg || '💾 Save'}
+                {saving ? 'Saving…' : '💾 Save'}
               </button>
               <button
                 type="button"
@@ -567,8 +568,17 @@ export default function LessonSlideCreator({
               </button>
             </div>
             {saveMsg && !saving && (
-              <div style={{ fontSize: 13, color: 'var(--teal)', fontWeight: 600, textAlign: 'center', marginTop: 4 }}>
-                {saveMsg} <button type="button" className="slide-free-cta" onClick={handleSaveNew}>Save as new →</button>
+              <div style={{
+                fontSize: 13,
+                color: saveMsg === 'Saved!' ? 'var(--teal)' : '#DC2626',
+                fontWeight: 600,
+                textAlign: 'center',
+                marginTop: 4,
+              }}>
+                {saveMsg}
+                {saveMsg === 'Saved!' && (
+                  <> <button type="button" className="slide-free-cta" onClick={handleSaveNew}>Save as new →</button></>
+                )}
               </div>
             )}
 

@@ -552,24 +552,29 @@ exports.saveSlide = httpsV1.onRequest(async (req, res) => {
   }
 
   const db = admin.firestore();
-  const userSnap = await db.collection("users").doc(uid).get();
-  const userData = userSnap.data() || {};
+  try {
+    const userSnap = await db.collection("users").doc(uid).get();
+    const userData = userSnap.data() || {};
 
-  if (!userIsPro(userData)) {
-    const slideRef = db.collection("users").doc(uid).collection("slides").doc(slide.id);
-    const existingSnap = await slideRef.get();
-    if (!existingSnap.exists) {
-      const slidesSnap = await db.collection("users").doc(uid).collection("slides").get();
-      if (slidesSnap.size >= 5) {
-        return res.status(402).json({ error: "SLIDE_LIMIT_REACHED", count: slidesSnap.size });
+    if (!userIsPro(userData)) {
+      const slideRef = db.collection("users").doc(uid).collection("slides").doc(slide.id);
+      const existingSnap = await slideRef.get();
+      if (!existingSnap.exists) {
+        const slidesSnap = await db.collection("users").doc(uid).collection("slides").get();
+        if (slidesSnap.size >= 5) {
+          return res.status(402).json({ error: "SLIDE_LIMIT_REACHED", count: slidesSnap.size });
+        }
       }
     }
+
+    await db.collection("users").doc(uid).collection("slides").doc(slide.id)
+      .set({ ...slide, savedAt: admin.firestore.FieldValue.serverTimestamp() });
+
+    return res.status(200).json({ success: true });
+  } catch (e) {
+    console.error("saveSlide Firestore error:", e);
+    return res.status(500).json({ error: "Server error — try again." });
   }
-
-  await db.collection("users").doc(uid).collection("slides").doc(slide.id)
-    .set({ ...slide, savedAt: admin.firestore.FieldValue.serverTimestamp() });
-
-  return res.status(200).json({ success: true });
 });
 
 // ── Lesson Slide: AI generation (onRequest — Gen2 onCall is incompatible with Gen1 deployments) ──
