@@ -225,6 +225,7 @@ function BlocksLayout({ slide, pm }) {
   const acc = '#4DB896';
   const bsz = s(pm, 32, 11);
   const lsz = s(pm, 16, 6);
+  const rule = 'rgba(255,255,255,0.07)';
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
   const steps        = (slide.steps        || []).filter(Boolean);
@@ -252,37 +253,31 @@ function BlocksLayout({ slide, pm }) {
         </div>
       </div>
 
-      {/* Outcomes + Expectations */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-        <VCenter style={{ padding: `${p * 0.3}px ${p}px`, borderRight: '1px solid rgba(255,255,255,0.07)' }}>
+      {/* 3-col grid: Outcomes | Expectations | Steps */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+        <VCenter style={{ padding: `${p * 0.3}px ${p}px`, borderRight: `1px solid ${rule}` }}>
           <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, marginBottom: s(pm, 20, 6) }}>Outcomes</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: s(pm, 20, 6) }}>
             {outcomes.map((o, i) => <Bullet key={i} text={o} accent={acc} textColor="rgba(255,255,255,0.87)" size={bsz} />)}
           </div>
         </VCenter>
-        <VCenter style={{ padding: `${p * 0.3}px ${p}px` }}>
+        <VCenter style={{ padding: `${p * 0.3}px ${p}px`, borderRight: `1px solid ${rule}` }}>
           <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, marginBottom: s(pm, 20, 6) }}>Expectations</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: s(pm, 20, 6) }}>
             {expectations.map((e, i) => <CheckBullet key={i} text={e} accent={acc} textColor="rgba(255,255,255,0.87)" size={bsz} />)}
           </div>
         </VCenter>
-      </div>
-
-      {/* Steps */}
-      <div style={{ flexShrink: 0, padding: `${p * 0.32}px ${p}px`, borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.18)' }}>
-        <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, marginBottom: s(pm, 16, 5) }}>Steps</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: s(pm, 24, 8) }}>
-          {steps.map((st, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: s(pm, 14, 5), maxWidth: s(pm, 380, 130) }}>
-              <div style={{
-                width: s(pm, 46, 14), height: s(pm, 46, 14), borderRadius: '50%',
-                background: acc, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0, fontSize: s(pm, 20, 7), fontWeight: 800, color: '#0D1B3E',
-              }}>{i + 1}</div>
-              <span style={{ fontSize: s(pm, 28, 9.5), color: 'rgba(255,255,255,0.85)', lineHeight: 1.4, paddingTop: s(pm, 6, 1.5) }}>{st}</span>
-            </div>
-          ))}
-        </div>
+        <VCenter style={{ padding: `${p * 0.3}px ${p}px`, background: 'rgba(0,0,0,0.2)' }}>
+          <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, marginBottom: s(pm, 20, 6) }}>Steps</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: s(pm, 20, 6) }}>
+            {steps.map((st, i) => (
+              <CircleStep key={i} num={i + 1} text={st}
+                badgeBg={acc} badgeText="#0D1B3E"
+                textColor="rgba(255,255,255,0.85)" size={bsz} pm={pm}
+              />
+            ))}
+          </div>
+        </VCenter>
       </div>
     </div>
   );
@@ -341,8 +336,8 @@ function DepthLayout({ slide, pm }) {
         </div>
       </div>
 
-      {/* Bento: outcomes + expectations */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '3fr 2fr', gap: g }}>
+      {/* 3 glass cards: Outcomes | Expectations | Steps */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: g }}>
         <div style={card}>
           <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, marginBottom: s(pm, 20, 6) }}>Outcomes</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: s(pm, 20, 6) }}>
@@ -355,27 +350,16 @@ function DepthLayout({ slide, pm }) {
             {expectations.map((e, i) => <CheckBullet key={i} text={e} accent={acc} textColor="rgba(255,255,255,0.85)" size={bsz} />)}
           </div>
         </div>
-      </div>
-
-      {/* Steps — full-width glass card */}
-      <div style={{ ...card, flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: s(pm, 32, 10), justifyContent: 'flex-start' }}>
-        <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, flexShrink: 0 }}>
-          Steps
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: s(pm, 20, 7), alignItems: 'center' }}>
-          {steps.map((st, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: s(pm, 12, 4) }}>
-              <div style={{
-                width: s(pm, 40, 12), height: s(pm, 40, 12), borderRadius: '50%',
-                background: acc, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0, fontSize: s(pm, 18, 6.5), fontWeight: 800, color: '#070C18',
-              }}>{i + 1}</div>
-              <span style={{ fontSize: s(pm, 26, 8.5), color: 'rgba(255,255,255,0.85)', lineHeight: 1.35 }}>{st}</span>
-              {i < steps.length - 1 && (
-                <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: s(pm, 22, 8), marginLeft: s(pm, 6, 2) }}>→</span>
-              )}
-            </div>
-          ))}
+        <div style={card}>
+          <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, marginBottom: s(pm, 20, 6) }}>Steps</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: s(pm, 20, 6) }}>
+            {steps.map((st, i) => (
+              <CircleStep key={i} num={i + 1} text={st}
+                badgeBg={acc} badgeText="#070C18"
+                textColor="rgba(255,255,255,0.85)" size={bsz} pm={pm}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
