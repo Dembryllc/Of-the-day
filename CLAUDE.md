@@ -7,7 +7,7 @@ Morning meeting planner for K–12 teachers using Responsive Classroom. Teachers
 - **Frontend**: React 19, Vite 8, react-router-dom 7
 - **Auth + DB**: Firebase Auth (email/password + Google) + Firestore (`oftheday-c6490`)
 - **Hosting**: Firebase Hosting (serves `dist/`)
-- **Functions**: Firebase Cloud Functions mixed gen (`functions/index.js`) — `onthisday` + `createCheckoutSession` + `stripeWebhook` + `sendLeadMagnet` + `generateLessonSlide` + `simplifyLessonSlide` are Gen 2; `onUserCreate` is Gen 1
+- **Functions**: Firebase Cloud Functions mixed gen (`functions/index.js`) — `onthisday` + `saveSlide` + `generateSlide` + `simplifySlide` are Gen 1 HTTP (`httpsV1.onRequest`); `createCheckoutSession` + `stripeWebhook` + `sendLeadMagnet` are Gen 2; `onUserCreate` is Gen 1 auth trigger
 - **Payments**: Stripe (test mode) — checkout sessions, webhooks, subscription lifecycle
 - **Email**: Mailgun (`functions/index.js`) — welcome email on signup, resource pack lead magnet delivery
 - **Build output**: `dist/` (gitignored)
@@ -62,14 +62,21 @@ src/
   tweaks-panel.jsx — dev tweaks UI
 
 functions/
-  index.js         — six Cloud Functions:
-                     • onthisday (Gen 2, onRequest) — fetches from onthisday.com, filters for classrooms
+  index.js         — Cloud Functions (mix of Gen 1 and Gen 2):
+                     • onthisday (Gen 1, onRequest) — fetches from onthisday.com, filters for classrooms
                      • onUserCreate (Gen 1, auth.user().onCreate) — writes plan:'trial' to Firestore on
                        signup AND sends welcome email via Mailgun (fails silently if keys not set)
                      • createCheckoutSession (Gen 2, onCall) — creates Stripe customer + checkout session
                      • stripeWebhook (Gen 2, onRequest) — handles subscription lifecycle events
                      • sendLeadMagnet (Gen 2, onCall) — sends resource pack email via Mailgun; called from
                        LandingPage after Firestore waitlist write; no-ops if MAILGUN keys not set
+                     • saveSlide (Gen 1, onRequest) — saves a slide to Firestore; enforces 5-slide free cap
+                       server-side. Client bypasses this and writes directly to Firestore; function kept
+                       deployed but not called by the frontend.
+                     • generateSlide (Gen 1, onRequest) — AI slide generation via Anthropic; called via
+                       fetch('/api/generate-slide') with Bearer token
+                     • simplifySlide (Gen 1, onRequest) — AI language simplification; called via
+                       fetch('/api/simplify-slide') with Bearer token
   .env.example     — documents required env vars (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, MAILGUN_API_KEY, MAILGUN_DOMAIN)
   package.json     — includes mailgun.js, form-data, stripe, firebase-admin, firebase-functions
 
@@ -137,8 +144,7 @@ Full deploy command (run on Mac, pulls from main):
 cd "/Users/mikeradicone/Desktop/of the day" && git pull origin main && npm run build && firebase deploy --only hosting
 ```
 
-**Important:** `git push` to GitHub does NOT deploy the live site. Firebase Hosting requires
-running `firebase deploy` manually on the Mac. GitHub push and Firebase deploy are separate steps.
+**Important:** Every push to `main` auto-deploys via GitHub Actions (hosting + functions + Firestore rules). Manual `firebase deploy` on Mac is only needed for out-of-band deploys.
 
 ## Firebase Console — required configuration
 These settings must be enabled in the Firebase Console or auth will not work:
@@ -437,18 +443,20 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 - Returns `{ sent: true/false }` — returns false (not throws) if Mailgun fails
 - No-ops silently if `MAILGUN_API_KEY` / `MAILGUN_DOMAIN` not set
 
-### generateLessonSlide (Gen 2, callable)
-- Called from `LessonSlideCreator.jsx` via `httpsCallable(functions, 'generateLessonSlide')`
-- Params: `{ subject, grade, topic, preserveLanguage? }`
-- Uses Claude Haiku (`claude-haiku-4-5-20251001`), max_tokens 512 — ~300–400 tokens/call
+### generateSlide (Gen 1, HTTP)
+- Called from `LessonSlideCreator.jsx` via `fetch('/api/generate-slide', { method: 'POST', headers: { Authorization: 'Bearer {token}' }, ... })`
+- Firebase Hosting rewrites `/api/generate-slide` → `generateSlide` function
+- Params (JSON body): `{ subject, grade, topic, preserveLanguage? }`
+- Uses Claude Haiku (`claude-haiku-4-5-20251001`), max_tokens 512
 - Returns structured JSON: `{ lessonName, learningTarget, outcomes[], expectations[], steps[] }`
-- Retries once on JSON parse failure; throws on second failure (client falls back to manual entry)
+- Retries once on JSON parse failure; returns 503 on second failure (client shows error, falls back to manual entry)
 - Requires `ANTHROPIC_API_KEY` in `functions/.env`
 - Hard character limits enforced in system prompt (LT 120, outcomes/expectations/steps 120 chars each)
 
-### simplifyLessonSlide (Gen 2, callable)
-- Called from `LessonSlideCreator.jsx` — Pro-only "Simplify Language" action
-- Params: `{ grade, learningTarget, outcomes[] }`
+### simplifySlide (Gen 1, HTTP)
+- Called from `LessonSlideCreator.jsx` via `fetch('/api/simplify-slide', ...)` — Pro-only "Simplify Language" action
+- Firebase Hosting rewrites `/api/simplify-slide` → `simplifySlide` function
+- Params (JSON body): `{ grade, learningTarget, outcomes[] }`
 - Uses Claude Haiku, max_tokens 256 — rewrites LT + outcomes in simpler grade-level language
 - Returns `{ learningTarget, outcomes[] }`
 - Requires `ANTHROPIC_API_KEY` in `functions/.env`
@@ -474,7 +482,15 @@ A Pro feature (1 free AI generation on trial/free) for building presentation-rea
 - Downgrade grandfathers existing slides; only new saves are blocked over the cap
 
 ### Themes
-Three slide themes: **calm** (white bg, navy/teal), **warm** (cream bg, amber), **bold** (dark bg, gold)
+Four slide themes (canonical keys + backward-compat aliases):
+- **focus** (alias: `calm`) — Clear Focus; white bg, teal/blue/green column headers
+- **soft** (alias: `warm`) — Soft Structure; cream bg, amber/lavender/sage column headers, large step numbers
+- **blocks** (alias: `bold`) — Bold Blocks; navy `#0D1B3E` bg, teal LT band, teal-tinted column headers
+- **depth** — Layered Depth; near-black `#070C18` bg, cyan accent, 3 glass cards
+
+`LessonSlideDisplay.jsx` resolves aliases via `ALIAS = { calm: 'focus', warm: 'soft', bold: 'blocks' }`.
+All 4 layouts use a 3-column grid (Outcomes | Expectations | Steps) with colored header bands and
+`justifyContent: space-evenly` so items fill the full column height.
 
 ### Behavioral expectation memory
 - Teacher's expectations auto-saved to `users/{uid}.behavioralExpectations` on every save
@@ -490,6 +506,19 @@ Three slide themes: **calm** (white bg, navy/teal), **warm** (cream bg, amber), 
 | preserveLanguage (AI input) | 100 |
 
 ## Known bugs fixed (do not reintroduce)
+- **Firestore rules never deployed (slide saves blocked from day one)**: `firestore.rules` was committed
+  but GitHub Actions only deployed `hosting` and `functions` — never `firestore:rules`. The rules file
+  had `allow create, update: if false` on slides, blocking all saves. Fixed by: (1) correcting the rules
+  to `allow read, write: if request.auth != null && request.auth.uid == userId`, and (2) adding
+  `firebase deploy --only firestore:rules` as a CI step.
+- **saveSlide Cloud Function returning 500**: The server-side `saveSlide` function kept failing in
+  production for unknown reasons. Bypassed entirely — client now writes directly to Firestore via
+  `setDoc` in `saveLessonSlide()` (firestore.js). Free-tier cap (5 slides) is enforced client-side
+  via `atSlideLimit`. The Cloud Function remains deployed but is no longer called by the frontend.
+- **saveBehavioralExpectations error hiding successful slide save**: `saveBehavioralExpectations` was
+  inside the same `try` block as `saveLessonSlide`. Any failure of the secondary write showed "Save
+  failed" even though the slide saved successfully. Fixed by splitting the try block — only the primary
+  `saveLessonSlide` call is in the guarded block.
 - **Timestamp arithmetic**: `trialStartedAt` is a Firestore Timestamp. `Date.now() - timestamp` = NaN.
   Fixed in both `App.jsx` (`tsToMs`) and `usePlan.js` (`toMs`). Never use raw subtraction.
 - **`toMs()` plain-number passthrough (critical — trial never expired)**: `account.trialStartedAt` is
@@ -623,8 +652,8 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 | `ofd:slideProjectorState` | `{...}` | Cross-window bridge for Lesson Slide projector |
 
 ## Live site status
-**Last updated: 2026-06-21**
-- All code changes on `main` auto-deploy to Firebase Hosting AND Cloud Functions via GitHub Actions
+**Last updated: 2026-06-22**
+- All code changes on `main` auto-deploy via GitHub Actions: hosting + functions + Firestore rules
 - Frontend build uses `VITE_FIREBASE_*` secrets from GitHub Actions settings
 - Cloud Functions env is written from GitHub Actions secrets (`STRIPE_*`, `MAILGUN_*`, `ANTHROPIC_API_KEY`) at deploy time — never stored in the repo
 - Firebase Hosting URLs: `oftheday.net` and `www.oftheday.net` (custom, **Connected**); `oftheday-c6490.web.app` and `oftheday-c6490.firebaseapp.com` (defaults)
@@ -634,14 +663,15 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 - Deploy SA: `firebase-adminsdk-fbsvc@oftheday-c6490.iam.gserviceaccount.com` (stored as `secrets.oftheday`) — requires `roles/cloudfunctions.admin` (granted 2026-06-20)
 - `FIREBASE_SA_FUNCTIONZ` secret exists in repo but is NOT used by the workflow
 - Node.js 20 deprecation warning in GitHub Actions — not a blocker until Oct 2026
+- Lesson Slide Creator saves working: direct Firestore writes to `users/{uid}/slides/{slideId}` ✓
+- Firestore rules correctly deployed via CI ✓
 
 ## Pending work — in priority order
-1. **AI slide generation** — `generateLessonSlide` deployed but not working; check Firebase Console → Functions → generateLessonSlide → Logs for the error
-2. **Stripe go-live** — Switch to live keys in GitHub Actions secrets (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`); register webhook in Stripe Dashboard
-3. **Mailgun setup** — Add `MAILGUN_API_KEY` + `MAILGUN_DOMAIN` to GitHub Actions secrets
-4. **Demo mode** — Let unauthenticated teachers browse sample activities before signup; biggest conversion lever
-5. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
-6. **Node.js upgrade** — Update `functions/package.json` engines + workflow `node-version` from 20 → 22 before Oct 2026
+1. **Stripe go-live** — Switch to live keys in GitHub Actions secrets (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`); register webhook in Stripe Dashboard
+2. **Mailgun setup** — Add `MAILGUN_API_KEY` + `MAILGUN_DOMAIN` to GitHub Actions secrets
+3. **Demo mode** — Let unauthenticated teachers browse sample activities before signup; biggest conversion lever
+4. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
+5. **Node.js upgrade** — Update `functions/package.json` engines + workflow `node-version` from 20 → 22 before Oct 2026
 
 ## Code architecture
 `src/App.jsx` is ~3,400 lines. `AuthScreen` and `DisplayMode` have been extracted to separate files. Shared data/logic lives in `src/lib/`.
