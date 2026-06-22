@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-// Scale helper: projector vs preview value
+// Scale helper: projector vs preview value (accepts numbers OR CSS strings)
 const s = (pm, big, small) => pm ? big : small;
 
 // ── Brand mark ─────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ function BrandMark({ pm, invert = false }) {
 function Bullet({ text, accent, textColor, size }) {
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-      <span style={{ color: accent, fontWeight: 900, fontSize: size * 1.05, lineHeight: 1.35, flexShrink: 0 }}>·</span>
+      <span style={{ color: accent, fontWeight: 900, fontSize: size, lineHeight: 1.35, flexShrink: 0 }}>·</span>
       <span style={{ fontSize: size, color: textColor, lineHeight: 1.45 }}>{text}</span>
     </div>
   );
@@ -38,17 +38,17 @@ function Bullet({ text, accent, textColor, size }) {
 function CheckBullet({ text, accent, textColor, size }) {
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-      <span style={{ color: accent, fontWeight: 800, fontSize: size * 0.9, lineHeight: 1.5, flexShrink: 0 }}>✓</span>
+      <span style={{ color: accent, fontWeight: 800, fontSize: size, lineHeight: 1.5, flexShrink: 0 }}>✓</span>
       <span style={{ fontSize: size, color: textColor, lineHeight: 1.45 }}>{text}</span>
     </div>
   );
 }
 
 function CircleStep({ num, text, badgeBg, badgeText, textColor, size, pm }) {
-  const dim = s(pm, 44, 13);
-  const fz  = s(pm, 20, 7);
+  const dim = s(pm, 'clamp(22px, 3vmin, 40px)', '13px');
+  const fz  = s(pm, 'clamp(10px, 1.4vmin, 18px)', '7px');
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: s(pm, 16, 5) }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: s(pm, 'clamp(8px, 1.4vmin, 16px)', '5px') }}>
       <div style={{
         width: dim, height: dim, borderRadius: '50%',
         background: badgeBg, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -65,8 +65,9 @@ function FocusLayout({ slide, pm }) {
   const p    = s(pm, 72, 18);
   const acc  = '#2D7A6A';
   const rule = '#ECEEF2';
-  const bsz  = s(pm, 36, 11);
-  const lsz  = s(pm, 18, 6);
+  const bsz  = s(pm, 'clamp(16px, 2vmin, 30px)', '11px');
+  const lsz  = s(pm, 'clamp(10px, 1.4vmin, 16px)', '6px');
+  const igap = s(pm, 'clamp(8px, 1.4vmin, 20px)', '5px');
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
   const steps        = (slide.steps        || []).filter(Boolean);
@@ -94,7 +95,7 @@ function FocusLayout({ slide, pm }) {
         <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, marginBottom: s(pm, 14, 5) }}>
           Learning Target
         </div>
-        <div style={{ fontSize: s(pm, 66, 20), fontWeight: 800, color: '#111827', lineHeight: 1.12, letterSpacing: '-0.025em' }}>
+        <div style={{ fontSize: s(pm, 'clamp(28px, 4.5vmin, 60px)', '20px'), fontWeight: 800, color: '#111827', lineHeight: 1.12, letterSpacing: '-0.025em' }}>
           {slide.learningTarget || <span style={{ opacity: 0.18 }}>Learning target will appear here</span>}
         </div>
       </div>
@@ -106,7 +107,7 @@ function FocusLayout({ slide, pm }) {
           <div style={{ flexShrink: 0, padding: `${s(pm, 22, 5)}px ${p}px`, background: '#F0FBF8', borderBottom: `1px solid #C9EFE6` }}>
             <span style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc }}>Outcomes</span>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', padding: `${p * 0.25}px ${p}px` }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap, padding: `${p * 0.25}px ${p}px` }}>
             {outcomes.map((o, i) => <Bullet key={i} text={o} accent={acc} textColor="#374151" size={bsz} />)}
           </div>
         </div>
@@ -116,7 +117,7 @@ function FocusLayout({ slide, pm }) {
           <div style={{ flexShrink: 0, padding: `${s(pm, 22, 5)}px ${p}px`, background: '#EFF6FF', borderBottom: `1px solid #BFDBFE` }}>
             <span style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1E40AF' }}>Expectations</span>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', padding: `${p * 0.25}px ${p}px` }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap, padding: `${p * 0.25}px ${p}px` }}>
             {expectations.map((e, i) => <CheckBullet key={i} text={e} accent="#3B82F6" textColor="#374151" size={bsz} />)}
           </div>
         </div>
@@ -126,7 +127,7 @@ function FocusLayout({ slide, pm }) {
           <div style={{ flexShrink: 0, padding: `${s(pm, 22, 5)}px ${p}px`, background: '#DCFCE7', borderBottom: `1px solid #BBF7D0` }}>
             <span style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#166534' }}>Steps</span>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', padding: `${p * 0.25}px ${p}px`, background: '#F5FFFB' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap, padding: `${p * 0.25}px ${p}px`, background: '#F5FFFB' }}>
             {steps.map((st, i) => (
               <CircleStep key={i} num={i + 1} text={st}
                 badgeBg={acc} badgeText="#fff"
@@ -143,8 +144,9 @@ function FocusLayout({ slide, pm }) {
 // ── SOFT: Soft Structure ───────────────────────────────────────────────────
 function SoftLayout({ slide, pm }) {
   const p   = s(pm, 68, 13);
-  const bsz = s(pm, 36, 11);
-  const lsz = s(pm, 18, 6);
+  const bsz = s(pm, 'clamp(16px, 2vmin, 30px)', '11px');
+  const lsz = s(pm, 'clamp(10px, 1.4vmin, 16px)', '6px');
+  const igap = s(pm, 'clamp(8px, 1.4vmin, 20px)', '5px');
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
   const steps        = (slide.steps        || []).filter(Boolean);
@@ -172,7 +174,7 @@ function SoftLayout({ slide, pm }) {
         <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#B45309', marginBottom: s(pm, 14, 5) }}>
           Learning Target
         </div>
-        <div style={{ fontSize: s(pm, 64, 17), fontWeight: 800, color: '#3B2A1A', lineHeight: 1.15, letterSpacing: '-0.015em' }}>
+        <div style={{ fontSize: s(pm, 'clamp(28px, 4.5vmin, 58px)', '17px'), fontWeight: 800, color: '#3B2A1A', lineHeight: 1.15, letterSpacing: '-0.015em' }}>
           {slide.learningTarget || <span style={{ opacity: 0.2 }}>Learning target will appear here</span>}
         </div>
       </div>
@@ -184,7 +186,7 @@ function SoftLayout({ slide, pm }) {
           <div style={{ flexShrink: 0, padding: `${s(pm, 22, 5)}px ${p}px`, background: '#FEF3C7', borderBottom: '1px solid #FDE68A' }}>
             <span style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#92400E' }}>Outcomes</span>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', padding: `${p * 0.25}px ${p}px` }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap, padding: `${p * 0.25}px ${p}px` }}>
             {outcomes.map((o, i) => <Bullet key={i} text={o} accent="#D97706" textColor="#3B2A1A" size={bsz} />)}
           </div>
         </div>
@@ -194,7 +196,7 @@ function SoftLayout({ slide, pm }) {
           <div style={{ flexShrink: 0, padding: `${s(pm, 22, 5)}px ${p}px`, background: '#EDE9FE', borderBottom: '1px solid #D5C8F0' }}>
             <span style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#5B21B6' }}>Expectations</span>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', padding: `${p * 0.25}px ${p}px` }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap, padding: `${p * 0.25}px ${p}px` }}>
             {expectations.map((e, i) => <CheckBullet key={i} text={e} accent="#7C3AED" textColor="#3B2A1A" size={bsz} />)}
           </div>
         </div>
@@ -204,12 +206,12 @@ function SoftLayout({ slide, pm }) {
           <div style={{ flexShrink: 0, padding: `${s(pm, 22, 5)}px ${p}px`, background: '#DCFCE7', borderBottom: '1px solid #BBF7D0' }}>
             <span style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#166534' }}>Steps</span>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', padding: `${p * 0.25}px ${p}px` }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap, padding: `${p * 0.25}px ${p}px` }}>
             {steps.map((st, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: s(pm, 16, 5) }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: s(pm, 'clamp(8px, 1.4vmin, 16px)', '5px') }}>
                 <span style={{
-                  fontWeight: 900, fontSize: s(pm, 64, 14), color: '#16A34A',
-                  lineHeight: 1, flexShrink: 0, minWidth: s(pm, 52, 16),
+                  fontWeight: 900, fontSize: s(pm, 'clamp(26px, 4vmin, 52px)', '14px'), color: '#16A34A',
+                  lineHeight: 1, flexShrink: 0, minWidth: s(pm, 'clamp(22px, 3.5vmin, 44px)', '16px'),
                 }}>{i + 1}</span>
                 <span style={{ fontSize: bsz, color: '#3B2A1A', lineHeight: 1.4 }}>{st}</span>
               </div>
@@ -225,8 +227,9 @@ function SoftLayout({ slide, pm }) {
 function BlocksLayout({ slide, pm }) {
   const p   = s(pm, 68, 16);
   const acc = '#4DB896';
-  const bsz = s(pm, 36, 11);
-  const lsz = s(pm, 18, 6);
+  const bsz = s(pm, 'clamp(16px, 2vmin, 30px)', '11px');
+  const lsz = s(pm, 'clamp(10px, 1.4vmin, 16px)', '6px');
+  const igap = s(pm, 'clamp(8px, 1.4vmin, 20px)', '5px');
   const rule = 'rgba(255,255,255,0.07)';
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
@@ -250,7 +253,7 @@ function BlocksLayout({ slide, pm }) {
         <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', marginBottom: s(pm, 14, 5) }}>
           Learning Target
         </div>
-        <div style={{ fontSize: s(pm, 62, 19), fontWeight: 800, color: '#FFFFFF', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+        <div style={{ fontSize: s(pm, 'clamp(26px, 4.5vmin, 58px)', '19px'), fontWeight: 800, color: '#FFFFFF', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
           {slide.learningTarget || <span style={{ opacity: 0.3 }}>Learning target will appear here</span>}
         </div>
       </div>
@@ -262,7 +265,7 @@ function BlocksLayout({ slide, pm }) {
           <div style={{ flexShrink: 0, padding: `${s(pm, 22, 5)}px ${p}px`, background: 'rgba(77,184,150,0.14)', borderBottom: `1px solid rgba(77,184,150,0.22)` }}>
             <span style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc }}>Outcomes</span>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', padding: `${p * 0.25}px ${p}px` }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap, padding: `${p * 0.25}px ${p}px` }}>
             {outcomes.map((o, i) => <Bullet key={i} text={o} accent={acc} textColor="rgba(255,255,255,0.87)" size={bsz} />)}
           </div>
         </div>
@@ -272,7 +275,7 @@ function BlocksLayout({ slide, pm }) {
           <div style={{ flexShrink: 0, padding: `${s(pm, 22, 5)}px ${p}px`, background: 'rgba(77,184,150,0.14)', borderBottom: `1px solid rgba(77,184,150,0.22)` }}>
             <span style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc }}>Expectations</span>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', padding: `${p * 0.25}px ${p}px` }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap, padding: `${p * 0.25}px ${p}px` }}>
             {expectations.map((e, i) => <CheckBullet key={i} text={e} accent={acc} textColor="rgba(255,255,255,0.87)" size={bsz} />)}
           </div>
         </div>
@@ -282,7 +285,7 @@ function BlocksLayout({ slide, pm }) {
           <div style={{ flexShrink: 0, padding: `${s(pm, 22, 5)}px ${p}px`, background: 'rgba(77,184,150,0.14)', borderBottom: `1px solid rgba(77,184,150,0.22)` }}>
             <span style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc }}>Steps</span>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', padding: `${p * 0.25}px ${p}px`, background: 'rgba(0,0,0,0.15)' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap, padding: `${p * 0.25}px ${p}px`, background: 'rgba(0,0,0,0.15)' }}>
             {steps.map((st, i) => (
               <CircleStep key={i} num={i + 1} text={st}
                 badgeBg={acc} badgeText="#0D1B3E"
@@ -301,8 +304,9 @@ function DepthLayout({ slide, pm }) {
   const p   = s(pm, 60, 13);
   const g   = s(pm, 16, 5);
   const acc = '#22D3EE';
-  const bsz = s(pm, 36, 11);
-  const lsz = s(pm, 18, 6);
+  const bsz = s(pm, 'clamp(16px, 2vmin, 30px)', '11px');
+  const lsz = s(pm, 'clamp(10px, 1.4vmin, 16px)', '6px');
+  const igap = s(pm, 'clamp(8px, 1.4vmin, 20px)', '5px');
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
   const steps        = (slide.steps        || []).filter(Boolean);
@@ -344,7 +348,7 @@ function DepthLayout({ slide, pm }) {
         <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, marginBottom: s(pm, 14, 5) }}>
           Learning Target
         </div>
-        <div style={{ fontSize: s(pm, 58, 16), fontWeight: 700, color: '#FFFFFF', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+        <div style={{ fontSize: s(pm, 'clamp(24px, 4vmin, 54px)', '16px'), fontWeight: 700, color: '#FFFFFF', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
           {slide.learningTarget || <span style={{ opacity: 0.2 }}>Learning target will appear here</span>}
         </div>
       </div>
@@ -353,19 +357,19 @@ function DepthLayout({ slide, pm }) {
       <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: g }}>
         <div style={card}>
           <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, marginBottom: s(pm, 16, 5) }}>Outcomes</div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap }}>
             {outcomes.map((o, i) => <Bullet key={i} text={o} accent={acc} textColor="rgba(255,255,255,0.85)" size={bsz} />)}
           </div>
         </div>
         <div style={card}>
           <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, marginBottom: s(pm, 16, 5) }}>Expectations</div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap }}>
             {expectations.map((e, i) => <CheckBullet key={i} text={e} accent={acc} textColor="rgba(255,255,255,0.85)" size={bsz} />)}
           </div>
         </div>
         <div style={card}>
           <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: acc, marginBottom: s(pm, 16, 5) }}>Steps</div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap }}>
             {steps.map((st, i) => (
               <CircleStep key={i} num={i + 1} text={st}
                 badgeBg={acc} badgeText="#070C18"
