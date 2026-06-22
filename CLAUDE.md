@@ -465,7 +465,8 @@ A Pro feature (1 free AI generation on trial/free) for building presentation-rea
 ### Free-tier gate
 - Free users can create and save up to **5 slides** (lifetime active cap; deletion frees a slot)
 - Count is the live document count in `users/{uid}/slides/` — no separate counter field
-- Server-side enforcement: `saveSlide` Cloud Function checks plan + count before writing
+- Client-side enforcement: `atSlideLimit` in `LessonSlideCreator` gates Save button; saves go direct to Firestore (no Cloud Function)
+- Firestore rules allow owner-only read/write on `users/{uid}/slides/{slideId}`
 - Editing an existing slide (same `slide.id`) never consumes a slot — always allowed
 - Generate is blocked at 5/5 for new slides; allowed for editing existing slides
 - Counter banner appears at 3/5 (neutral), 4/5 (amber), 5/5 (red) in the creator form

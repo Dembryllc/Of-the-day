@@ -11,12 +11,10 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
-      // Lesson slides — reads and deletes are owner-only.
-      // Creates and updates must go through the saveSlide Cloud Function (Admin SDK),
-      // which enforces the 5-slide free-tier cap server-side.
+      // Lesson slides — owner-only read/write.
+      // Free-tier cap (5 slides) is enforced client-side via atSlideLimit.
       match /slides/{slideId} {
-        allow read, delete: if request.auth != null && request.auth.uid == userId;
-        allow create, update: if false;
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
 
