@@ -5,13 +5,20 @@ const s = (pm, big, small) => pm ? big : small;
 
 // ── Brand mark ─────────────────────────────────────────────────────────────
 function BrandMark({ pm, invert = false }) {
-  const textCol = invert ? 'rgba(255,255,255,0.65)' : 'rgba(27,45,91,0.5)';
+  const textCol = invert ? 'rgba(255,255,255,0.95)' : 'rgba(27,45,91,0.85)';
+  const borderCol = invert ? 'rgba(255,255,255,0.2)' : 'rgba(27,45,91,0.15)';
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: s(pm, 10, 3), flexShrink: 0 }}>
-      <span style={{ fontSize: s(pm, 18, 7), color: '#F5A623', lineHeight: 1 }}>●</span>
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: s(pm, 10, 4),
+      flexShrink: 0,
+      border: `${s(pm, 2, 1)}px solid ${borderCol}`,
+      borderRadius: 999,
+      padding: `${s(pm, 8, 2.5)}px ${s(pm, 20, 6)}px`,
+    }}>
+      <span style={{ fontSize: s(pm, 26, 9), color: '#F5A623', lineHeight: 1 }}>●</span>
       <span style={{
-        fontSize: s(pm, 22, 8), fontWeight: 800, color: textCol,
-        letterSpacing: '0.06em', textTransform: 'lowercase', fontFamily: "'Outfit',sans-serif",
+        fontSize: s(pm, 36, 12), fontWeight: 800, color: textCol,
+        letterSpacing: '0.04em', textTransform: 'lowercase', fontFamily: "'Outfit',sans-serif",
       }}>of the day</span>
     </div>
   );
