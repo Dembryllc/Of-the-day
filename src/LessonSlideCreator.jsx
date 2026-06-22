@@ -9,11 +9,11 @@ const THEMES = ['focus', 'soft', 'blocks', 'depth'];
 const THEME_LABELS = { focus: 'Clear Focus', soft: 'Soft Structure', blocks: 'Bold Blocks', depth: 'Layered Depth' };
 
 const LIMITS = {
-  lessonName: 60,
+  lessonName: 120,
   learningTarget: 120,
-  outcome: 60,
-  expectation: 60,
-  step: 60,
+  outcome: 120,
+  expectation: 120,
+  step: 120,
   topic: 200,
   preserveLanguage: 100,
 };
@@ -326,7 +326,7 @@ export default function LessonSlideCreator({
         loadLessonSlides(account.uid).then(setSavedSlides).catch(() => {});
         onUpgradeNeeded();
       } else {
-        setSaveMsg('Save failed — try again.');
+        setSaveMsg(err.message || 'Save failed — try again.');
       }
       setSaving(false);
       return;

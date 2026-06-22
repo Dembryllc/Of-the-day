@@ -72,8 +72,8 @@ export async function fetchActivities() {
 // ── Lesson Slides ─────────────────────────────────────────────────────────────
 
 export async function saveLessonSlide(_uid, slide) {
-  const token = await auth.currentUser?.getIdToken();
-  if (!token) throw new Error('Not signed in');
+  if (!auth.currentUser) throw new Error('Not signed in — please reload and try again.');
+  const token = await auth.currentUser.getIdToken(true); // force refresh to avoid stale token
   const resp = await fetch('/api/save-slide', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -81,7 +81,7 @@ export async function saveLessonSlide(_uid, slide) {
   });
   if (!resp.ok) {
     const data = await resp.json().catch(() => ({}));
-    const err = new Error(data.error || 'Save failed');
+    const err = new Error(data.error || `HTTP ${resp.status}`);
     err.code = data.error;
     throw err;
   }

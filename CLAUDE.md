@@ -444,7 +444,7 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 - Returns structured JSON: `{ lessonName, learningTarget, outcomes[], expectations[], steps[] }`
 - Retries once on JSON parse failure; throws on second failure (client falls back to manual entry)
 - Requires `ANTHROPIC_API_KEY` in `functions/.env`
-- Hard character limits enforced in system prompt (LT 120, outcomes/expectations/steps 60 chars each)
+- Hard character limits enforced in system prompt (LT 120, outcomes/expectations/steps 120 chars each)
 
 ### simplifyLessonSlide (Gen 2, callable)
 - Called from `LessonSlideCreator.jsx` — Pro-only "Simplify Language" action
@@ -482,9 +482,9 @@ Three slide themes: **calm** (white bg, navy/teal), **warm** (cream bg, amber), 
 ### Character limits (hard, enforced in both form UI and AI system prompt)
 | Field | Max |
 |-------|-----|
-| lessonName | 60 |
+| lessonName | 120 |
 | learningTarget | 120 |
-| Each outcome/expectation/step | 60 |
+| Each outcome/expectation/step | 120 |
 | Topic (AI input) | 200 |
 | preserveLanguage (AI input) | 100 |
 

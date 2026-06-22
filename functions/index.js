@@ -58,11 +58,11 @@ Grade band language registers:
 - 9-12: Formal academic language appropriate for high school. Max 15 words per line.
 
 HARD character limits — never exceed these:
-- lessonName: 60 characters
+- lessonName: 120 characters
 - learningTarget: 120 characters
-- Each outcome: 60 characters (include 2-3 outcomes)
-- Each expectation: 60 characters (include 2-3 expectations)
-- Each step: 60 characters (include 3-6 steps)
+- Each outcome: 120 characters (include 2-3 outcomes)
+- Each expectation: 120 characters (include 2-3 expectations)
+- Each step: 120 characters (include 3-6 steps)
 
 Return exactly this JSON structure:
 {"lessonName":"string","learningTarget":"string","outcomes":["string","string"],"expectations":["string","string","string"],"steps":["string","string","string","string"]}
@@ -77,7 +77,7 @@ EXAMPLE — Grade 3-5, Math, Adding fractions with like denominators:
 EXAMPLE — Grade K-2, ELA, Letter sounds:
 {"lessonName":"Letter Sounds","learningTarget":"I can match letters to their sounds.","outcomes":["I can say the sound a letter makes.","I can find words that start with it."],"expectations":["Sit with legs crossed and hands in lap.","Raise your hand when you know the answer.","Listen when a friend is talking."],"steps":["Sing our alphabet song together.","Look at today's special letter.","Say the sound three times with me.","Find things in the room that start with it."]}`;
 
-const SIMPLIFY_SYSTEM_PROMPT = `Rewrite learning targets and outcomes using simpler words for the given grade level. Same meaning, simpler language. Return ONLY valid JSON with no preamble: {"learningTarget":"string","outcomes":["string"]}. Hard limits: learningTarget 120 chars, each outcome 60 chars.`;
+const SIMPLIFY_SYSTEM_PROMPT = `Rewrite learning targets and outcomes using simpler words for the given grade level. Same meaning, simpler language. Return ONLY valid JSON with no preamble: {"learningTarget":"string","outcomes":["string"]}. Hard limits: learningTarget 120 chars, each outcome 120 chars.`;
 
 function parseModelJson(raw) {
   const text = String(raw || "").trim();
