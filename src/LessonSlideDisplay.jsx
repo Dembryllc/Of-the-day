@@ -45,10 +45,10 @@ function CheckBullet({ text, accent, textColor, size }) {
 }
 
 function CircleStep({ num, text, badgeBg, badgeText, textColor, size, pm }) {
-  const dim = s(pm, 56, 15);
-  const fz  = s(pm, 26, 8);
+  const dim = s(pm, 44, 13);
+  const fz  = s(pm, 20, 7);
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: s(pm, 20, 6) }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: s(pm, 16, 5) }}>
       <div style={{
         width: dim, height: dim, borderRadius: '50%',
         background: badgeBg, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -65,8 +65,8 @@ function FocusLayout({ slide, pm }) {
   const p    = s(pm, 72, 18);
   const acc  = '#2D7A6A';
   const rule = '#ECEEF2';
-  const bsz  = s(pm, 44, 12);
-  const lsz  = s(pm, 20, 7);
+  const bsz  = s(pm, 36, 11);
+  const lsz  = s(pm, 18, 6);
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
   const steps        = (slide.steps        || []).filter(Boolean);
@@ -143,8 +143,8 @@ function FocusLayout({ slide, pm }) {
 // ── SOFT: Soft Structure ───────────────────────────────────────────────────
 function SoftLayout({ slide, pm }) {
   const p   = s(pm, 68, 13);
-  const bsz = s(pm, 44, 12);
-  const lsz = s(pm, 20, 6);
+  const bsz = s(pm, 36, 11);
+  const lsz = s(pm, 18, 6);
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
   const steps        = (slide.steps        || []).filter(Boolean);
@@ -208,8 +208,8 @@ function SoftLayout({ slide, pm }) {
             {steps.map((st, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: s(pm, 16, 5) }}>
                 <span style={{
-                  fontWeight: 900, fontSize: s(pm, 80, 16), color: '#16A34A',
-                  lineHeight: 1, flexShrink: 0, minWidth: s(pm, 64, 18),
+                  fontWeight: 900, fontSize: s(pm, 64, 14), color: '#16A34A',
+                  lineHeight: 1, flexShrink: 0, minWidth: s(pm, 52, 16),
                 }}>{i + 1}</span>
                 <span style={{ fontSize: bsz, color: '#3B2A1A', lineHeight: 1.4 }}>{st}</span>
               </div>
@@ -225,8 +225,8 @@ function SoftLayout({ slide, pm }) {
 function BlocksLayout({ slide, pm }) {
   const p   = s(pm, 68, 16);
   const acc = '#4DB896';
-  const bsz = s(pm, 44, 12);
-  const lsz = s(pm, 20, 7);
+  const bsz = s(pm, 36, 11);
+  const lsz = s(pm, 18, 6);
   const rule = 'rgba(255,255,255,0.07)';
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
@@ -301,8 +301,8 @@ function DepthLayout({ slide, pm }) {
   const p   = s(pm, 60, 13);
   const g   = s(pm, 16, 5);
   const acc = '#22D3EE';
-  const bsz = s(pm, 42, 12);
-  const lsz = s(pm, 20, 7);
+  const bsz = s(pm, 36, 11);
+  const lsz = s(pm, 18, 6);
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
   const steps        = (slide.steps        || []).filter(Boolean);
