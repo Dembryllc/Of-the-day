@@ -101,6 +101,7 @@ export default function LandingPage() {
           </ul>
           <div className="nav-actions">
             <Link to="/login" className="btn-ghost">Sign In</Link>
+            <Link to="/demo" className="btn-ghost">Live Demo</Link>
             <Link to="/login?signup=1" className="btn-primary">Try It Free</Link>
           </div>
           <button className="hamburger" onClick={() => setNavOpen(o => !o)} aria-label="Open menu">
@@ -124,7 +125,7 @@ export default function LandingPage() {
             </p>
             <div className="hero-ctas">
               <Link to="/login?signup=1" className="btn-primary-lg">Try It Free — No Credit Card</Link>
-              <a href="#how-it-works" className="btn-secondary-lg">See How It Works</a>
+              <Link to="/demo" className="btn-secondary-lg">See a Live Demo</Link>
             </div>
             <p className="hero-note">Free plan available · Grades K–2, 3–5, 6–8, 9–12</p>
           </div>

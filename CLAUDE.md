@@ -22,6 +22,7 @@ Single-page app. One `index.html` entry, one JS/CSS bundle, React Router handles
 | `/login` | `AuthScreen` | Public (redirects to `/dashboard` if authed) |
 | `/dashboard` | `MainApp` | Protected (redirects to `/login` if unauthed) |
 | `/upgrade` | `UpgradePage` | Protected (redirects to `/login` if unauthed) |
+| `/demo` | `MainApp` (guest) | Public — null-uid DEMO_ACCOUNT; shows demo banner; cloud ops no-op |
 | `/district` | `DistrictPage` | Public |
 | `/privacy` | `PrivacyPage` | Public |
 | `/terms` | `TermsPage` | Public |
@@ -696,9 +697,9 @@ The sidebar nav uses these exact string labels (referenced throughout App.jsx as
 ## Pending work — in priority order
 1. **Stripe go-live** — Switch to live keys in GitHub Actions secrets (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`); register webhook in Stripe Dashboard
 2. **Mailgun setup** — Add `MAILGUN_API_KEY` + `MAILGUN_DOMAIN` to GitHub Actions secrets
-3. **Demo mode** — Let unauthenticated teachers browse sample activities before signup; biggest conversion lever
+3. ~~**Demo mode**~~ — ✓ Done: `/demo` route renders `MainApp` with a null-uid guest account; navy demo banner prompts signup; cloud save/restore guarded against null uid; "Live Demo" CTA added to landing page nav + hero
 4. **Projector design section** — Visual theme swatches + live preview in Settings Sheet
-5. **Node.js upgrade** — Update `functions/package.json` engines + workflow `node-version` from 20 → 22 before Oct 2026
+5. ~~**Node.js upgrade**~~ — ✓ Done: `functions/package.json` engines + workflow `node-version` updated to 22
 
 ## Code architecture
 `src/App.jsx` is ~3,400 lines. `AuthScreen` and `DisplayMode` have been extracted to separate files. Shared data/logic lives in `src/lib/`.

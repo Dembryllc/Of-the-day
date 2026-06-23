@@ -2394,6 +2394,7 @@ function MainApp({ account, onSignOut }) {
   }, [account]);
 
   const saveToCloud = useCallback(async ({ quiet = false } = {}) => {
+    if (!account?.uid) return;
     if (!quiet) setCloudBusy(true);
     setCloudStatus(quiet ? "Auto-saving to cloud..." : "Saving to cloud...");
     try {
@@ -2437,6 +2438,7 @@ function MainApp({ account, onSignOut }) {
   }, [routine]);
 
   const restoreFromCloud = useCallback(async () => {
+    if (!account?.uid) return;
     if (!confirm("Restore cloud data to this device? This will replace the local custom data currently in this browser.")) return;
     setCloudBusy(true);
     setCloudStatus("Restoring cloud data...");
@@ -2928,6 +2930,14 @@ function MainApp({ account, onSignOut }) {
 
   return (
     <div className="app" style={{ "--home-accent": projectorStyle.homeAccent, "--home-soft": projectorStyle.homeSoft }}>
+      {!account?.uid && (
+        <div className="demo-banner" role="banner">
+          <span>
+            You're previewing OfTheDay — changes won't be saved.{' '}
+            <a href="/login?signup=1" className="demo-banner-cta">Create your free account →</a>
+          </span>
+        </div>
+      )}
       {showProBanner && (
         <div className="pro-success-banner" role="status">
           Welcome to Pro! 🌅
@@ -3117,7 +3127,7 @@ function MainApp({ account, onSignOut }) {
           <div className="topbar">
             <div className="topbar-left">
               <div className="topbar-title">Lesson Slides</div>
-              <div className="topbar-date">AI-generated classroom display slides · learning targets, outcomes, steps</div>
+              <div className="topbar-date">AI-generated classroom display slides · learning targets, success criteria, vocabulary</div>
             </div>
             {isPlanFree && (
               <div className="topbar-right">
@@ -3713,6 +3723,7 @@ function App() {
 
   const loading = <div className="auth-loading">Loading…</div>;
   const authed = authState.account;
+  const DEMO_ACCOUNT = { uid: null, name: 'Guest Teacher', email: '', grade: '3–5', plan: 'free', tier: 'free', emailVerified: true };
 
   return (
     <BrowserRouter>
@@ -3732,6 +3743,7 @@ function App() {
           authed ? <MainApp account={authed} onSignOut={signOut} /> :
           <Navigate to="/login" replace />
         } />
+        <Route path="/demo" element={<MainApp account={DEMO_ACCOUNT} onSignOut={() => window.location.href = '/'} />} />
         <Route path="/upgrade" element={
           authState.loading ? loading :
           authed ? <UpgradePage account={authed} /> :
