@@ -65,8 +65,8 @@ function FocusLayout({ slide, pm }) {
   const p    = s(pm, 72, 18);
   const acc  = '#2D7A6A';
   const rule = '#ECEEF2';
-  const bsz  = s(pm, 'clamp(16px, 2vmin, 30px)', '11px');
-  const lsz  = s(pm, 'clamp(10px, 1.4vmin, 16px)', '6px');
+  const bsz  = s(pm, 'clamp(16px, 2vmin, 30px)', '13px');
+  const lsz  = s(pm, 'clamp(10px, 1.4vmin, 16px)', '8px');
   const igap = s(pm, 'clamp(8px, 1.4vmin, 20px)', '5px');
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
@@ -144,8 +144,8 @@ function FocusLayout({ slide, pm }) {
 // ── SOFT: Soft Structure ───────────────────────────────────────────────────
 function SoftLayout({ slide, pm }) {
   const p   = s(pm, 68, 13);
-  const bsz = s(pm, 'clamp(16px, 2vmin, 30px)', '11px');
-  const lsz = s(pm, 'clamp(10px, 1.4vmin, 16px)', '6px');
+  const bsz = s(pm, 'clamp(16px, 2vmin, 30px)', '13px');
+  const lsz = s(pm, 'clamp(10px, 1.4vmin, 16px)', '8px');
   const igap = s(pm, 'clamp(8px, 1.4vmin, 20px)', '5px');
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
@@ -227,8 +227,8 @@ function SoftLayout({ slide, pm }) {
 function BlocksLayout({ slide, pm }) {
   const p   = s(pm, 68, 16);
   const acc = '#4DB896';
-  const bsz = s(pm, 'clamp(16px, 2vmin, 30px)', '11px');
-  const lsz = s(pm, 'clamp(10px, 1.4vmin, 16px)', '6px');
+  const bsz = s(pm, 'clamp(16px, 2vmin, 30px)', '13px');
+  const lsz = s(pm, 'clamp(10px, 1.4vmin, 16px)', '8px');
   const igap = s(pm, 'clamp(8px, 1.4vmin, 20px)', '5px');
   const rule = 'rgba(255,255,255,0.07)';
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
@@ -304,8 +304,8 @@ function DepthLayout({ slide, pm }) {
   const p   = s(pm, 60, 13);
   const g   = s(pm, 16, 5);
   const acc = '#22D3EE';
-  const bsz = s(pm, 'clamp(16px, 2vmin, 30px)', '11px');
-  const lsz = s(pm, 'clamp(10px, 1.4vmin, 16px)', '6px');
+  const bsz = s(pm, 'clamp(16px, 2vmin, 30px)', '13px');
+  const lsz = s(pm, 'clamp(10px, 1.4vmin, 16px)', '8px');
   const igap = s(pm, 'clamp(8px, 1.4vmin, 20px)', '5px');
   const outcomes     = (slide.outcomes     || []).filter(Boolean);
   const expectations = (slide.expectations || []).filter(Boolean);
@@ -435,11 +435,11 @@ function InstructionalSlide({ slide, pm }) {
   const themeKey = ALIAS[slide.theme] || slide.theme || 'focus';
   const c = INSTR_THEMES[themeKey] || INSTR_THEMES.focus;
   const hp  = s(pm, 56, 13);
-  const bsz = s(pm, 'clamp(13px, 1.7vmin, 24px)', '10px');
-  const lsz = s(pm, 'clamp(9px, 1.1vmin, 13px)', '5px');
-  const ltSz = s(pm, 'clamp(20px, 3vmin, 44px)', '15px');
-  const eqSz = s(pm, 'clamp(13px, 1.8vmin, 26px)', '10px');
-  const igap = s(pm, 'clamp(6px, 1.1vmin, 14px)', '4px');
+  const bsz = s(pm, 'clamp(13px, 1.7vmin, 24px)', '13px');
+  const lsz = s(pm, 'clamp(9px, 1.1vmin, 13px)', '7px');
+  const ltSz = s(pm, 'clamp(20px, 3vmin, 44px)', '18px');
+  const eqSz = s(pm, 'clamp(13px, 1.8vmin, 26px)', '12px');
+  const igap = s(pm, 'clamp(6px, 1.1vmin, 14px)', '5px');
 
   const ColHdr = ({ bg, border, label, color }) => (
     <div style={{ flexShrink: 0, padding: `${s(pm, 14, 3.5)}px ${hp}px`, background: bg, borderBottom: `1px solid ${border}` }}>
@@ -569,7 +569,7 @@ export default function LessonSlideDisplay({ slide, projectorMode = false, onExi
           type="button"
           onClick={onExit}
           style={{
-            position: 'absolute', top: 20, right: 20, zIndex: 10,
+            position: 'absolute', bottom: 20, right: 20, zIndex: 10,
             padding: '12px 24px', background: 'rgba(0,0,0,0.55)',
             color: '#fff', border: '1px solid rgba(255,255,255,0.25)',
             borderRadius: 10, fontSize: 18, fontWeight: 600, cursor: 'pointer', minHeight: 48,
