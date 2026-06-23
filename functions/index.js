@@ -48,36 +48,36 @@ function anthropicPost(apiKey, payload) {
 // ── Lesson Slide AI ───────────────────────────────────────────────────────────
 // Requires ANTHROPIC_API_KEY in functions/.env
 
-const SLIDE_SYSTEM_PROMPT = `You are an assistant that helps K-12 teachers create structured lesson display slides.
-Return ONLY valid JSON. No preamble, explanation, or markdown. No code fences.
+const SLIDE_SYSTEM_PROMPT = `You are an expert instructional designer and NYS curriculum specialist for K–12 classrooms.
+Apply research-based instructional design: UDL, Explicit Instruction, Cognitive Load Theory, Hattie/Marzano.
+Return ONLY valid JSON. No preamble, explanation, or markdown fences.
 
 Grade band language registers:
-- K-2: Very simple sentences. Max 8 words per line. Use "We will" or "I can" with everyday words.
-- 3-5: Clear direct sentences. Academic vocabulary introduced but accessible. Max 12 words per line.
-- 6-8: Standard academic language appropriate for middle school. Max 15 words per line.
-- 9-12: Formal academic language appropriate for high school. Max 15 words per line.
+- K-2: Very simple language. Max 8 words per sentence. Everyday vocabulary. Use "I can..." with simple verbs.
+- 3-5: Clear, direct academic language. Max 12 words. Grade-appropriate vocabulary.
+- 6-8: Standard academic language. Max 15 words. Content-area vocabulary.
+- 9-12: Formal academic language. Max 15 words. Discipline-specific vocabulary.
 
-HARD character limits — never exceed these:
-- lessonName: 120 characters
-- learningTarget: 120 characters
-- Each outcome: 120 characters (include 2-3 outcomes)
-- Each expectation: 120 characters (include 2-3 expectations)
-- Each step: 120 characters (include 3-6 steps)
+HARD character limits — never exceed:
+- lessonName: 80 chars
+- learningTarget: 100 chars — format: "I can [observable verb] [specific content]"
+- essentialQuestion: 120 chars — open-ended, thought-provoking, student-accessible
+- Each successCriteria item: 90 chars — format: "I will..." measurable (2–3 items)
+- Each vocabulary word: 30 chars; each definition: 80 chars — student-friendly (3–4 items)
+- studentTask: 150 chars — numbered steps, imperative verbs
+- discussionPrompt: 120 chars — Turn and Talk or Think-Pair-Share aligned to learning target
+- exitTicket: 120 chars — 1 question directly aligned to the learning target
 
 Return exactly this JSON structure:
-{"lessonName":"string","learningTarget":"string","outcomes":["string","string"],"expectations":["string","string","string"],"steps":["string","string","string","string"]}
-
-For expectations: positive behavioral language only (what TO do, not what not to do).
-For learning targets: always "I can..." or "We will..." format.
-For steps: imperative verbs, short and scannable. Teachers read these aloud.
+{"lessonName":"string","learningTarget":"string","essentialQuestion":"string","successCriteria":["string","string"],"vocabulary":[{"word":"string","definition":"string"},{"word":"string","definition":"string"},{"word":"string","definition":"string"}],"studentTask":"string","discussionPrompt":"string","exitTicket":"string"}
 
 EXAMPLE — Grade 3-5, Math, Adding fractions with like denominators:
-{"lessonName":"Adding Fractions","learningTarget":"I can add fractions with the same denominator.","outcomes":["I can write the sum of two fractions.","I can explain why the denominator stays the same."],"expectations":["Show your thinking on your whiteboard.","Raise your hand to share ideas.","Use math vocabulary when you explain."],"steps":["Review: what does a denominator tell us?","Watch: adding fraction strips together.","Try it: solve 3 problems with a partner.","Share: explain one solution to the class."]}
+{"lessonName":"Adding Fractions","learningTarget":"I can add fractions with the same denominator.","essentialQuestion":"Why does the bottom number stay the same when we add fractions?","successCriteria":["I will add numerators and keep the denominator the same.","I will explain my thinking using fraction vocabulary.","I will solve at least 3 fraction problems correctly."],"vocabulary":[{"word":"numerator","definition":"top number — how many parts you have"},{"word":"denominator","definition":"bottom number — total equal parts"},{"word":"fraction","definition":"a number showing part of a whole"}],"studentTask":"1. Watch the model. 2. Try 2 problems with a partner. 3. Check your work. 4. Write your strategy.","discussionPrompt":"Turn and Talk: Explain to your partner why 1/4 + 2/4 = 3/4 and not 3/8.","exitTicket":"Solve 2/5 + 1/5. Show your work and explain in one sentence why the denominator stays the same."}
 
 EXAMPLE — Grade K-2, ELA, Letter sounds:
-{"lessonName":"Letter Sounds","learningTarget":"I can match letters to their sounds.","outcomes":["I can say the sound a letter makes.","I can find words that start with it."],"expectations":["Sit with legs crossed and hands in lap.","Raise your hand when you know the answer.","Listen when a friend is talking."],"steps":["Sing our alphabet song together.","Look at today's special letter.","Say the sound three times with me.","Find things in the room that start with it."]}`;
+{"lessonName":"Letter Sounds","learningTarget":"I can match letters to their sounds.","essentialQuestion":"How do letter sounds help us read new words?","successCriteria":["I will say the sound each letter makes.","I will find words that start with today's letter."],"vocabulary":[{"word":"letter","definition":"a symbol that stands for a sound"},{"word":"sound","definition":"what you hear when you say a letter"},{"word":"word","definition":"letters put together that have meaning"}],"studentTask":"1. Listen to the letter sound. 2. Repeat it 3 times. 3. Find 2 things in the room that start with it.","discussionPrompt":"Turn and Talk: Tell your partner a word that starts with today's letter.","exitTicket":"Draw one thing that starts with today's letter and write the letter next to it."}`;
 
-const SIMPLIFY_SYSTEM_PROMPT = `Rewrite learning targets and outcomes using simpler words for the given grade level. Same meaning, simpler language. Return ONLY valid JSON with no preamble: {"learningTarget":"string","outcomes":["string"]}. Hard limits: learningTarget 120 chars, each outcome 120 chars.`;
+const SIMPLIFY_SYSTEM_PROMPT = `Rewrite educational content using simpler language for the given grade level. Keep the same meaning, use grade-appropriate vocabulary. Return ONLY valid JSON with no preamble: {"learningTarget":"string","items":["string"]}. Hard limits: learningTarget 100 chars, each item 90 chars.`;
 
 function parseModelJson(raw) {
   const text = String(raw || "").trim();
@@ -608,13 +608,13 @@ exports.generateSlide = httpsV1.onRequest(async (req, res) => {
   const run = async () => {
     const data = await anthropicPost(process.env.ANTHROPIC_API_KEY, {
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 512,
+      max_tokens: 700,
       system: SLIDE_SYSTEM_PROMPT,
       messages: [{ role: "user", content: userMsg }],
     });
     const raw = (data.content[0]?.text || "").trim();
     const parsed = parseModelJson(raw);
-    if (!parsed.learningTarget || !Array.isArray(parsed.outcomes) || !Array.isArray(parsed.steps)) {
+    if (!parsed.learningTarget || !parsed.essentialQuestion || !Array.isArray(parsed.successCriteria)) {
       throw new Error("Invalid slide structure");
     }
     return parsed;
@@ -651,19 +651,28 @@ exports.simplifySlide = httpsV1.onRequest(async (req, res) => {
     return res.status(503).json({ error: "AI simplification is not configured." });
   }
 
-  const { grade, learningTarget, outcomes } = req.body || {};
+  const { grade, learningTarget, successCriteria, outcomes } = req.body || {};
   if (!grade || !learningTarget) {
     return res.status(400).json({ error: "grade and learningTarget are required" });
   }
 
+  const items = successCriteria?.length ? successCriteria : (outcomes || []);
+  const returnKey = successCriteria?.length ? "successCriteria" : "outcomes";
+  const msg = "Grade: " + grade + "\nLearning target: " + learningTarget +
+    (items.length ? "\nCriteria: " + items.join(" | ") : "");
+
   try {
     const data = await anthropicPost(process.env.ANTHROPIC_API_KEY, {
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 256,
+      max_tokens: 300,
       system: SIMPLIFY_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: "Grade: " + grade + "\nLearning target: " + learningTarget + "\nOutcomes: " + (outcomes || []).join(" | ") }],
+      messages: [{ role: "user", content: msg }],
     });
-    return res.status(200).json(parseModelJson(data.content[0]?.text || ""));
+    const parsed = parseModelJson(data.content[0]?.text || "");
+    return res.status(200).json({
+      learningTarget: parsed.learningTarget,
+      [returnKey]: parsed.items || [],
+    });
   } catch {
     return res.status(503).json({ error: "Simplification unavailable right now." });
   }

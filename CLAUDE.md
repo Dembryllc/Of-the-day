@@ -171,9 +171,12 @@ users/{uid}/data/main
   customVocab{}, customDoNow{}, projectorStyle{}
 
 users/{uid}/slides/{slideId}
-  id, lessonName, learningTarget, outcomes[], expectations[], steps[], theme, subject, grade,
-  savedAt (serverTimestamp) — pure JSON, ~1KB per slide, no binary assets
-  Ordered by savedAt desc. Owner-only Firestore rules.
+  id, lessonName, subject, grade, theme, createdAt, savedAt (serverTimestamp)
+  New format (v2): learningTarget, essentialQuestion, successCriteria[], vocabulary[{word,definition}],
+                   studentTask, discussionPrompt, exitTicket
+  Legacy format (v1): learningTarget, outcomes[], expectations[], steps[]
+  Detected in display by: slide.essentialQuestion !== undefined || slide.successCriteria !== undefined
+  Pure JSON, ~1.5KB per slide, no binary assets. Ordered by savedAt desc. Owner-only Firestore rules.
 
 activities/{id}
   id, cat, title, meta, time, prompt, starter, directions, source, sourceUrl
@@ -447,28 +450,37 @@ Reference with absolute path: `src="/assets/ofthedaylogi.png"`. Never use relati
 - Called from `LessonSlideCreator.jsx` via `fetch('/api/generate-slide', { method: 'POST', headers: { Authorization: 'Bearer {token}' }, ... })`
 - Firebase Hosting rewrites `/api/generate-slide` → `generateSlide` function
 - Params (JSON body): `{ subject, grade, topic, preserveLanguage? }`
-- Uses Claude Haiku (`claude-haiku-4-5-20251001`), max_tokens 512
-- Returns structured JSON: `{ lessonName, learningTarget, outcomes[], expectations[], steps[] }`
+- Uses Claude Haiku (`claude-haiku-4-5-20251001`), max_tokens 700
+- System prompt applies UDL / Explicit Instruction / Hattie/Marzano research-based instructional design
+- Returns structured JSON (new v2 format): `{ lessonName, learningTarget, essentialQuestion, successCriteria[], vocabulary[{word,definition}], studentTask, discussionPrompt, exitTicket }`
 - Retries once on JSON parse failure; returns 503 on second failure (client shows error, falls back to manual entry)
 - Requires `ANTHROPIC_API_KEY` in `functions/.env`
-- Hard character limits enforced in system prompt (LT 120, outcomes/expectations/steps 120 chars each)
 
 ### simplifySlide (Gen 1, HTTP)
 - Called from `LessonSlideCreator.jsx` via `fetch('/api/simplify-slide', ...)` — Pro-only "Simplify Language" action
 - Firebase Hosting rewrites `/api/simplify-slide` → `simplifySlide` function
-- Params (JSON body): `{ grade, learningTarget, outcomes[] }`
-- Uses Claude Haiku, max_tokens 256 — rewrites LT + outcomes in simpler grade-level language
-- Returns `{ learningTarget, outcomes[] }`
+- Params (JSON body): `{ grade, learningTarget, successCriteria[] }` (also accepts `outcomes[]` for legacy slides)
+- Uses Claude Haiku, max_tokens 300 — rewrites LT + criteria in simpler grade-level language
+- Returns `{ learningTarget, successCriteria[] }` (or `outcomes[]` if that was sent — matches input key)
 - Requires `ANTHROPIC_API_KEY` in `functions/.env`
 
 ## Lesson Slide Creator
-A Pro feature (1 free AI generation on trial/free) for building presentation-ready lesson slides.
+A Pro feature (1 free AI generation on trial/free) for building presentation-ready instructional slides.
 
 ### Architecture
 - **Creator form** (`LessonSlideCreator.jsx`): two-panel layout — left form col (380px) + right live preview (1fr)
 - **Display** (`LessonSlideDisplay.jsx`): pure display component; preview mode (16:9 aspect ratio) or projector mode (position fixed, fullscreen)
 - **Projector bridge**: `SLIDE_PROJECTOR_KEY = 'ofd:slideProjectorState'` — same localStorage+popup pattern as activity projector
 - **Receiver**: `LessonSlideReceiver` component in `App.jsx`; detected via `?slideProjector=1` URL param
+
+### Slide format detection (new vs. legacy)
+`LessonSlideDisplay.jsx` detects format by `slide.essentialQuestion !== undefined || slide.successCriteria !== undefined`:
+- **New format (v2)**: uses `InstructionalSlide` component — 6-zone layout (header, LT+EQ row, 3-col body: Success Criteria | Vocabulary | Task+Discussion+Exit)
+- **Legacy format (v1)**: uses old `FocusLayout`/`SoftLayout`/`BlocksLayout`/`DepthLayout` — 3-col grid (Outcomes | Expectations | Steps)
+
+Old saved slides continue to display correctly. AI generation always produces new format.
+When an old slide is loaded for editing, the form shows new fields (empty until generated or filled manually).
+Clicking "Generate with AI" on an old slide regenerates in new format and clears legacy `outcomes/expectations/steps`.
 
 ### Free-tier gate
 - Free users can create and save up to **5 slides** (lifetime active cap; deletion frees a slot)
@@ -482,26 +494,41 @@ A Pro feature (1 free AI generation on trial/free) for building presentation-rea
 - Downgrade grandfathers existing slides; only new saves are blocked over the cap
 
 ### Themes
-Four slide themes (canonical keys + backward-compat aliases):
-- **focus** (alias: `calm`) — Clear Focus; white bg, teal/blue/green column headers
-- **soft** (alias: `warm`) — Soft Structure; cream bg, amber/lavender/sage column headers, large step numbers
-- **blocks** (alias: `bold`) — Bold Blocks; navy `#0D1B3E` bg, teal LT band, teal-tinted column headers
-- **depth** — Layered Depth; near-black `#070C18` bg, cyan accent, 3 glass cards
+Four slide themes (canonical keys + backward-compat aliases); applied to both v1 and v2 layouts:
+- **focus** (alias: `calm`) — Clear Focus; white bg
+- **soft** (alias: `warm`) — Soft Structure; cream bg
+- **blocks** (alias: `bold`) — Bold Blocks; navy `#0D1B3E` bg
+- **depth** — Layered Depth; near-black `#070C18` bg
 
 `LessonSlideDisplay.jsx` resolves aliases via `ALIAS = { calm: 'focus', warm: 'soft', bold: 'blocks' }`.
-All 4 layouts use a 3-column grid (Outcomes | Expectations | Steps) with colored header bands and
-`justifyContent: space-evenly` so items fill the full column height.
+`INSTR_THEMES` object in `LessonSlideDisplay.jsx` holds per-theme color config for the `InstructionalSlide` component.
 
-### Behavioral expectation memory
-- Teacher's expectations auto-saved to `users/{uid}.behavioralExpectations` on every save
-- Pre-filled on every new slide (saves re-typing the same classroom norms)
+### New slide data structure (v2)
+```
+{
+  id, lessonName, subject, grade, theme, createdAt,
+  learningTarget,       // "I can..." format
+  essentialQuestion,    // open-ended, thought-provoking
+  successCriteria[],    // "I will..." measurable (2-3)
+  vocabulary[],         // [{word, definition}] student-friendly (3-4)
+  studentTask,          // numbered steps, imperative verbs
+  discussionPrompt,     // Turn and Talk / Think-Pair-Share
+  exitTicket,           // 1 question aligned to LT
+}
+```
 
 ### Character limits (hard, enforced in both form UI and AI system prompt)
 | Field | Max |
 |-------|-----|
-| lessonName | 120 |
-| learningTarget | 120 |
-| Each outcome/expectation/step | 120 |
+| lessonName | 80 |
+| learningTarget | 100 |
+| essentialQuestion | 120 |
+| Each successCriteria | 90 |
+| vocabulary word | 30 |
+| vocabulary definition | 80 |
+| studentTask | 150 |
+| discussionPrompt | 120 |
+| exitTicket | 120 |
 | Topic (AI input) | 200 |
 | preserveLanguage (AI input) | 100 |
 

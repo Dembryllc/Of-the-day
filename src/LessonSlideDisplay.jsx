@@ -383,6 +383,158 @@ function DepthLayout({ slide, pm }) {
   );
 }
 
+// ── INSTRUCTIONAL SLIDE (new format) ─────────────────────────────────────
+const INSTR_THEMES = {
+  focus: {
+    bg: '#FFFFFF', divider: '#ECEEF2', invert: false,
+    ltBg: '#F4FDFA', ltAccent: '#2D7A6A', ltLabel: '#2D7A6A', ltText: '#111827',
+    eqBg: '#EFF6FF', eqLabel: '#1E40AF', eqText: '#1E3A8A',
+    c1Hdr: '#DCF5EE', c1HdrBdr: '#B8EBD9', c1Label: '#2D7A6A', c1Accent: '#2D7A6A',
+    c2Hdr: '#DBEAFE', c2HdrBdr: '#BFDBFE', c2Label: '#1D4ED8', c2Word: '#1D4ED8', c2Def: '#6B7280',
+    tkHdr: '#FEF3C7', tkHdrBdr: '#FDE68A', tkLabel: '#92400E',
+    dcHdr: '#F5F3FF', dcHdrBdr: '#DDD6FE', dcLabel: '#5B21B6',
+    exHdr: '#DCFCE7', exHdrBdr: '#BBF7D0', exLabel: '#166534',
+    body: '#374151',
+  },
+  soft: {
+    bg: '#FAF8F4', divider: '#EDE7DB', invert: false,
+    ltBg: '#FFFBF5', ltAccent: '#D97706', ltLabel: '#B45309', ltText: '#3B2A1A',
+    eqBg: '#FEF9F0', eqLabel: '#92400E', eqText: '#7C3811',
+    c1Hdr: '#FEF3C7', c1HdrBdr: '#FDE68A', c1Label: '#92400E', c1Accent: '#D97706',
+    c2Hdr: '#EDE9FE', c2HdrBdr: '#D5C8F0', c2Label: '#5B21B6', c2Word: '#5B21B6', c2Def: '#78716C',
+    tkHdr: '#DCFCE7', tkHdrBdr: '#BBF7D0', tkLabel: '#166534',
+    dcHdr: '#EDE9FE', dcHdrBdr: '#D5C8F0', dcLabel: '#5B21B6',
+    exHdr: '#FEF3C7', exHdrBdr: '#FDE68A', exLabel: '#92400E',
+    body: '#3B2A1A',
+  },
+  blocks: {
+    bg: '#0D1B3E', divider: 'rgba(255,255,255,0.1)', invert: true,
+    ltBg: '#1A7A68', ltAccent: '#4DB896', ltLabel: 'rgba(255,255,255,0.7)', ltText: '#FFFFFF',
+    eqBg: 'rgba(77,184,150,0.12)', eqLabel: '#4DB896', eqText: 'rgba(255,255,255,0.9)',
+    c1Hdr: 'rgba(77,184,150,0.2)', c1HdrBdr: 'rgba(77,184,150,0.35)', c1Label: '#4DB896', c1Accent: '#4DB896',
+    c2Hdr: 'rgba(77,184,150,0.15)', c2HdrBdr: 'rgba(77,184,150,0.25)', c2Label: '#4DB896', c2Word: '#4DB896', c2Def: 'rgba(255,255,255,0.55)',
+    tkHdr: 'rgba(245,166,35,0.18)', tkHdrBdr: 'rgba(245,166,35,0.3)', tkLabel: '#F5A623',
+    dcHdr: 'rgba(147,51,234,0.2)', dcHdrBdr: 'rgba(147,51,234,0.3)', dcLabel: '#C084FC',
+    exHdr: 'rgba(34,197,94,0.18)', exHdrBdr: 'rgba(34,197,94,0.3)', exLabel: '#4ADE80',
+    body: 'rgba(255,255,255,0.87)',
+  },
+  depth: {
+    bg: '#070C18', divider: 'rgba(255,255,255,0.12)', invert: true,
+    ltBg: 'rgba(34,211,238,0.07)', ltAccent: '#22D3EE', ltLabel: '#22D3EE', ltText: '#FFFFFF',
+    eqBg: 'rgba(255,255,255,0.05)', eqLabel: 'rgba(34,211,238,0.8)', eqText: 'rgba(255,255,255,0.85)',
+    c1Hdr: 'rgba(34,211,238,0.15)', c1HdrBdr: 'rgba(34,211,238,0.25)', c1Label: '#22D3EE', c1Accent: '#22D3EE',
+    c2Hdr: 'rgba(255,255,255,0.08)', c2HdrBdr: 'rgba(255,255,255,0.14)', c2Label: '#22D3EE', c2Word: '#22D3EE', c2Def: 'rgba(255,255,255,0.5)',
+    tkHdr: 'rgba(251,191,36,0.15)', tkHdrBdr: 'rgba(251,191,36,0.25)', tkLabel: '#FCD34D',
+    dcHdr: 'rgba(167,139,250,0.15)', dcHdrBdr: 'rgba(167,139,250,0.25)', dcLabel: '#A78BFA',
+    exHdr: 'rgba(52,211,153,0.15)', exHdrBdr: 'rgba(52,211,153,0.25)', exLabel: '#34D399',
+    body: 'rgba(255,255,255,0.85)',
+  },
+};
+
+function InstructionalSlide({ slide, pm }) {
+  const themeKey = ALIAS[slide.theme] || slide.theme || 'focus';
+  const c = INSTR_THEMES[themeKey] || INSTR_THEMES.focus;
+  const hp  = s(pm, 56, 13);
+  const bsz = s(pm, 'clamp(13px, 1.7vmin, 24px)', '10px');
+  const lsz = s(pm, 'clamp(9px, 1.1vmin, 13px)', '5px');
+  const ltSz = s(pm, 'clamp(20px, 3vmin, 44px)', '15px');
+  const eqSz = s(pm, 'clamp(13px, 1.8vmin, 26px)', '10px');
+  const igap = s(pm, 'clamp(6px, 1.1vmin, 14px)', '4px');
+
+  const ColHdr = ({ bg, border, label, color }) => (
+    <div style={{ flexShrink: 0, padding: `${s(pm, 14, 3.5)}px ${hp}px`, background: bg, borderBottom: `1px solid ${border}` }}>
+      <span style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color }}>{label}</span>
+    </div>
+  );
+
+  const successCriteria = (slide.successCriteria || []).filter(Boolean);
+  const vocabulary = (slide.vocabulary || []).filter(v => v && (v.word || v.definition));
+
+  return (
+    <div style={{ width: '100%', height: '100%', background: c.bg, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+      {/* Header */}
+      <div style={{ flexShrink: 0, padding: `${s(pm, 14, 3)}px ${hp}px`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${c.divider}` }}>
+        <span style={{ fontSize: s(pm, 19, 6.5), fontWeight: 700, color: c.invert ? 'rgba(255,255,255,0.45)' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          {slide.lessonName || 'Lesson'}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: s(pm, 18, 7) }}>
+          <span style={{ fontSize: s(pm, 17, 6), color: c.invert ? 'rgba(255,255,255,0.3)' : '#C0C5CF' }}>{[slide.subject, slide.grade].filter(Boolean).join(' · ')}</span>
+          <BrandMark pm={pm} invert={c.invert} />
+        </div>
+      </div>
+
+      {/* Learning Target + Essential Question row */}
+      <div style={{ flexShrink: 0, display: 'flex', borderBottom: `1px solid ${c.divider}` }}>
+        <div style={{ flex: '0 0 58%', padding: `${s(pm, 20, 5)}px ${hp}px`, background: c.ltBg, borderRight: `1px solid ${c.divider}`, borderLeft: `${s(pm, 5, 2)}px solid ${c.ltAccent}` }}>
+          <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: c.ltLabel, marginBottom: s(pm, 8, 2) }}>🎯 Learning Target</div>
+          <div style={{ fontSize: ltSz, fontWeight: 800, color: c.ltText, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+            {slide.learningTarget || <span style={{ opacity: 0.25 }}>Learning target will appear here</span>}
+          </div>
+        </div>
+        <div style={{ flex: '0 0 42%', padding: `${s(pm, 20, 5)}px ${hp}px`, background: c.eqBg }}>
+          <div style={{ fontSize: lsz, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: c.eqLabel, marginBottom: s(pm, 8, 2) }}>❓ Essential Question</div>
+          <div style={{ fontSize: eqSz, fontWeight: 600, color: c.eqText, lineHeight: 1.35, fontStyle: 'italic' }}>
+            {slide.essentialQuestion || <span style={{ opacity: 0.25, fontStyle: 'normal' }}>Essential question will appear here</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* 3-col body */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+
+        {/* Col 1: Success Criteria */}
+        <div style={{ display: 'flex', flexDirection: 'column', borderRight: `1px solid ${c.divider}`, overflow: 'hidden' }}>
+          <ColHdr bg={c.c1Hdr} border={c.c1HdrBdr} label="✓ Success Criteria" color={c.c1Label} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap, padding: `${s(pm, 16, 4)}px ${hp}px` }}>
+            {successCriteria.map((sc, i) => (
+              <CheckBullet key={i} text={sc} accent={c.c1Accent} textColor={c.body} size={bsz} />
+            ))}
+            {successCriteria.length === 0 && <span style={{ fontSize: bsz, color: c.body, opacity: 0.3 }}>Success criteria will appear here</span>}
+          </div>
+        </div>
+
+        {/* Col 2: Key Vocabulary */}
+        <div style={{ display: 'flex', flexDirection: 'column', borderRight: `1px solid ${c.divider}`, overflow: 'hidden' }}>
+          <ColHdr bg={c.c2Hdr} border={c.c2HdrBdr} label="📖 Key Vocabulary" color={c.c2Label} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: igap, padding: `${s(pm, 16, 4)}px ${hp}px` }}>
+            {vocabulary.map((v, i) => (
+              <div key={i} style={{ lineHeight: 1.35 }}>
+                <span style={{ fontSize: bsz, fontWeight: 700, color: c.c2Word }}>{v.word}</span>
+                {v.definition && <span style={{ fontSize: bsz, color: c.c2Def }}> — {v.definition}</span>}
+              </div>
+            ))}
+            {vocabulary.length === 0 && <span style={{ fontSize: bsz, color: c.body, opacity: 0.3 }}>Vocabulary will appear here</span>}
+          </div>
+        </div>
+
+        {/* Col 3: Task / Discussion / Exit Ticket */}
+        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderBottom: `1px solid ${c.divider}`, overflow: 'hidden' }}>
+            <ColHdr bg={c.tkHdr} border={c.tkHdrBdr} label="📝 Student Task" color={c.tkLabel} />
+            <div style={{ flex: 1, padding: `${s(pm, 10, 3)}px ${hp}px`, fontSize: bsz, color: c.body, lineHeight: 1.4, overflow: 'hidden' }}>
+              {slide.studentTask || <span style={{ opacity: 0.3 }}>Student task will appear here</span>}
+            </div>
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderBottom: `1px solid ${c.divider}`, overflow: 'hidden' }}>
+            <ColHdr bg={c.dcHdr} border={c.dcHdrBdr} label="💬 Discussion" color={c.dcLabel} />
+            <div style={{ flex: 1, padding: `${s(pm, 10, 3)}px ${hp}px`, fontSize: bsz, color: c.body, lineHeight: 1.4, overflow: 'hidden' }}>
+              {slide.discussionPrompt || <span style={{ opacity: 0.3 }}>Discussion prompt will appear here</span>}
+            </div>
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <ColHdr bg={c.exHdr} border={c.exHdrBdr} label="🎫 Exit Ticket" color={c.exLabel} />
+            <div style={{ flex: 1, padding: `${s(pm, 10, 3)}px ${hp}px`, fontSize: bsz, color: c.body, lineHeight: 1.4, overflow: 'hidden' }}>
+              {slide.exitTicket || <span style={{ opacity: 0.3 }}>Exit ticket will appear here</span>}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ── Main export ────────────────────────────────────────────────────────────
 const ALIAS   = { calm: 'focus', warm: 'soft', bold: 'blocks' };
 const LAYOUTS = { focus: FocusLayout, soft: SoftLayout, blocks: BlocksLayout, depth: DepthLayout };
@@ -398,7 +550,8 @@ export default function LessonSlideDisplay({ slide, projectorMode = false, onExi
   if (!slide) return null;
 
   const themeKey = ALIAS[slide.theme] || slide.theme || 'focus';
-  const Layout   = LAYOUTS[themeKey] || FocusLayout;
+  const isNewFormat = slide.essentialQuestion !== undefined || slide.successCriteria !== undefined;
+  const Layout = isNewFormat ? InstructionalSlide : (LAYOUTS[themeKey] || FocusLayout);
 
   const wrapStyle = projectorMode
     ? { position: 'fixed', inset: 0, zIndex: 400, fontFamily: "'Outfit',sans-serif" }

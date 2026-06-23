@@ -9,25 +9,32 @@ const THEMES = ['focus', 'soft', 'blocks', 'depth'];
 const THEME_LABELS = { focus: 'Clear Focus', soft: 'Soft Structure', blocks: 'Bold Blocks', depth: 'Layered Depth' };
 
 const LIMITS = {
-  lessonName: 120,
-  learningTarget: 120,
-  outcome: 120,
-  expectation: 120,
-  step: 120,
+  lessonName: 80,
+  learningTarget: 100,
+  essentialQuestion: 120,
+  successCriterion: 90,
+  vocabWord: 30,
+  vocabDef: 80,
+  studentTask: 150,
+  discussionPrompt: 120,
+  exitTicket: 120,
   topic: 200,
   preserveLanguage: 100,
 };
 
-const blankSlide = (grade = '3–5', savedExpectations = []) => ({
+const blankSlide = (grade = '3–5') => ({
   id: `slide-${Date.now()}`,
   lessonName: '',
   subject: 'Math',
   grade,
   theme: 'focus',
   learningTarget: '',
-  outcomes: ['', ''],
-  expectations: savedExpectations.length > 0 ? [...savedExpectations] : ['', '', ''],
-  steps: ['', '', '', ''],
+  essentialQuestion: '',
+  successCriteria: ['', ''],
+  vocabulary: [{ word: '', definition: '' }, { word: '', definition: '' }],
+  studentTask: '',
+  discussionPrompt: '',
+  exitTicket: '',
   createdAt: new Date().toISOString(),
 });
 
@@ -100,32 +107,40 @@ function ArrayFieldList({ label, items, onChange, limit, placeholder, min = 2, m
   );
 }
 
-function StepsList({ steps, onChange }) {
-  const min = 3, max = 6;
-  const add = () => onChange([...steps, '']);
-  const remove = () => onChange(steps.slice(0, -1));
-  const update = (i, v) => onChange(steps.map((x, idx) => idx === i ? v.slice(0, LIMITS.step) : x));
+function VocabularyList({ items, onChange }) {
+  const min = 1, max = 4;
+  const add = () => onChange([...items, { word: '', definition: '' }]);
+  const remove = () => onChange(items.slice(0, -1));
+  const update = (i, field, val) => onChange(
+    items.map((x, idx) => idx === i ? { ...x, [field]: val.slice(0, field === 'word' ? LIMITS.vocabWord : LIMITS.vocabDef) } : x)
+  );
   return (
-    <FieldRow label="Steps" extra={
+    <FieldRow label="Key Vocabulary" extra={
       <div style={{ display: 'flex', gap: 4 }}>
-        {steps.length < max && <button type="button" className="slide-arr-btn" onClick={add} title="Add step">+</button>}
-        {steps.length > min && <button type="button" className="slide-arr-btn slide-arr-btn--remove" onClick={remove} title="Remove step">−</button>}
+        {items.length < max && <button type="button" className="slide-arr-btn" onClick={add} title="Add term">+</button>}
+        {items.length > min && <button type="button" className="slide-arr-btn slide-arr-btn--remove" onClick={remove} title="Remove term">−</button>}
       </div>
     }>
-      {steps.map((v, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 5 }}>
-          <span style={{ fontWeight: 800, color: 'var(--teal)', fontSize: 13, minWidth: 16, paddingTop: 7 }}>{i + 1}</span>
-          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 2 }}>
+      {items.map((v, i) => (
+        <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 5 }}>
+          <div style={{ flex: '0 0 36%' }}>
             <textarea
-              className={`slide-field-input${v.length >= LIMITS.step ? ' slide-field-input--over' : ''}`}
-              value={v}
-              onChange={e => update(i, e.target.value)}
-              placeholder={`Step ${i + 1}`}
+              className={`slide-field-input${(v.word || '').length >= LIMITS.vocabWord ? ' slide-field-input--over' : ''}`}
+              value={v.word}
+              onChange={e => update(i, 'word', e.target.value)}
+              placeholder={`Term ${i + 1}`}
+              rows={1}
+              style={{ fontSize: 13 }}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <textarea
+              className={`slide-field-input${(v.definition || '').length >= LIMITS.vocabDef ? ' slide-field-input--over' : ''}`}
+              value={v.definition}
+              onChange={e => update(i, 'definition', e.target.value)}
+              placeholder="Student-friendly definition"
               rows={1}
             />
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <CharCount value={v} limit={LIMITS.step} />
-            </div>
           </div>
         </div>
       ))}
@@ -195,7 +210,7 @@ export default function LessonSlideCreator({
   onSaveBehavioralExpectations,
 }) {
   const [view, setView] = useState('create'); // 'create' | 'slides'
-  const [slide, setSlide] = useState(() => blankSlide(account?.grade, savedBehavioralExpectations));
+  const [slide, setSlide] = useState(() => blankSlide(account?.grade));
   const [topic, setTopic] = useState('');
   const [preserveLanguage, setPreserveLanguage] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -205,21 +220,17 @@ export default function LessonSlideCreator({
   const [saveMsg, setSaveMsg] = useState('');
   const [savedSlides, setSavedSlides] = useState([]);
   const [slidesLoading, setSlidesLoading] = useState(false);
-  const [projecting, setProjecting] = useState(false);
 
-  // Whether the current slide is already saved (editing) vs. brand-new
   const isExistingSlide = useMemo(
     () => savedSlides.some(s => s.id === slide.id),
     [savedSlides, slide.id]
   );
-  // Free users are blocked from creating a 6th new slide
   const atSlideLimit = isPlanFree && !isExistingSlide && savedSlides.length >= 5;
 
   const update = useCallback((field, value) => {
     setSlide(s => ({ ...s, [field]: value }));
   }, []);
 
-  // Load saved slides on mount (and uid change) — needed for count-based gate on create view
   useEffect(() => {
     if (!account?.uid) return;
     setSlidesLoading(true);
@@ -242,10 +253,7 @@ export default function LessonSlideCreator({
       if (!token) throw new Error('Not signed in');
       const resp = await fetch('/api/generate-slide', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({
           subject: slide.subject,
           grade: slide.grade,
@@ -262,9 +270,16 @@ export default function LessonSlideCreator({
         ...s,
         lessonName: data.lessonName || s.lessonName,
         learningTarget: data.learningTarget || '',
-        outcomes: data.outcomes?.length ? data.outcomes : s.outcomes,
-        expectations: data.expectations?.length ? data.expectations : s.expectations,
-        steps: data.steps?.length ? data.steps : s.steps,
+        essentialQuestion: data.essentialQuestion || '',
+        successCriteria: data.successCriteria?.length ? data.successCriteria : ['', ''],
+        vocabulary: data.vocabulary?.length ? data.vocabulary : [{ word: '', definition: '' }],
+        studentTask: data.studentTask || '',
+        discussionPrompt: data.discussionPrompt || '',
+        exitTicket: data.exitTicket || '',
+        // Clear legacy fields from old slides
+        outcomes: [],
+        expectations: [],
+        steps: [],
       }));
     } catch (err) {
       setGenError(
@@ -290,29 +305,26 @@ export default function LessonSlideCreator({
       if (!token) throw new Error('Not signed in');
       const resp = await fetch('/api/simplify-slide', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({
           grade: slide.grade,
           learningTarget: slide.learningTarget,
-          outcomes: slide.outcomes.filter(Boolean),
+          successCriteria: (slide.successCriteria || []).filter(Boolean),
         }),
       });
-      if (!resp.ok) return; // silent — simplification is a nice-to-have
+      if (!resp.ok) return;
       const data = await resp.json();
       setSlide(s => ({
         ...s,
         learningTarget: data.learningTarget || s.learningTarget,
-        outcomes: data.outcomes?.length ? data.outcomes : s.outcomes,
+        ...(data.successCriteria?.length ? { successCriteria: data.successCriteria } : {}),
       }));
     } catch {
       // silent — simplification is a nice-to-have
     } finally {
       setSimplifying(false);
     }
-  }, [slide.grade, slide.learningTarget, slide.outcomes, isPlanFree, onUpgradeNeeded]);
+  }, [slide.grade, slide.learningTarget, slide.successCriteria, isPlanFree, onUpgradeNeeded]);
 
   const handleSave = useCallback(async () => {
     if (!account?.uid) return;
@@ -334,17 +346,11 @@ export default function LessonSlideCreator({
       setSaving(false);
       return;
     }
-    // Slide saved — secondary operations are best-effort and must not fail the save
-    const hasCustomExpectations = slide.expectations.some(e => e.trim());
-    if (hasCustomExpectations) {
-      saveBehavioralExpectations(account.uid, slide.expectations.filter(Boolean)).catch(() => {});
-      onSaveBehavioralExpectations?.(slide.expectations.filter(Boolean));
-    }
     loadLessonSlides(account.uid).then(setSavedSlides).catch(err => { console.error('[Slides Reload Error]', err?.code, err?.message); });
     setSaveMsg('Saved!');
     setTimeout(() => setSaveMsg(''), 2500);
     setSaving(false);
-  }, [account?.uid, slide, atSlideLimit, onUpgradeNeeded, onSaveBehavioralExpectations]);
+  }, [account?.uid, slide, atSlideLimit, onUpgradeNeeded]);
 
   const handleSaveNew = useCallback(() => {
     setSlide(s => ({ ...s, id: `slide-${Date.now()}`, createdAt: new Date().toISOString() }));
@@ -371,12 +377,15 @@ export default function LessonSlideCreator({
   }, [account?.uid]);
 
   const handleNewSlide = useCallback(() => {
-    setSlide(blankSlide(account?.grade, savedBehavioralExpectations));
+    setSlide(blankSlide(account?.grade));
     setTopic('');
     setPreserveLanguage('');
     setGenError('');
     setSaveMsg('');
-  }, [account?.grade, savedBehavioralExpectations]);
+  }, [account?.grade]);
+
+  // Detect if the slide being edited is in the new format
+  const isNewFormat = slide.essentialQuestion !== undefined || slide.successCriteria !== undefined;
 
   return (
     <div className="slide-creator">
@@ -418,7 +427,7 @@ export default function LessonSlideCreator({
           {/* Left: form */}
           <div className="slide-form-col">
 
-            {/* Free-tier slide count banner — shown at 3/5 and above */}
+            {/* Free-tier slide count banner */}
             {isPlanFree && savedSlides.length >= 3 && (
               <div className={`slide-free-banner${savedSlides.length >= 5 ? ' slide-free-banner--full' : savedSlides.length >= 4 ? ' slide-free-banner--warn' : ''}`}>
                 {savedSlides.length >= 5
@@ -428,7 +437,7 @@ export default function LessonSlideCreator({
               </div>
             )}
 
-            {/* Theme + meta */}
+            {/* Theme */}
             <div className="slide-meta-row">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
                 <label className="slide-field-label">Theme</label>
@@ -460,21 +469,13 @@ export default function LessonSlideCreator({
             <div className="slide-row-2">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <label className="slide-field-label">Subject</label>
-                <select
-                  className="slide-field-input"
-                  value={slide.subject}
-                  onChange={e => update('subject', e.target.value)}
-                >
+                <select className="slide-field-input" value={slide.subject} onChange={e => update('subject', e.target.value)}>
                   {SUBJECTS.map(s => <option key={s}>{s}</option>)}
                 </select>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <label className="slide-field-label">Grade</label>
-                <select
-                  className="slide-field-input"
-                  value={slide.grade}
-                  onChange={e => update('grade', e.target.value)}
-                >
+                <select className="slide-field-input" value={slide.grade} onChange={e => update('grade', e.target.value)}>
                   {GRADES.map(g => <option key={g}>{g}</option>)}
                 </select>
               </div>
@@ -511,7 +512,7 @@ export default function LessonSlideCreator({
 
             <div className="slide-divider">— or fill in manually —</div>
 
-            {/* Learning target */}
+            {/* Learning Target */}
             <FieldRow label="Learning Target" extra={<CharCount value={slide.learningTarget} limit={LIMITS.learningTarget} />}>
               <SlideTextarea
                 value={slide.learningTarget}
@@ -532,41 +533,106 @@ export default function LessonSlideCreator({
               )}
             </FieldRow>
 
-            <ArrayFieldList
-              label="Expected Outcomes"
-              items={slide.outcomes}
-              onChange={v => update('outcomes', v)}
-              limit={LIMITS.outcome}
-              placeholder="Outcome"
-              min={2} max={3}
-            />
+            {/* Essential Question — only on new-format slides */}
+            {isNewFormat && (
+              <FieldRow label="Essential Question" extra={<CharCount value={slide.essentialQuestion} limit={LIMITS.essentialQuestion} />}>
+                <SlideTextarea
+                  value={slide.essentialQuestion}
+                  onChange={v => update('essentialQuestion', v)}
+                  limit={LIMITS.essentialQuestion}
+                  placeholder='e.g. "Why does the denominator stay the same when we add fractions?"'
+                  rows={2}
+                />
+              </FieldRow>
+            )}
 
-            <ArrayFieldList
-              label="Behavioral Expectations"
-              items={slide.expectations}
-              onChange={v => update('expectations', v)}
-              limit={LIMITS.expectation}
-              placeholder="Expectation"
-              min={2} max={3}
-            />
+            {/* Success Criteria — new format */}
+            {isNewFormat && (
+              <ArrayFieldList
+                label="Success Criteria"
+                items={slide.successCriteria || ['', '']}
+                onChange={v => update('successCriteria', v)}
+                limit={LIMITS.successCriterion}
+                placeholder='e.g. "I will explain my thinking in writing."'
+                min={2} max={3}
+              />
+            )}
 
-            <StepsList steps={slide.steps} onChange={v => update('steps', v)} />
+            {/* Key Vocabulary — new format */}
+            {isNewFormat && (
+              <VocabularyList
+                items={slide.vocabulary || [{ word: '', definition: '' }]}
+                onChange={v => update('vocabulary', v)}
+              />
+            )}
+
+            {/* Student Task — new format */}
+            {isNewFormat && (
+              <FieldRow label="Student Task" extra={<CharCount value={slide.studentTask} limit={LIMITS.studentTask} />}>
+                <SlideTextarea
+                  value={slide.studentTask}
+                  onChange={v => update('studentTask', v)}
+                  limit={LIMITS.studentTask}
+                  placeholder='e.g. "1. Watch the model. 2. Try 2 problems with a partner. 3. Check your work."'
+                  rows={2}
+                />
+              </FieldRow>
+            )}
+
+            {/* Discussion Prompt — new format */}
+            {isNewFormat && (
+              <FieldRow label="Discussion Prompt" extra={<CharCount value={slide.discussionPrompt} limit={LIMITS.discussionPrompt} />}>
+                <SlideTextarea
+                  value={slide.discussionPrompt}
+                  onChange={v => update('discussionPrompt', v)}
+                  limit={LIMITS.discussionPrompt}
+                  placeholder='e.g. "Turn and Talk: Explain to your partner why the denominator stays the same."'
+                  rows={2}
+                />
+              </FieldRow>
+            )}
+
+            {/* Exit Ticket — new format */}
+            {isNewFormat && (
+              <FieldRow label="Exit Ticket" extra={<CharCount value={slide.exitTicket} limit={LIMITS.exitTicket} />}>
+                <SlideTextarea
+                  value={slide.exitTicket}
+                  onChange={v => update('exitTicket', v)}
+                  limit={LIMITS.exitTicket}
+                  placeholder='e.g. "Solve 2/5 + 1/5. Show your work and explain your thinking."'
+                  rows={2}
+                />
+              </FieldRow>
+            )}
+
+            {/* Legacy fields for old-format slides */}
+            {!isNewFormat && slide.outcomes !== undefined && (
+              <>
+                <ArrayFieldList
+                  label="Expected Outcomes"
+                  items={slide.outcomes || ['', '']}
+                  onChange={v => update('outcomes', v)}
+                  limit={120}
+                  placeholder="Outcome"
+                  min={2} max={3}
+                />
+                <ArrayFieldList
+                  label="Behavioral Expectations"
+                  items={slide.expectations || ['', '', '']}
+                  onChange={v => update('expectations', v)}
+                  limit={120}
+                  placeholder="Expectation"
+                  min={2} max={3}
+                />
+              </>
+            )}
 
             {/* Actions */}
             <div className="slide-actions">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={handleSave}
-                disabled={saving}
-              >
+              <button type="button" className="btn-secondary" onClick={handleSave} disabled={saving}>
                 {saving ? 'Saving…' : '💾 Save'}
               </button>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => handleProject()}
-              >
+              <button type="button" className="btn-primary" onClick={() => handleProject()}>
                 ▶ Project
               </button>
             </div>
