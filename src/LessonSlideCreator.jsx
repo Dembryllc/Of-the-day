@@ -2,25 +2,12 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { getAuth } from 'firebase/auth';
 import { saveLessonSlide, loadLessonSlides, deleteLessonSlide, saveBehavioralExpectations } from './lib/firestore';
 import LessonSlideDisplay from './LessonSlideDisplay';
+import { SLIDE_CHAR_LIMITS as LIMITS, isAtSlideLimit } from './lib/slideUtils';
 
 const SUBJECTS = ['ELA', 'Math', 'Science', 'Social Studies', 'SEL', 'Art', 'Music', 'PE', 'Other'];
 const GRADES = ['K–2', '3–5', '6–8', '9–12'];
 const THEMES = ['focus', 'soft', 'blocks', 'depth'];
 const THEME_LABELS = { focus: 'Clear Focus', soft: 'Soft Structure', blocks: 'Bold Blocks', depth: 'Layered Depth' };
-
-const LIMITS = {
-  lessonName: 80,
-  learningTarget: 100,
-  essentialQuestion: 120,
-  successCriterion: 90,
-  vocabWord: 30,
-  vocabDef: 80,
-  studentTask: 220,
-  discussionPrompt: 180,
-  exitTicket: 180,
-  topic: 200,
-  preserveLanguage: 100,
-};
 
 const blankSlide = (grade = '3–5') => ({
   id: `slide-${Date.now()}`,
@@ -221,11 +208,10 @@ export default function LessonSlideCreator({
   const [savedSlides, setSavedSlides] = useState([]);
   const [slidesLoading, setSlidesLoading] = useState(false);
 
-  const isExistingSlide = useMemo(
-    () => savedSlides.some(s => s.id === slide.id),
-    [savedSlides, slide.id]
+  const atSlideLimit = useMemo(
+    () => isAtSlideLimit(isPlanFree, savedSlides, slide.id),
+    [isPlanFree, savedSlides, slide.id]
   );
-  const atSlideLimit = isPlanFree && !isExistingSlide && savedSlides.length >= 5;
 
   const update = useCallback((field, value) => {
     setSlide(s => ({ ...s, [field]: value }));

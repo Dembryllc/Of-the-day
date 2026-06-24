@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { resolveThemeKey, isNewSlideFormat } from './lib/slideUtils';
 
 // Scale helper: projector vs preview value (accepts numbers OR CSS strings)
 const s = (pm, big, small) => pm ? big : small;
@@ -432,7 +433,7 @@ const INSTR_THEMES = {
 };
 
 function InstructionalSlide({ slide, pm }) {
-  const themeKey = ALIAS[slide.theme] || slide.theme || 'focus';
+  const themeKey = resolveThemeKey(slide.theme);
   const c = INSTR_THEMES[themeKey] || INSTR_THEMES.focus;
   const hp  = s(pm, 56, 13);
   const bsz = s(pm, 'clamp(13px, 1.7vmin, 24px)', '13px');
@@ -536,7 +537,6 @@ function InstructionalSlide({ slide, pm }) {
 }
 
 // ── Main export ────────────────────────────────────────────────────────────
-const ALIAS   = { calm: 'focus', warm: 'soft', bold: 'blocks' };
 const LAYOUTS = { focus: FocusLayout, soft: SoftLayout, blocks: BlocksLayout, depth: DepthLayout };
 
 export default function LessonSlideDisplay({ slide, projectorMode = false, onExit }) {
@@ -549,8 +549,8 @@ export default function LessonSlideDisplay({ slide, projectorMode = false, onExi
 
   if (!slide) return null;
 
-  const themeKey = ALIAS[slide.theme] || slide.theme || 'focus';
-  const isNewFormat = slide.essentialQuestion !== undefined || slide.successCriteria !== undefined;
+  const themeKey = resolveThemeKey(slide.theme);
+  const isNewFormat = isNewSlideFormat(slide);
   const Layout = isNewFormat ? InstructionalSlide : (LAYOUTS[themeKey] || FocusLayout);
 
   const wrapStyle = projectorMode
