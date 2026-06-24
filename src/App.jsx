@@ -3464,7 +3464,7 @@ function MainApp({ account, onSignOut }) {
             <LessonSlideCreator
               account={account}
               isPlanFree={isPlanFree}
-              onUpgradeNeeded={() => setUpgradeModalFor("Upgrade to Pro to create, save, and project unlimited lesson slides.")}
+              onUpgradeNeeded={() => account?.uid ? setUpgradeModalFor("Upgrade to Pro to create, save, and project unlimited lesson slides.") : (window.location.href = '/login?signup=1')}
               onProjectSlide={projectSlideToWindow}
               savedBehavioralExpectations={savedBehavioralExpectations}
               onSaveBehavioralExpectations={exps => {

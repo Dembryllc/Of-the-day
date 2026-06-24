@@ -242,6 +242,7 @@ export default function LessonSlideCreator({
 
   const handleGenerate = useCallback(async () => {
     if (atSlideLimit) { onUpgradeNeeded(); return; }
+    if (!account?.uid) { onUpgradeNeeded(); return; }
     if (!slide.subject || !topic.trim()) {
       setGenError('Add a subject and describe your lesson first.');
       return;
