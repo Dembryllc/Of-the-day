@@ -527,9 +527,9 @@ Four slide themes (canonical keys + backward-compat aliases); applied to both v1
 | Each successCriteria | 90 |
 | vocabulary word | 30 |
 | vocabulary definition | 80 |
-| studentTask | 150 |
-| discussionPrompt | 120 |
-| exitTicket | 120 |
+| studentTask | 220 |
+| discussionPrompt | 180 |
+| exitTicket | 180 |
 | Topic (AI input) | 200 |
 | preserveLanguage (AI input) | 100 |
 
