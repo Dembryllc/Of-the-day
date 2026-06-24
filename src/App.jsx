@@ -26,6 +26,7 @@ import {
 import { auth, functions } from './lib/firebase';
 import { createUserDocument, getUserDocument, saveDataSnapshot, loadDataSnapshot, migrateFromLocalStorage, fetchActivities, updateUserGrade, updateUserProfile, saveBehavioralExpectations } from './lib/firestore';
 import { usePlan, FREE_LIMITS } from './lib/usePlan';
+import { readSeenActivities, markActivitiesSeen, readUsedToday, recordUsedToday, readUsedThisWeek, recordUsedThisWeek } from './lib/storage';
 import { httpsCallable } from 'firebase/functions';
 
 const tsToMs = ts => { if (typeof ts === 'number') return ts; return ts?.toMillis?.() ?? (ts?.seconds != null ? ts.seconds * 1000 : null); };
@@ -656,67 +657,6 @@ function projectorWindowUrl() {
   return url.toString();
 }
 
-function readSeenActivities() {
-  try {
-    const raw = localStorage.getItem('ofd:seenActivities');
-    return new Set(raw ? JSON.parse(raw) : []);
-  } catch { return new Set(); }
-}
-
-function markActivitiesSeen(ids) {
-  try {
-    const existing = readSeenActivities();
-    ids.forEach(id => existing.add(id));
-    localStorage.setItem('ofd:seenActivities', JSON.stringify([...existing]));
-  } catch {}
-}
-
-function readUsedToday() {
-  const today = new Date().toISOString().slice(0, 10);
-  try {
-    const raw = localStorage.getItem('ofd:usedToday');
-    const obj = raw ? JSON.parse(raw) : {};
-    return new Set(obj.date === today ? (obj.ids || []) : []);
-  } catch { return new Set(); }
-}
-
-function recordUsedToday(ids) {
-  const today = new Date().toISOString().slice(0, 10);
-  try {
-    const raw = localStorage.getItem('ofd:usedToday');
-    const obj = raw ? JSON.parse(raw) : {};
-    const existing = new Set(obj.date === today ? (obj.ids || []) : []);
-    ids.forEach(id => existing.add(id));
-    localStorage.setItem('ofd:usedToday', JSON.stringify({ date: today, ids: [...existing] }));
-  } catch {}
-}
-
-function getWeekStart() {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(new Date(d).setDate(diff)).toISOString().slice(0, 10);
-}
-
-function readUsedThisWeek() {
-  const weekStart = getWeekStart();
-  try {
-    const raw = localStorage.getItem('ofd:usedThisWeek');
-    const obj = raw ? JSON.parse(raw) : {};
-    return new Set(obj.weekStart === weekStart ? (obj.ids || []) : []);
-  } catch { return new Set(); }
-}
-
-function recordUsedThisWeek(ids) {
-  const weekStart = getWeekStart();
-  try {
-    const raw = localStorage.getItem('ofd:usedThisWeek');
-    const obj = raw ? JSON.parse(raw) : {};
-    const existing = new Set(obj.weekStart === weekStart ? (obj.ids || []) : []);
-    ids.forEach(id => existing.add(id));
-    localStorage.setItem('ofd:usedThisWeek', JSON.stringify({ weekStart, ids: [...existing] }));
-  } catch {}
-}
 
 function readCustomVocab() {
   try {
