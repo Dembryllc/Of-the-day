@@ -64,9 +64,9 @@ HARD character limits — never exceed:
 - essentialQuestion: 120 chars — open-ended, thought-provoking, student-accessible
 - Each successCriteria item: 90 chars — format: "I will..." measurable (2–3 items)
 - Each vocabulary word: 30 chars; each definition: 80 chars — student-friendly (3–4 items)
-- studentTask: 220 chars — numbered steps, imperative verbs
-- discussionPrompt: 180 chars — Turn and Talk or Think-Pair-Share aligned to learning target
-- exitTicket: 180 chars — 1 question directly aligned to the learning target
+- studentTask: 300 chars — numbered steps, imperative verbs
+- discussionPrompt: 250 chars — Turn and Talk or Think-Pair-Share aligned to learning target
+- exitTicket: 250 chars — 1 question directly aligned to the learning target
 
 Return exactly this JSON structure:
 {"lessonName":"string","learningTarget":"string","essentialQuestion":"string","successCriteria":["string","string"],"vocabulary":[{"word":"string","definition":"string"},{"word":"string","definition":"string"},{"word":"string","definition":"string"}],"studentTask":"string","discussionPrompt":"string","exitTicket":"string"}

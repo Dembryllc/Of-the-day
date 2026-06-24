@@ -15,9 +15,9 @@ const LIMITS = {
   successCriterion: 90,
   vocabWord: 30,
   vocabDef: 80,
-  studentTask: 220,
-  discussionPrompt: 180,
-  exitTicket: 180,
+  studentTask: 300,
+  discussionPrompt: 250,
+  exitTicket: 250,
   topic: 200,
   preserveLanguage: 100,
 };
