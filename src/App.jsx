@@ -3615,8 +3615,14 @@ function MainApp({ account, onSignOut }) {
 function UpgradePage({ account }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const monthlyPriceId = import.meta.env.VITE_STRIPE_MONTHLY_PRICE_ID;
+  const annualPriceId = import.meta.env.VITE_STRIPE_ANNUAL_PRICE_ID;
 
   const checkout = async (priceId) => {
+    if (!priceId) {
+      setError('Checkout is not configured yet. Please contact hello@oftheday.net.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -3639,7 +3645,7 @@ function UpgradePage({ account }) {
           <div className="upgrade-pricing-card">
             <div className="upgrade-pricing-label">Monthly</div>
             <div className="upgrade-pricing-amount">$9<span className="upgrade-pricing-period">/mo</span></div>
-            <button className="btn-primary" type="button" disabled={busy} onClick={() => checkout('price_1Te35JB2eRKsbhTpqJrBmNRE')}>
+            <button className="btn-primary" type="button" disabled={busy} onClick={() => checkout(monthlyPriceId)}>
               {busy ? 'Loading…' : 'Get Pro Monthly'}
             </button>
           </div>
@@ -3648,7 +3654,7 @@ function UpgradePage({ account }) {
             <div className="upgrade-pricing-label">Annual</div>
             <div className="upgrade-pricing-amount">$79<span className="upgrade-pricing-period">/yr</span></div>
             <div className="upgrade-pricing-note">Save $29 vs monthly</div>
-            <button className="btn-primary" type="button" disabled={busy} onClick={() => checkout('price_1Te38IB2eRKsbhTp9GXJjxM0')}>
+            <button className="btn-primary" type="button" disabled={busy} onClick={() => checkout(annualPriceId)}>
               {busy ? 'Loading…' : 'Get Pro Annual'}
             </button>
           </div>

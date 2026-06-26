@@ -441,6 +441,16 @@ exports.onthisday = onRequest(async (req, res) => {
 exports.createCheckoutSession = onCall(async (request) => {
   const { priceId, userId } = request.data;
   if (!priceId || !userId) throw new Error("priceId and userId are required");
+  if (!request.auth || request.auth.uid !== userId) {
+    throw new Error("You must be signed in as this user to start checkout");
+  }
+  const allowedPriceIds = [
+    process.env.STRIPE_MONTHLY_PRICE_ID,
+    process.env.STRIPE_ANNUAL_PRICE_ID,
+  ].filter(Boolean);
+  if (!allowedPriceIds.includes(priceId)) {
+    throw new Error("Invalid subscription price");
+  }
   const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
   const db = admin.firestore();
   const userRef = db.collection("users").doc(userId);
