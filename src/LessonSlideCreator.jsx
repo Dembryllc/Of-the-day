@@ -412,13 +412,13 @@ export default function LessonSlideCreator({
     setExportMsg('');
     try {
       await exportToGoogleSlides(s);
-      setExportMsg('Opened in Google Slides!');
+      setExportMsg('Downloaded! Google Drive is opening — drag the file in to import it as Google Slides.');
     } catch (err) {
       console.error('[Export Google Slides]', err);
       setExportMsg(err.message || 'Export failed — try again.');
     } finally {
       setExporting(null);
-      setTimeout(() => setExportMsg(''), 6000);
+      setTimeout(() => setExportMsg(''), 8000);
     }
   }, [slide]);
 

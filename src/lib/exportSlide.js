@@ -9,7 +9,6 @@ async function getPptxGen() {
 
 const SLIDE_W = 10;
 const SLIDE_H = 5.625;
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '984386798513-aprar4ehdq87dd4jtguigupaiva0pnr5.apps.googleusercontent.com';
 
 // Theme color maps — hex without '#'
 // Dark-theme rgba values are composited against their background colors
@@ -243,82 +242,23 @@ export async function exportToPowerPoint(data) {
   await prs.writeFile({ fileName: `${sanitizeName(data.lessonName)}.pptx` });
 }
 
-// ── Google Slides via Drive API ───────────────────────────────────────────────
-
-async function loadGisScript() {
-  if (window.google?.accounts?.oauth2) return;
-  await new Promise((resolve, reject) => {
-    if (document.querySelector('script[data-google-identity]')) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
-    s.dataset.googleIdentity = 'true';
-    s.onload = resolve;
-    s.onerror = () => reject(new Error('Failed to load Google Identity Services'));
-    document.head.appendChild(s);
-  });
-}
-
-async function getGoogleDriveToken() {
-  await loadGisScript();
-  return new Promise((resolve, reject) => {
-    const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: 'https://www.googleapis.com/auth/drive.file',
-      callback: (resp) => {
-        if (resp.error) reject(new Error(resp.error_description || resp.error));
-        else resolve(resp.access_token);
-      },
-      error_callback: (err) => reject(new Error(err?.message || 'Google auth failed')),
-    });
-    client.requestAccessToken();
-  });
-}
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
+// ── Google Slides export ──────────────────────────────────────────────────────
+// Downloads a .pptx that Google Slides can open natively via File → Import.
+// Returns the Drive upload URL so the caller can optionally open it.
 export async function exportToGoogleSlides(data) {
   const prs = await buildPptx(data);
   const blob = await prs.write({ outputType: 'blob' });
   const filename = sanitizeName(data.lessonName);
 
-  let token;
-  try {
-    token = await getGoogleDriveToken();
-  } catch {
-    // Auth failed — download PPTX so the user isn't left empty-handed
-    downloadBlob(blob, `${filename}.pptx`);
-    throw new Error('Google sign-in was cancelled. The file was downloaded as a .pptx instead — you can upload it to Google Drive to open it as Google Slides.');
-  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${filename}.pptx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-  // Upload to Drive with conversion to Google Slides format
-  const meta = JSON.stringify({
-    name: filename,
-    mimeType: 'application/vnd.google-apps.presentation',
-  });
-  const form = new FormData();
-  form.append('metadata', new Blob([meta], { type: 'application/json' }));
-  form.append('file', blob);
-
-  const res = await fetch(
-    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink',
-    { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form }
-  );
-
-  if (!res.ok) {
-    downloadBlob(blob, `${filename}.pptx`);
-    throw new Error(`Upload to Google Drive failed (${res.status}). File downloaded as .pptx instead.`);
-  }
-
-  const { webViewLink } = await res.json();
-  window.open(webViewLink, '_blank', 'noopener');
-  return webViewLink;
+  // Open Google Drive so the user can upload right away
+  window.open('https://drive.google.com/drive/my-drive', '_blank', 'noopener');
 }
