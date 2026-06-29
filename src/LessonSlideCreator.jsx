@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { getAuth } from 'firebase/auth';
 import { saveLessonSlide, loadLessonSlides, deleteLessonSlide, saveBehavioralExpectations } from './lib/firestore';
+import { exportToPowerPoint, exportToGoogleSlides } from './lib/exportSlide';
 import LessonSlideDisplay from './LessonSlideDisplay';
 
 const SUBJECTS = ['ELA', 'Math', 'Science', 'Social Studies', 'SEL', 'Art', 'Music', 'PE', 'Other'];
@@ -150,7 +151,7 @@ function VocabularyList({ items, onChange }) {
 
 // ── My Slides Library ─────────────────────────────────────────────────────────
 
-function MySlidesView({ slides, onEdit, onDelete, onProject, loading }) {
+function MySlidesView({ slides, onEdit, onDelete, onProject, onExportPptx, onExportGoogle, loading }) {
   const [q, setQ] = useState('');
   const filtered = q.trim()
     ? slides.filter(s =>
@@ -190,6 +191,8 @@ function MySlidesView({ slides, onEdit, onDelete, onProject, loading }) {
             <div className="slide-lib-actions">
               <button type="button" className="btn-secondary btn-compact" onClick={() => onEdit(s)}>Edit</button>
               <button type="button" className="btn-primary btn-compact" onClick={() => onProject(s)}>▶ Project</button>
+              <button type="button" className="btn-ghost btn-compact" onClick={() => onExportPptx(s)} title="Download as PowerPoint">.pptx</button>
+              <button type="button" className="btn-ghost btn-compact" onClick={() => onExportGoogle(s)} title="Export to Google Slides">Slides</button>
               <button type="button" className="slide-lib-delete" onClick={() => onDelete(s.id)} title="Delete slide">✕</button>
             </div>
           </div>
@@ -220,6 +223,8 @@ export default function LessonSlideCreator({
   const [saveMsg, setSaveMsg] = useState('');
   const [savedSlides, setSavedSlides] = useState([]);
   const [slidesLoading, setSlidesLoading] = useState(false);
+  const [exporting, setExporting] = useState(null); // null | 'pptx' | 'google'
+  const [exportMsg, setExportMsg] = useState('');
 
   const isExistingSlide = useMemo(
     () => savedSlides.some(s => s.id === slide.id),
@@ -385,6 +390,38 @@ export default function LessonSlideCreator({
     setSaveMsg('');
   }, [account?.grade]);
 
+  const handleExportPptx = useCallback(async (target = null) => {
+    const s = target || slide;
+    setExporting('pptx');
+    setExportMsg('');
+    try {
+      await exportToPowerPoint(s);
+      setExportMsg('Downloaded!');
+    } catch (err) {
+      console.error('[Export PPTX]', err);
+      setExportMsg('Export failed — try again.');
+    } finally {
+      setExporting(null);
+      setTimeout(() => setExportMsg(''), 3000);
+    }
+  }, [slide]);
+
+  const handleExportGoogle = useCallback(async (target = null) => {
+    const s = target || slide;
+    setExporting('google');
+    setExportMsg('');
+    try {
+      await exportToGoogleSlides(s);
+      setExportMsg('Opened in Google Slides!');
+    } catch (err) {
+      console.error('[Export Google Slides]', err);
+      setExportMsg(err.message || 'Export failed — try again.');
+    } finally {
+      setExporting(null);
+      setTimeout(() => setExportMsg(''), 6000);
+    }
+  }, [slide]);
+
   // Detect if the slide being edited is in the new format
   const isNewFormat = slide.essentialQuestion !== undefined || slide.successCriteria !== undefined;
 
@@ -422,6 +459,8 @@ export default function LessonSlideCreator({
           onEdit={handleEditSaved}
           onDelete={handleDeleteSaved}
           onProject={s => handleProject(s)}
+          onExportPptx={s => handleExportPptx(s)}
+          onExportGoogle={s => handleExportGoogle(s)}
         />
       ) : (
         <div className="slide-creator-body">
@@ -637,6 +676,38 @@ export default function LessonSlideCreator({
                 ▶ Project
               </button>
             </div>
+            <div className="slide-export-actions">
+              <button
+                type="button"
+                className="btn-ghost btn-compact"
+                onClick={() => handleExportPptx()}
+                disabled={exporting !== null}
+                title="Download as PowerPoint (.pptx)"
+              >
+                {exporting === 'pptx' ? 'Exporting…' : '⬇ PowerPoint'}
+              </button>
+              <button
+                type="button"
+                className="btn-ghost btn-compact"
+                onClick={() => handleExportGoogle()}
+                disabled={exporting !== null}
+                title="Export directly to Google Slides (requires Google sign-in)"
+              >
+                {exporting === 'google' ? 'Uploading…' : '⬇ Google Slides'}
+              </button>
+            </div>
+            {exportMsg && (
+              <div style={{
+                fontSize: 12,
+                color: exportMsg.startsWith('Opened') || exportMsg === 'Downloaded!' ? 'var(--teal)' : '#D97706',
+                textAlign: 'center',
+                marginTop: 2,
+                lineHeight: 1.4,
+                padding: '0 8px',
+              }}>
+                {exportMsg}
+              </div>
+            )}
             {saveMsg && !saving && (
               <div style={{
                 fontSize: 13,

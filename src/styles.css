@@ -356,6 +356,13 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
 .btn-danger:hover { background: #FFE4E6; }
 .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-compact { padding: 7px 11px; border-radius: 8px; font-size: 12px; }
+.btn-ghost {
+  background: transparent; color: var(--ink2); border: 1.5px solid #E0DCD6;
+  border-radius: 8px; padding: 7px 11px; font-size: 12px; font-weight: 600;
+  font-family: 'Outfit', sans-serif; cursor: pointer; transition: all 0.14s;
+}
+.btn-ghost:hover { border-color: #9CA3AF; background: #F5F3F0; color: var(--ink); }
+.btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ── detail panel ── */
 .detail-panel {
@@ -1839,6 +1846,8 @@ select.slide-field-input { cursor: pointer; }
 .slide-simplify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .slide-actions { display: flex; gap: 8px; margin-top: 4px; }
 .slide-actions .btn-secondary, .slide-actions .btn-primary { flex: 1; }
+.slide-export-actions { display: flex; gap: 6px; margin-top: 6px; }
+.slide-export-actions .btn-ghost { flex: 1; justify-content: center; text-align: center; }
 
 /* Free banner */
 .slide-free-banner {
