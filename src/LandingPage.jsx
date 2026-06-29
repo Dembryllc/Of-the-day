@@ -6,15 +6,24 @@ import { db, functions } from './lib/firebase';
 import './landing.css';
 
 const FAQ_ITEMS = [
-  { id: 'free', q: 'Is there a free plan?', a: 'Yes. The free plan includes the daily routine view, basic activity library, grade-level filtering, and up to 3 saved routines. No credit card required.' },
+  { id: 'free', q: 'Is there a free plan?', a: 'Yes. The free plan includes the daily routine view, basic activity library, grade-level filtering, up to 3 saved routines, and 5 AI lesson slides per month. No credit card required.' },
+  { id: 'lesson-slides', q: 'What is the AI Lesson Slide Creator?', a: 'The AI Lesson Slide Creator lets you describe a lesson objective and automatically generates a complete structured slide — learning target, essential question, success criteria, key vocabulary, student task, discussion prompt, and exit ticket. Free accounts get 5 slides per month; Pro accounts get unlimited.' },
+  { id: 'export', q: 'Can I export slides to PowerPoint or Google Slides?', a: 'Yes. Every slide exports as a .pptx file that opens natively in PowerPoint or Google Slides (File → Open). All four visual themes export with full formatting, colors, and layout preserved.' },
   { id: 'chromebook', q: 'Does it work on a Chromebook?', a: 'Yes. OfTheDay.net is a web app that runs in any modern browser — Chrome, Safari, Firefox, or Edge. No download or installation required.' },
   { id: 'projector', q: 'Can I use it with my classroom projector or smartboard?', a: 'Yes. Pro includes a dedicated full-screen projector view that opens in a second browser window. Choose from four visual themes — Calm, Bright, Minimal, or Primary — to match your classroom.' },
-  { id: 'grades', q: 'What grade levels are supported?', a: 'K–2, 3–5, 6–8, and 9–12. The grade picker filters activities, vocabulary words, and Do Now problems to be appropriate for your students.' },
+  { id: 'grades', q: 'What grade levels are supported?', a: 'K–2, 3–5, 6–8, and 9–12. The grade picker filters activities, vocabulary words, Do Now problems, and AI slide content to match your students.' },
   { id: 'purchase', q: 'Does my school need to purchase it, or can I pay myself?', a: 'Individual teachers can subscribe directly with a credit card. School and district licensing (single invoice, multiple seats) is also available — contact us at hello@oftheday.net.' },
   { id: 'rc', q: 'Is this specifically for Responsive Classroom?', a: "It's built with Responsive Classroom structure in mind — the four Morning Meeting components are the foundation. But the activities work for any morning meeting format, including PBIS morning circles and SEL-focused check-in routines." },
-  { id: 'cancel', q: 'What happens to my saved routines if I cancel?', a: 'Your routines and custom activities are yours. If you cancel Pro, you keep your account and any saved content — you\'ll just be moved to the Free tier limits (3 routines, 1 custom activity).' },
-  { id: 'student-data', q: 'Does OfTheDay store student data?', a: 'No. OfTheDay.net is a teacher planning tool — students do not create accounts and do not submit any information through this service. We collect only teacher account information (name, email, grade preference, saved routines). No student personally identifiable information (PII) is ever collected or stored, which means FERPA exposure is minimal.' },
-  { id: 'dpa', q: 'Is a Data Privacy Agreement (DPA) available?', a: 'Yes. Because OfTheDay does not process student data, a standard DPA is typically sufficient for district procurement. Email us at hello@oftheday.net with the subject "DPA Request" and we will respond within 2 business days.' },
+  { id: 'cancel', q: 'What happens to my saved routines if I cancel?', a: "Your routines and custom activities are yours. If you cancel Pro, you keep your account and any saved content — you'll just be moved to the Free tier limits." },
+  { id: 'student-data', q: 'Does OfTheDay store student data?', a: 'No. OfTheDay.net is a teacher planning tool — students do not create accounts and submit no information through this service. We collect only teacher account information (name, email, grade preference, saved routines). No student PII is ever collected or stored.' },
+  { id: 'dpa', q: 'Is a Data Privacy Agreement (DPA) available?', a: 'Yes. Because OfTheDay does not process student data, a standard DPA is typically sufficient for district procurement. Email hello@oftheday.net with the subject "DPA Request" and we will respond within 2 business days.' },
+];
+
+const SLIDE_THEMES = [
+  { id: 'focus', label: 'Clear Focus' },
+  { id: 'soft', label: 'Soft Structure' },
+  { id: 'blocks', label: 'Bold Blocks' },
+  { id: 'depth', label: 'Layered Depth' },
 ];
 
 export default function LandingPage() {
@@ -25,6 +34,7 @@ export default function LandingPage() {
   const [billingPeriod, setBillingPeriod] = useState('annual');
   const [schoolForm, setSchoolForm] = useState({ name: '', school: '', email: '' });
   const [schoolSubmitted, setSchoolSubmitted] = useState(false);
+  const [slideTheme, setSlideTheme] = useState('focus');
 
   useLayoutEffect(() => {
     const prevBodyOverflow = document.body.style.overflow;
@@ -55,9 +65,7 @@ export default function LandingPage() {
         source: 'school-inquiry',
         submittedAt: serverTimestamp(),
       });
-    } catch {
-      // Fail silently — still confirm to the user
-    }
+    } catch {}
     setSchoolSubmitted(true);
   };
 
@@ -65,20 +73,12 @@ export default function LandingPage() {
     e.preventDefault();
     const email = captureEmail.trim().toLowerCase();
     try {
-      await addDoc(collection(db, 'waitlist'), {
-        email,
-        source: 'landing-page',
-        submittedAt: serverTimestamp(),
-      });
-    } catch {
-      // Firestore save failed silently
-    }
+      await addDoc(collection(db, 'waitlist'), { email, source: 'landing-page', submittedAt: serverTimestamp() });
+    } catch {}
     try {
       const sendLeadMagnet = httpsCallable(functions, 'sendLeadMagnet');
       await sendLeadMagnet({ email });
-    } catch {
-      // Email send failed silently — submission still confirmed to user
-    }
+    } catch {}
     setCaptureSubmitted(true);
   };
 
@@ -93,11 +93,11 @@ export default function LandingPage() {
           </a>
           <ul className={`nav-links${navOpen ? ' open' : ''}`} id="nav-links">
             <li><a href="#features" onClick={() => setNavOpen(false)}>Features</a></li>
+            <li><a href="#slides" onClick={() => setNavOpen(false)}>Lesson Slides</a></li>
             <li><a href="#how-it-works" onClick={() => setNavOpen(false)}>How It Works</a></li>
             <li><a href="#pricing" onClick={() => setNavOpen(false)}>Pricing</a></li>
             <li><a href="#faq" onClick={() => setNavOpen(false)}>FAQ</a></li>
             <li><Link to="/district" onClick={() => setNavOpen(false)}>For Districts</Link></li>
-            <li><Link to="/login?signup=1" onClick={() => setNavOpen(false)}>Get Started Free</Link></li>
           </ul>
           <div className="nav-actions">
             <Link to="/login" className="btn-ghost">Sign In</Link>
@@ -115,19 +115,24 @@ export default function LandingPage() {
         <div className="hero-inner">
           <div className="hero-content">
             <div className="hero-badge">
-              <span></span> Built for Responsive Classroom Teachers
+              <span></span> Built for Teachers Who Run Tight Mornings
             </div>
-            <h1>Your Morning Meeting,<br /><em>Ready Before First Bell.</em></h1>
+            <h1>Your Classroom,<br /><em>Ready Before the Bell.</em></h1>
             <p className="hero-sub">
-              Stop scrambling for activities every morning. OfTheDay.net builds a complete,
-              grade-appropriate routine — Greeting, Sharing, Group Activity, and Morning Message —
-              the moment you open it.
+              Two tools in one app: an automatic Morning Meeting Builder and an AI Lesson Slide Creator.
+              Open OfTheDay.net — everything is ready.
             </p>
+            <div className="hero-pills">
+              <span className="hero-pill">☀️ Morning Meetings</span>
+              <span className="hero-pill">✨ AI Lesson Slides</span>
+              <span className="hero-pill">🎓 Grades K–12</span>
+              <span className="hero-pill">⬇ PowerPoint Export</span>
+            </div>
             <div className="hero-ctas">
               <Link to="/login?signup=1" className="btn-primary-lg">Try It Free — No Credit Card</Link>
               <Link to="/demo" className="btn-secondary-lg">See a Live Demo</Link>
             </div>
-            <p className="hero-note">Free plan available · Grades K–2, 3–5, 6–8, 9–12</p>
+            <p className="hero-note">Free plan available · No setup required</p>
           </div>
 
           <div className="hero-visual">
@@ -142,6 +147,7 @@ export default function LandingPage() {
                   <div className="mockup-nav-item lp-active">☀</div>
                   <div className="mockup-nav-item">⊞</div>
                   <div className="mockup-nav-item">▦</div>
+                  <div className="mockup-nav-item">🖼</div>
                 </div>
                 <div className="mockup-main">
                   <div className="mockup-header">Today's Meeting</div>
@@ -178,6 +184,9 @@ export default function LandingPage() {
                       <div className="activity-meta">4 min · Low energy</div>
                     </div>
                   </div>
+                  <div className="mockup-word-chip">
+                    Word of the Day: <strong>Perseverance</strong>
+                  </div>
                 </div>
               </div>
             </div>
@@ -189,13 +198,18 @@ export default function LandingPage() {
       <div className="trust-bar">
         <div className="trust-bar-inner">
           <div className="trust-stat">
-            <span className="trust-num">180</span>
-            <span className="trust-label">school days covered, every year</span>
+            <span className="trust-num">2</span>
+            <span className="trust-label">complete classroom tools in one app</span>
           </div>
           <div className="trust-divider" aria-hidden="true"/>
           <div className="trust-stat">
             <span className="trust-num">30s</span>
-            <span className="trust-label">to a complete morning routine</span>
+            <span className="trust-label">to generate a lesson slide with AI</span>
+          </div>
+          <div className="trust-divider" aria-hidden="true"/>
+          <div className="trust-stat">
+            <span className="trust-num">180</span>
+            <span className="trust-label">school days covered, every year</span>
           </div>
           <div className="trust-divider" aria-hidden="true"/>
           <div className="trust-stat">
@@ -205,116 +219,40 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ══════════ PROBLEM ══════════ */}
-      <section className="problem" id="problem">
+      {/* ══════════ TWO TOOLS ══════════ */}
+      <section className="two-tools">
         <div className="container">
-          <div className="problem-grid">
-            <div className="problem-text">
-              <div className="section-label">The Problem</div>
-              <h2 className="section-title">Every Morning Before School, Thousands of Teachers Are Scrambling.</h2>
-              <blockquote>
-                "Searching Pinterest for a greeting activity. Googling 'responsive classroom
-                morning meeting ideas.' Reusing the same circle activity for the third week
-                in a row because there's no time to think.
-                <br /><br />
-                Morning meetings are the most important 15 minutes of the school day.
-                But preparing them shouldn't eat into your planning time every single day."
-              </blockquote>
-            </div>
-            <div className="problem-stat-group">
-              <div className="stat-card">
-                <div className="stat-number">15+</div>
-                <div className="stat-label">minutes spent planning a single morning meeting</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">180</div>
-                <div className="stat-label">school days that need a fresh routine every year</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">8</div>
-                <div className="stat-label">activity categories built into the library</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">30s</div>
-                <div className="stat-label">to have a complete routine ready with OfTheDay</div>
-              </div>
-            </div>
+          <div className="text-center">
+            <div className="section-label">Two Tools, One App</div>
+            <h2 className="section-title">Everything Before the Bell Rings.</h2>
+            <p className="section-sub">OfTheDay.net gives teachers two complete classroom tools — a morning routine builder and an AI-powered lesson slide creator — both ready the moment you open the app.</p>
           </div>
-        </div>
-      </section>
-
-      {/* ══════════ HOW IT WORKS ══════════ */}
-      <section id="how-it-works">
-        <div className="container">
-          <div className="solution-grid">
-            <div>
-              <div className="section-label">How It Works</div>
-              <h2 className="section-title">Open It. See Your Meeting. Run Your Meeting.</h2>
-              <p className="section-sub" style={{marginBottom:'40px'}}>
-                Three steps. Thirty seconds. Done.
-              </p>
-              <div className="solution-steps">
-                <div className="step">
-                  <div className="step-num">1</div>
-                  <div className="step-body">
-                    <h3>Choose your grade level</h3>
-                    <p>K–2, 3–5, 6–8, or 9–12. The app filters every activity, prompt, and vocabulary word to match your students.</p>
-                  </div>
-                </div>
-                <div className="step">
-                  <div className="step-num">2</div>
-                  <div className="step-body">
-                    <h3>See today's complete routine</h3>
-                    <p>A Greeting, Sharing, Group Activity, and Morning Message are ready the moment you open the app. Swap any activity with one tap if you want a change.</p>
-                  </div>
-                </div>
-                <div className="step">
-                  <div className="step-num">3</div>
-                  <div className="step-body">
-                    <h3>Display on your projector</h3>
-                    <p>One click opens a full-screen display view in a separate window. Four visual themes to match your classroom vibe. No Google Slides needed.</p>
-                  </div>
-                </div>
-              </div>
+          <div className="tools-grid">
+            <div className="tool-card tool-card-meeting">
+              <div className="tool-icon-wrap tool-teal">☀️</div>
+              <h3>Morning Meeting Builder</h3>
+              <p>A complete Responsive Classroom routine — Greeting, Sharing, Group Activity, and Morning Message — automatically generated for your grade level every single day.</p>
+              <ul className="tool-list">
+                <li>100+ activities across 8 categories</li>
+                <li>Grade-level filtering: K–2, 3–5, 6–8, 9–12</li>
+                <li>Full-screen projector mode with 4 themes</li>
+                <li>Word of the Day &amp; Do Now warm-ups</li>
+                <li>Save and reuse your favorite routines</li>
+              </ul>
+              <Link to="/demo" className="tool-link tool-link-teal">See a Live Demo →</Link>
             </div>
-            <div className="solution-visual">
-              <div className="routine-preview-title">Today's Routine · Grade 3–5</div>
-              <div className="routine-row">
-                <div className="routine-icon" style={{background:'rgba(126,200,164,0.15)'}}>👋</div>
-                <div className="routine-info">
-                  <div className="routine-cat" style={{color:'#7EC8A4'}}>Greeting</div>
-                  <div className="routine-name">Would You Rather Welcome</div>
-                  <div className="routine-time">2 min · Low energy</div>
-                </div>
-              </div>
-              <div className="routine-row">
-                <div className="routine-icon" style={{background:'rgba(122,172,218,0.15)'}}>💬</div>
-                <div className="routine-info">
-                  <div className="routine-cat" style={{color:'#7AACDA'}}>Sharing</div>
-                  <div className="routine-name">Weekend Weather Report</div>
-                  <div className="routine-time">5 min · Medium energy</div>
-                </div>
-              </div>
-              <div className="routine-row">
-                <div className="routine-icon" style={{background:'rgba(242,192,110,0.15)'}}>✦</div>
-                <div className="routine-info">
-                  <div className="routine-cat" style={{color:'#F2C06E'}}>Group Activity</div>
-                  <div className="routine-name">Zip Zap Zoom</div>
-                  <div className="routine-time">7 min · High energy</div>
-                </div>
-              </div>
-              <div className="routine-row" style={{borderBottom:'none'}}>
-                <div className="routine-icon" style={{background:'rgba(176,159,219,0.15)'}}>✎</div>
-                <div className="routine-info">
-                  <div className="routine-cat" style={{color:'#B09FDB'}}>Morning Message</div>
-                  <div className="routine-name">Today's Focus Prompt</div>
-                  <div className="routine-time">4 min · Low energy</div>
-                </div>
-              </div>
-              <div style={{marginTop:'20px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                <span style={{fontSize:'12px', color:'rgba(255,255,255,0.3)'}}>Total: ~18 min</span>
-                <Link to="/login?signup=1" style={{fontSize:'12px', color:'#F5A623', textDecoration:'none', fontWeight:'700'}}>Open the app →</Link>
-              </div>
+            <div className="tool-card tool-card-slides">
+              <div className="tool-icon-wrap tool-blue">✨</div>
+              <h3>AI Lesson Slide Creator</h3>
+              <p>Describe your lesson objective and AI generates a complete structured slide — learning target, essential question, success criteria, vocabulary, student task, and exit ticket — in under 30 seconds.</p>
+              <ul className="tool-list">
+                <li>AI-generated in under 30 seconds</li>
+                <li>4 visual themes for every classroom style</li>
+                <li>Export to PowerPoint or Google Slides</li>
+                <li>Simplify content for any reading level</li>
+                <li>Display full-screen on any projector</li>
+              </ul>
+              <Link to="/login?signup=1" className="tool-link tool-link-blue">Try It Free →</Link>
             </div>
           </div>
         </div>
@@ -325,19 +263,24 @@ export default function LandingPage() {
         <div className="container">
           <div className="text-center">
             <div className="section-label">Features</div>
-            <h2 className="section-title">Everything Your Morning Routine Needs</h2>
-            <p className="section-sub">One tool for the entire first 20 minutes of your day.</p>
+            <h2 className="section-title">Built for Your Entire Morning Prep</h2>
+            <p className="section-sub">Every feature reduces the time between "I need a lesson" and "class is ready."</p>
           </div>
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">☀️</div>
               <h3>Daily Routine Builder</h3>
-              <p>Automatic Greeting, Sharing, Group Activity, and Morning Message every day. Filter by grade level, time available, and class energy.</p>
+              <p>Automatic Greeting, Sharing, Group Activity, and Morning Message every day. Filter by grade, time, and energy level.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🖥️</div>
               <h3>Projector Mode</h3>
-              <p>One-click full-screen display view for your classroom projector or smartboard. Four visual themes: Calm, Bright, Minimal, and Primary.</p>
+              <p>One-click full-screen display for your classroom projector or smartboard. Four visual themes: Calm, Bright, Minimal, and Primary.</p>
+            </div>
+            <div className="feature-card feature-card-ai">
+              <div className="feature-icon feature-icon-blue">✨</div>
+              <h3>AI Lesson Slide Creator</h3>
+              <p>Describe any lesson and get a complete structured slide in seconds — learning target, vocabulary, success criteria, exit ticket, and more.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">📖</div>
@@ -347,25 +290,158 @@ export default function LandingPage() {
             <div className="feature-card">
               <div className="feature-icon">✏️</div>
               <h3>Do Now Warm-Ups</h3>
-              <p>Daily math and writing warm-up problems by grade band. Toggle between subjects. Build your own custom problems to match your curriculum.</p>
+              <p>Daily math and writing warm-up problems by grade band. Build custom problems to match your curriculum.</p>
+            </div>
+            <div className="feature-card feature-card-ai">
+              <div className="feature-icon feature-icon-green">📤</div>
+              <h3>Export to PowerPoint &amp; Google Slides</h3>
+              <p>Every AI-generated slide exports as a .pptx file — ready for PowerPoint or Google Slides, full formatting preserved.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">⏳</div>
               <h3>On This Day</h3>
-              <p>Classroom-appropriate historical facts for the current date — automatically filtered to remove content that isn't suitable for students.</p>
+              <p>Classroom-appropriate historical facts for the current date, automatically filtered for student suitability.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🗂️</div>
-              <h3>My Activities + Routines</h3>
-              <p>Build your own activities and save your favourite routine combinations. Your custom content is stored and ready whenever you need it.</p>
+              <h3>My Activities &amp; Routines</h3>
+              <p>Build custom activities and save favorite routine combinations. Your content is stored and ready whenever you need it.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">🎯</div>
+              <h3>Grade-Level Intelligence</h3>
+              <p>One grade picker filters everything — activities, vocabulary, warm-ups, and AI slide content — to match your class.</p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* ══════════ SLIDE SPOTLIGHT ══════════ */}
+      <section className="slide-spotlight" id="slides">
+        <div className="container">
+          <div className="spotlight-grid">
+            <div className="spotlight-copy">
+              <div className="section-label spotlight-label">AI Lesson Slides</div>
+              <h2 className="section-title spotlight-title">30 Seconds to a Print-Ready Lesson Slide.</h2>
+              <p className="section-sub spotlight-sub">Describe your lesson objective, choose a visual theme, and AI fills in every structured field. Export directly to PowerPoint or Google Slides — no reformatting needed.</p>
+              <ul className="spotlight-checklist">
+                <li>Learning target &amp; essential question</li>
+                <li>3 success criteria for student self-assessment</li>
+                <li>Key vocabulary with definitions</li>
+                <li>Student task, discussion prompt &amp; exit ticket</li>
+                <li>4 themes — all export-ready with full formatting</li>
+              </ul>
+              <Link to="/login?signup=1" className="btn-primary-lg">Try Lesson Slides Free</Link>
+            </div>
+            <div className="spotlight-visual">
+              <div className="theme-switcher">
+                {SLIDE_THEMES.map(t => (
+                  <button
+                    key={t.id}
+                    className={`theme-btn${slideTheme === t.id ? ' active' : ''}`}
+                    onClick={() => setSlideTheme(t.id)}
+                  >{t.label}</button>
+                ))}
+              </div>
+              <div className={`lp-slide-mock sm-${slideTheme}`}>
+                <div className="sm-hdr">
+                  <span className="sm-lesson-name">SCIENCE · GRADE 3–5</span>
+                  <span className="sm-hdr-right">OfTheDay.net</span>
+                </div>
+                <div className="sm-lt-row">
+                  <div className="sm-lt">
+                    <div className="sm-slabel">LEARNING TARGET</div>
+                    <div className="sm-lt-text">Students will explain how photosynthesis converts sunlight into food energy for plants.</div>
+                  </div>
+                  <div className="sm-eq">
+                    <div className="sm-slabel">ESSENTIAL QUESTION</div>
+                    <div className="sm-eq-text">How do living things get the energy they need to grow?</div>
+                  </div>
+                </div>
+                <div className="sm-body">
+                  <div className="sm-col">
+                    <div className="sm-col-hdr sm-sc-hdr">
+                      <span className="sm-col-label">SUCCESS CRITERIA</span>
+                    </div>
+                    <div className="sm-col-content">
+                      <div className="sm-check"><span className="sm-ck">✓</span> Describe inputs of photosynthesis</div>
+                      <div className="sm-check"><span className="sm-ck">✓</span> Explain what chlorophyll does</div>
+                      <div className="sm-check"><span className="sm-ck">✓</span> Connect plants to the food chain</div>
+                    </div>
+                  </div>
+                  <div className="sm-col sm-mid-col">
+                    <div className="sm-col-hdr sm-vocab-hdr">
+                      <span className="sm-col-label">KEY VOCABULARY</span>
+                    </div>
+                    <div className="sm-col-content">
+                      <div className="sm-vocab"><span className="sm-vocab-word">Photosynthesis</span> — light to energy</div>
+                      <div className="sm-vocab"><span className="sm-vocab-word">Chlorophyll</span> — green pigment</div>
+                      <div className="sm-vocab"><span className="sm-vocab-word">Glucose</span> — plant sugar</div>
+                    </div>
+                  </div>
+                  <div className="sm-col sm-right-col">
+                    <div className="sm-col-hdr sm-task-hdr">
+                      <span className="sm-col-label">STUDENT TASK</span>
+                    </div>
+                    <div className="sm-col-content sm-task-content">
+                      Draw and label a plant showing where photosynthesis occurs.
+                    </div>
+                    <div className="sm-col-hdr sm-disc-hdr">
+                      <span className="sm-col-label">DISCUSSION</span>
+                    </div>
+                    <div className="sm-col-content sm-sm-content">
+                      Why are plants the color green?
+                    </div>
+                    <div className="sm-col-hdr sm-exit-hdr">
+                      <span className="sm-col-label">EXIT TICKET</span>
+                    </div>
+                    <div className="sm-col-content sm-sm-content">
+                      Name 3 things a plant needs.
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="slide-export-chips">
+                <span className="export-chip">⬇ Export as PowerPoint</span>
+                <span className="export-chip">⬇ Open in Google Slides</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ HOW IT WORKS ══════════ */}
+      <section id="how-it-works">
+        <div className="container">
+          <div className="text-center">
+            <div className="section-label">How It Works</div>
+            <h2 className="section-title">Open It. See Your Meeting. Run Your Day.</h2>
+            <p className="section-sub" style={{margin:'0 auto 56px'}}>Three steps. Thirty seconds. Done.</p>
+          </div>
+          <div className="hiw-grid">
+            <div className="hiw-step">
+              <div className="hiw-num">1</div>
+              <h3>Choose your grade level</h3>
+              <p>K–2, 3–5, 6–8, or 9–12. One picker filters every activity, prompt, vocabulary word, and AI slide content to match your students.</p>
+            </div>
+            <div className="hiw-connector" aria-hidden="true">→</div>
+            <div className="hiw-step">
+              <div className="hiw-num">2</div>
+              <h3>Your routine is ready instantly</h3>
+              <p>A complete Morning Meeting — Greeting, Sharing, Group Activity, Morning Message — loads the moment you open the app. Swap any card with one tap.</p>
+            </div>
+            <div className="hiw-connector" aria-hidden="true">→</div>
+            <div className="hiw-step">
+              <div className="hiw-num">3</div>
+              <h3>Generate a lesson slide</h3>
+              <p>Describe any objective and AI builds a complete structured slide in under 30 seconds. Display full-screen, export to PowerPoint, or send to Google Slides.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ══════════ PRICING ══════════ */}
-      <section id="pricing">
+      <section id="pricing" style={{background:'#FAF8F4', borderTop:'1px solid rgba(0,0,0,0.06)'}}>
         <div className="container">
           <div className="text-center">
             <div className="section-label">Pricing</div>
@@ -374,18 +450,11 @@ export default function LandingPage() {
           </div>
 
           <div className="billing-toggle">
-            <button
-              className={`billing-option${billingPeriod === 'monthly' ? ' active' : ''}`}
-              onClick={() => setBillingPeriod('monthly')}
-            >Monthly</button>
-            <button
-              className={`billing-option${billingPeriod === 'annual' ? ' active' : ''}`}
-              onClick={() => setBillingPeriod('annual')}
-            >Annual <span className="billing-save">Save 27%</span></button>
+            <button className={`billing-option${billingPeriod === 'monthly' ? ' active' : ''}`} onClick={() => setBillingPeriod('monthly')}>Monthly</button>
+            <button className={`billing-option${billingPeriod === 'annual' ? ' active' : ''}`} onClick={() => setBillingPeriod('annual')}>Annual <span className="billing-save">Save 27%</span></button>
           </div>
 
           <div className="pricing-grid">
-
             <div className="pricing-card">
               <div className="pricing-tier">Free</div>
               <div className="pricing-price">$0</div>
@@ -396,6 +465,8 @@ export default function LandingPage() {
                 <li>3 saved routines</li>
                 <li>1 custom activity</li>
                 <li>Grade-level filtering (K–12)</li>
+                <li>5 AI lesson slides per month</li>
+                <li>PowerPoint &amp; Google Slides export</li>
               </ul>
               <Link to="/login?signup=1" className="pricing-cta pricing-cta-outline">Get Started Free</Link>
             </div>
@@ -411,7 +482,7 @@ export default function LandingPage() {
               ) : (
                 <div className="pricing-price"><sup>$</sup>9<span>/month</span></div>
               )}
-              <div className="pricing-desc">The full toolkit for teachers who run a structured morning meeting every day.</div>
+              <div className="pricing-desc">The full toolkit for teachers who run a structured routine every day.</div>
               <ul className="pricing-features">
                 <li>Everything in Free</li>
                 <li>Full activity library — all categories</li>
@@ -421,6 +492,8 @@ export default function LandingPage() {
                 <li>Word of the Day</li>
                 <li>Do Now warm-up problems</li>
                 <li>On This Day historical facts</li>
+                <li>Unlimited AI lesson slides</li>
+                <li>Simplify content for any grade level</li>
                 <li>Cloud sync — all your devices</li>
               </ul>
               <Link to="/upgrade" className="pricing-cta pricing-cta-primary">
@@ -442,21 +515,9 @@ export default function LandingPage() {
                 <div className="school-form-success">✓ Got it — we'll be in touch within 1 business day.</div>
               ) : (
                 <form className="school-inquiry-form" onSubmit={handleSchoolInquiry}>
-                  <input
-                    type="text" placeholder="Your name" required
-                    value={schoolForm.name}
-                    onChange={e => setSchoolForm(f => ({ ...f, name: e.target.value }))}
-                  />
-                  <input
-                    type="text" placeholder="School or district name" required
-                    value={schoolForm.school}
-                    onChange={e => setSchoolForm(f => ({ ...f, school: e.target.value }))}
-                  />
-                  <input
-                    type="email" placeholder="your@school.edu" required
-                    value={schoolForm.email}
-                    onChange={e => setSchoolForm(f => ({ ...f, email: e.target.value }))}
-                  />
+                  <input type="text" placeholder="Your name" required value={schoolForm.name} onChange={e => setSchoolForm(f => ({ ...f, name: e.target.value }))} />
+                  <input type="text" placeholder="School or district name" required value={schoolForm.school} onChange={e => setSchoolForm(f => ({ ...f, school: e.target.value }))} />
+                  <input type="email" placeholder="your@school.edu" required value={schoolForm.email} onChange={e => setSchoolForm(f => ({ ...f, email: e.target.value }))} />
                   <button type="submit" className="pricing-cta pricing-cta-outline">Request School Pricing</button>
                 </form>
               )}
@@ -464,7 +525,6 @@ export default function LandingPage() {
                 <Link to="/district" style={{fontSize:'0.8rem', color:'#6B7280'}}>Privacy &amp; compliance info for IT directors →</Link>
               </div>
             </div>
-
           </div>
           <p style={{textAlign:'center', marginTop:'24px', fontSize:'13px', color:'#9CA3AF'}}>
             School and district licensing available. <a href="mailto:hello@oftheday.net?subject=School Pricing" style={{color:'#9CA3AF'}}>Contact us</a> for a quote.
@@ -507,14 +567,7 @@ export default function LandingPage() {
             <div className="capture-success">🎉 Sent! Check your inbox — it should arrive in under a minute.</div>
           ) : (
             <form className="capture-form" onSubmit={handleCapture}>
-              <input
-                type="email"
-                placeholder="your@school.edu"
-                required
-                autoComplete="email"
-                value={captureEmail}
-                onChange={e => setCaptureEmail(e.target.value)}
-              />
+              <input type="email" placeholder="your@school.edu" required autoComplete="email" value={captureEmail} onChange={e => setCaptureEmail(e.target.value)} />
               <button type="submit">Send Me the Pack</button>
             </form>
           )}
@@ -525,8 +578,8 @@ export default function LandingPage() {
       {/* ══════════ FINAL CTA ══════════ */}
       <section className="final-cta">
         <div className="container">
-          <h2>Start Your Day With a Plan.</h2>
-          <p>Open OfTheDay.net and your morning meeting is ready in seconds.</p>
+          <h2>Two Tools. One App. Ready in Seconds.</h2>
+          <p>Morning meetings built automatically. Lesson slides generated by AI. Open OfTheDay.net and start teaching.</p>
           <div className="final-cta-actions">
             <Link to="/login?signup=1" className="btn-primary-lg">Try It Free — No Credit Card</Link>
             <Link to="/login" style={{fontSize:'15px', color:'rgba(255,255,255,0.5)', textDecoration:'none', fontWeight:500}}>Already have an account? Sign In →</Link>
@@ -539,6 +592,7 @@ export default function LandingPage() {
         <div className="footer-logo">of<span>·</span>the<span>·</span>day</div>
         <div className="footer-links">
           <a href="#features">Features</a>
+          <a href="#slides">Lesson Slides</a>
           <a href="#pricing">Pricing</a>
           <a href="#faq">FAQ</a>
           <a href="mailto:hello@oftheday.net">Contact</a>
