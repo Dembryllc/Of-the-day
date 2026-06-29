@@ -235,6 +235,12 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
 .profile-plan-badge--free { background: #f3f4f6; color: #6b7280; }
 .profile-upgrade-link { font-size: 12px; font-weight: 600; color: var(--teal); text-decoration: none; }
 .profile-upgrade-link:hover { text-decoration: underline; }
+.profile-form-grid { grid-template-columns: 1fr 1fr !important; }
+.profile-footer-row { display: flex; align-items: center; justify-content: space-between; padding: 0 2px; }
+.profile-share-link { background: none; border: none; padding: 0; font-size: 12px; font-weight: 600; color: var(--teal); cursor: pointer; }
+.profile-share-link:hover { text-decoration: underline; }
+.profile-signout-link { background: none; border: none; padding: 0; font-size: 12px; font-weight: 500; color: var(--muted); cursor: pointer; }
+.profile-signout-link:hover { color: #EF4444; }
 .sidebar-trial-card { margin: 10px 12px 4px; padding: 11px 12px; background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.3); border-radius: 10px; }
 .sidebar-trial-days { font-size: 11.5px; font-weight: 700; color: #F5A623; margin-bottom: 7px; letter-spacing: 0.01em; }
 .sidebar-trial-upgrade { display: block; padding: 8px 10px; background: linear-gradient(135deg, #f5c842, #f0a500); color: #1a1a1a; font: 700 12px/1 'Outfit', sans-serif; border-radius: 7px; text-decoration: none; text-align: center; transition: opacity 0.14s; }
