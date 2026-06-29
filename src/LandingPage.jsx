@@ -199,8 +199,8 @@ export default function LandingPage() {
           </div>
           <div className="trust-divider" aria-hidden="true"/>
           <div className="trust-stat">
-            <span className="trust-num">Free</span>
-            <span className="trust-label">to start — no credit card needed</span>
+            <span className="trust-num">79+</span>
+            <span className="trust-label">activities ready to use today</span>
           </div>
         </div>
       </div>
@@ -337,7 +337,12 @@ export default function LandingPage() {
             <div className="feature-card">
               <div className="feature-icon">🖥️</div>
               <h3>Projector Mode</h3>
-              <p>One-click full-screen display view for your classroom projector or smartboard. Four visual themes: Calm, Bright, Minimal, and Primary.</p>
+              <p>One-click full-screen display for your classroom projector or smartboard. Four visual themes: Calm, Bright, Minimal, and Primary.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">✨</div>
+              <h3>AI Lesson Slide Creator</h3>
+              <p>Generate a complete, research-based lesson slide in seconds. Four presentation themes, classroom-ready from the first draft. Pro feature.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">📖</div>
@@ -352,12 +357,22 @@ export default function LandingPage() {
             <div className="feature-card">
               <div className="feature-icon">⏳</div>
               <h3>On This Day</h3>
-              <p>Classroom-appropriate historical facts for the current date — automatically filtered to remove content that isn't suitable for students.</p>
+              <p>Classroom-appropriate historical facts for today's date — automatically filtered to remove content that isn't suitable for students.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🗂️</div>
               <h3>My Activities + Routines</h3>
               <p>Build your own activities and save your favourite routine combinations. Your custom content is stored and ready whenever you need it.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">☁️</div>
+              <h3>Cloud Sync</h3>
+              <p>Your routines, custom activities, and settings follow you across every device. Open on your phone at home, project from your laptop in class.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">🏫</div>
+              <h3>No Student Data. Ever.</h3>
+              <p>Students don't create accounts. Nothing is collected from your class. FERPA-friendly by design — easy to clear with your IT department.</p>
             </div>
           </div>
         </div>
@@ -525,8 +540,8 @@ export default function LandingPage() {
       {/* ══════════ FINAL CTA ══════════ */}
       <section className="final-cta">
         <div className="container">
-          <h2>Start Your Day With a Plan.</h2>
-          <p>Open OfTheDay.net and your morning meeting is ready in seconds.</p>
+          <h2>The First 20 Minutes,<br /><em>Handled.</em></h2>
+          <p>Open OfTheDay.net and your morning meeting is ready before your students walk in.</p>
           <div className="final-cta-actions">
             <Link to="/login?signup=1" className="btn-primary-lg">Try It Free — No Credit Card</Link>
             <Link to="/login" style={{fontSize:'15px', color:'rgba(255,255,255,0.5)', textDecoration:'none', fontWeight:500}}>Already have an account? Sign In →</Link>
