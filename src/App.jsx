@@ -281,10 +281,11 @@ function rotateHistoryItems(items, date = new Date(), count = 6) {
 }
 
 function getGradeHistoryItems(grade = "3–5", liveItems = [], date = new Date()) {
-  if (grade === "K–2") return rotateHistoryItems(ELEMENTARY_ON_THIS_DAY["K–2"], date, 5);
-  if (grade === "3–5") return rotateHistoryItems(ELEMENTARY_ON_THIS_DAY["3–5"], date, 6);
+  const band = gradeToBand(grade);
+  if (band === "K–2") return rotateHistoryItems(ELEMENTARY_ON_THIS_DAY["K–2"], date, 5);
+  if (band === "3–5") return rotateHistoryItems(ELEMENTARY_ON_THIS_DAY["3–5"], date, 6);
   const fallback = getFallbackHistory(date);
-  if (grade === "6–8") {
+  if (band === "6–8") {
     const middle = [...liveItems, ...fallback].filter(item => !/treaty|monastic|papal|conquer|condemned|heretic/i.test(item.title || ""));
     return middle.length ? middle.slice(0, 8) : fallback;
   }
@@ -450,9 +451,20 @@ function getEnergy(activity) {
   return (activity.meta || "").split("·").map(x => x.trim()).pop();
 }
 
+const INDIVIDUAL_GRADES = ["K","1","2","3","4","5","6","7","8","9","10","11","12"];
+function gradeToBand(g) {
+  if (!g) return "3–5";
+  if (g === "K" || g === "1" || g === "2") return "K–2";
+  if (g === "3" || g === "4" || g === "5") return "3–5";
+  if (g === "6" || g === "7" || g === "8") return "6–8";
+  if (g === "9" || g === "10" || g === "11" || g === "12") return "9–12";
+  return g; // already a band (legacy Firestore values)
+}
+
 function activityMatchesGrade(activity, grade) {
   if (!grade) return true;
-  if (Array.isArray(activity.grades)) return activity.grades.includes(grade);
+  const band = gradeToBand(grade);
+  if (Array.isArray(activity.grades)) return activity.grades.includes(band) || activity.grades.includes(grade);
   if (activity.custom) return true;
   if (typeof activity.id === "string" && activity.id.includes(`-${grade}-`)) return true;
   if (GRADE_RITUAL_ACTIVITY_IDS[grade]) {
@@ -533,13 +545,15 @@ function formatToday() {
 }
 
 function getVocabBank(grade = "3–5", custom = {}) {
-  return [...(VOCAB_WORDS[grade] || VOCAB_WORDS["3–5"]), ...(custom[grade] || [])];
+  const band = gradeToBand(grade);
+  return [...(VOCAB_WORDS[band] || VOCAB_WORDS["3–5"]), ...(custom[band] || custom[grade] || [])];
 }
 
 function getDoNowBank(subject = "math", grade = "3–5", custom = {}) {
+  const band = gradeToBand(grade);
   const section = DO_NOW_SECTIONS[subject] || DO_NOW_SECTIONS.math;
-  const builtIns = (section.bank || DO_NOW_SECTIONS.math.bank)[grade] || (section.bank || DO_NOW_SECTIONS.math.bank)["3–5"] || DO_NOW_SECTIONS.math.bank["3–5"];
-  return [...builtIns, ...((custom[subject] || {})[grade] || [])];
+  const builtIns = (section.bank || DO_NOW_SECTIONS.math.bank)[band] || (section.bank || DO_NOW_SECTIONS.math.bank)["3–5"] || DO_NOW_SECTIONS.math.bank["3–5"];
+  return [...builtIns, ...((custom[subject] || {})[band] || (custom[subject] || {})[grade] || [])];
 }
 
 function pickDailyVocab(grade = "3–5", offset = 0, custom = {}) {
@@ -1100,7 +1114,7 @@ function SettingsSheet({ onClose, onExport, onImport, onReset, projectorStyle, o
 /* ── Profile Sheet ── */
 function ProfileSheet({ account, displayName, trialDaysLeft, effectivePlan, onClose, onSignOut, onSave }) {
   const [name, setName] = useState(displayName || account?.name || '');
-  const [grade, setGrade] = useState(account?.grade || '3–5');
+  const [grade, setGrade] = useState(account?.grade || '3');
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -1151,29 +1165,31 @@ function ProfileSheet({ account, displayName, trialDaysLeft, effectivePlan, onCl
               )}
             </div>
           </div>
-          <div className="form-grid">
+          <div className="form-grid profile-form-grid">
             <label className="form-field">
               <span>Your Name</span>
               <input value={name} onChange={e => setName(e.target.value)} maxLength={50} placeholder="Your name"/>
             </label>
             <label className="form-field">
-              <span>Default Grade</span>
+              <span>Your Grade</span>
               <select value={grade} onChange={e => setGrade(e.target.value)}>
-                {["K–2","3–5","6–8","9–12"].map(g => <option key={g}>{g}</option>)}
+                {INDIVIDUAL_GRADES.map(g => <option key={g} value={g}>{g === 'K' ? 'Kindergarten' : `Grade ${g}`}</option>)}
               </select>
             </label>
           </div>
         </div>
-        <div className="sheet-footer" style={{flexDirection:'column', gap: 10}}>
+        <div className="sheet-footer" style={{flexDirection:'column', gap: 12}}>
           <button className="btn-primary" type="button" style={{width:'100%'}} disabled={saving} onClick={handleSave}>
             {saving ? 'Saving…' : 'Save Changes'}
           </button>
-          <button className="btn-secondary" type="button" style={{width:'100%'}} onClick={handleShare}>
-            {copied ? '✓ Link copied — share it!' : '↗ Share OfTheDay with a Colleague'}
-          </button>
-          <button className="btn-danger" type="button" style={{width:'100%'}} onClick={() => { onClose(); onSignOut(); }}>
-            Sign Out
-          </button>
+          <div className="profile-footer-row">
+            <button className="profile-share-link" type="button" onClick={handleShare}>
+              {copied ? '✓ Copied!' : '↗ Share with a colleague'}
+            </button>
+            <button className="profile-signout-link" type="button" onClick={() => { onClose(); onSignOut(); }}>
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -2106,7 +2122,7 @@ function UpgradeModal({ feature, onClose }) {
 ════════════════════════════════ */
 function MainApp({ account, onSignOut }) {
   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-    "grade": account?.grade || "3–5",
+    "grade": account?.grade || "3",
     "time": "15 min",
     "energy": "Medium",
     "teacherName": "Mike"
@@ -2533,12 +2549,13 @@ function MainApp({ account, onSignOut }) {
       const events = getGradeHistoryItems(currentGrade, liveEvents, new Date());
       setHistoryItems(events);
       setSelectedHistoryItem(events[0]);
-      setHistorySource(currentGrade === "K–2" || currentGrade === "3–5" ? "Elementary classroom fact bank" : (data.source || ON_THIS_DAY_SOURCE.name));
+      const gradeBand = gradeToBand(currentGrade);
+      setHistorySource(gradeBand === "K–2" || gradeBand === "3–5" ? "Elementary classroom fact bank" : (data.source || ON_THIS_DAY_SOURCE.name));
       setHistorySourceUrl(data.sourceUrl || onThisDayUrl());
     } catch {
       setHistoryItems(fallback);
       setSelectedHistoryItem(fallback[0]);
-      setHistorySource(currentGrade === "K–2" || currentGrade === "3–5" ? "Elementary classroom fact bank" : "Built-in classroom fallback");
+      setHistorySource(gradeToBand(currentGrade) === "K–2" || gradeToBand(currentGrade) === "3–5" ? "Elementary classroom fact bank" : "Built-in classroom fallback");
       setHistorySourceUrl(onThisDayUrl());
     } finally {
       setHistoryLoading(false);
@@ -3695,7 +3712,7 @@ function App() {
           await createUserDocument(user.uid, {
             name: user.displayName || "",
             email: user.email || "",
-            grade: "3–5",
+            grade: "3",
           });
           userDoc = await getUserDocument(user.uid);
         }
@@ -3704,7 +3721,7 @@ function App() {
           email: user.email,
           emailVerified: user.emailVerified,
           name: userDoc?.name || user.displayName || "",
-          grade: userDoc?.grade || "3–5",
+          grade: userDoc?.grade || "3",
           plan: userDoc?.plan || "trial",
           trialStartedAt: tsToMs(userDoc?.trialStartedAt),
           tier: userDoc?.tier || null,
