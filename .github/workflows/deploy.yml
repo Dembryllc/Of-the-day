@@ -95,14 +95,6 @@ jobs:
       - name: Install functions dependencies
         run: npm install --prefix functions
 
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.oftheday }}
-          channelId: live
-          projectId: oftheday-c6490
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -110,6 +102,15 @@ jobs:
 
       - name: Install firebase-tools
         run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase Hosting
+        run: |
+          firebase deploy --only hosting --project oftheday-c6490 --non-interactive 2>&1 | tee /tmp/hosting.log
+          code=${PIPESTATUS[0]}
+          if [ $code -ne 0 ]; then
+            grep -q "current active version" /tmp/hosting.log && echo "Hosting already up to date — OK" && exit 0
+            exit $code
+          fi
 
       - name: Deploy Cloud Functions
         run: firebase deploy --only functions --project oftheday-c6490 --non-interactive --force
