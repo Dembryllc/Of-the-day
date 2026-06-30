@@ -1,5 +1,22 @@
 # OfTheDay.net — Claude Code Terminal Handoff
 
+---
+
+## 🟢 Session brief — 2026-06-30 (most current; older sections below are historical)
+
+**Deploy now runs via GitHub Actions on push to `main`** (hosting + functions + Firestore rules). The "deploy on the Mac" / "live site on Netlify" notes further down are OBSOLETE — see `CLAUDE.md` Deployment section for the authoritative pipeline.
+
+### Shipped today (merged to `main`)
+- **Slide export to PowerPoint / Google Slides** — `src/lib/exportSlide.js` (pptxgenjs, lazy-loaded). Both buttons live in `LessonSlideCreator.jsx`. See CLAUDE.md "Slide Export".
+- **Landing page redesign** — showcases both tools + AI lesson slides; merged cleanly with prior `main` polish. See CLAUDE.md "Landing Page".
+
+### 🔴 The one thing blocking go-live
+Every deploy since 2026-06-26 **fails at the CI "Verify required secrets are present" gate** — 8 secrets are missing from GitHub Actions (Stripe ×6 + Mailgun ×2). Firebase + Anthropic are present. **Fix = add the 8 secrets via GitHub web UI** (no code change). Full list + price-ID values in CLAUDE.md "Deploy gate". Once added, re-run the workflow and it goes green. User is adding these manually; do NOT accept secret values pasted into chat.
+
+### Next session: start by checking whether the 8 secrets were added (GitHub Actions run status), then watch the deploy clear the gate.
+
+---
+
 ## AI Slide Generation — Architecture (2026-06-20)
 
 The AI lesson slide generation uses Gen 1 `onRequest` functions (`generateSlide` and `simplifySlide`).
