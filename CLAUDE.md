@@ -93,5 +93,11 @@ Never bypass `usePlan.js` for plan checks — don't add a second plan-resolution
 ## Landing Page (redesigned 2026-06-30)
 Full redesign shipped to `main` (`src/LandingPage.jsx` + `src/landing.css`): hero showcases BOTH tools, "Two Tools" section, interactive AI-slide spotlight with a 4-theme CSS mockup + theme switcher, 11-card feature grid (incl. AI Lesson Slide Creator, PowerPoint/Slides export, Cloud Sync, FERPA "No Student Data"), lesson-slide FAQ + pricing. Reconciled with prior `main` polish (button glow, teal labels, hero dot-grid, animated FAQ) during merge. Still honor "Removed — Do Not Re-Add" below (no testimonials).
 
+## Notes / Obsidian Vault Sync
+- Session logs live in the repo at `notes/` (e.g. `notes/2026-06-30-session.md`), Obsidian-friendly frontmatter (date/project/tags).
+- The user's Obsidian vault is **local, in iCloud**: `~/Library/Mobile Documents/com~apple~CloudDocs/obsidianvault` (Mac). Cloud/remote sessions CANNOT reach it — only local sessions can.
+- Sync flow (run locally): `git pull origin main` → copy the note into the vault (`cp notes/<file>.md ~/Library/Mobile\ Documents/com~apple~CloudDocs/obsidianvault/`) OR run the user's local `/record-to-vault` skill.
+- The `/record-to-vault` skill and the vault both exist only on the user's Mac — they are not available in cloud sessions.
+
 ## Co-founder Note
 OfTheDay.net is co-founded. Coordinate on major product/business decisions before implementing.
