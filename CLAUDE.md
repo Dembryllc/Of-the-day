@@ -14,11 +14,11 @@
 - Auth SA stored in `secrets.oftheday`
 - ANTHROPIC_API_KEY rotated 2026-06-21 (was exposed in chat) — confirm it's in GitHub Actions secrets, not hardcoded anywhere
 
-### ⚠️ Deploy gate — required secrets (current blocker as of 2026-06-30)
-`.github/workflows/deploy.yml` starts with a **"Verify required secrets are present"** step that hard-fails the ENTIRE deploy (`exit 1`, never builds) if any one of 15 GitHub Actions secrets is empty. The runner prints `MISSING: <NAME>` for each.
-- **Present & verified:** all 6 `VITE_FIREBASE_*`, `ANTHROPIC_API_KEY`
-- **MISSING (8) — these are why every deploy since 2026-06-26 fails:** `VITE_STRIPE_MONTHLY_PRICE_ID`, `VITE_STRIPE_ANNUAL_PRICE_ID`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_MONTHLY_PRICE_ID`, `STRIPE_ANNUAL_PRICE_ID`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`
-- **Fix (no code change):** add the 8 in GitHub → Settings → Secrets and variables → Actions. Price IDs: monthly `price_1Te35JB2eRKsbhTpqJrBmNRE`, annual `price_1Te38IB2eRKsbhTp9GXJjxM0` (used for BOTH the `VITE_` and non-`VITE_` copies). Test-mode Stripe keys are fine for now.
+### ✅ Deploy gate — required secrets (RESOLVED 2026-06-30)
+`.github/workflows/deploy.yml` starts with a **"Verify required secrets are present"** step that hard-fails the ENTIRE deploy (`exit 1`, never builds) if any required secret is empty. The runner prints `MISSING: <NAME>` for each.
+- **Status: PASSING.** The latest `main` deploy (commit `d368bbb`, 2026-06-30 03:51) ran green and published to Firebase Hosting. The 8 previously-missing secrets have been added and the gate clears. (Earlier deploys 06-26→06-30 failed on this gate; that is history, not current state.)
+- `MAILGUN_DOMAIN` is now read from `vars.MAILGUN_DOMAIN` (a repo variable), not `secrets` — see commit `6d72bcf`. The other Stripe/Mailgun values remain Actions secrets.
+- Price IDs (for reference): monthly `price_1Te35JB2eRKsbhTpqJrBmNRE`, annual `price_1Te38IB2eRKsbhTp9GXJjxM0` (used for BOTH the `VITE_` and non-`VITE_` copies). Stripe is still in **test mode** — see Pending Ops for go-live.
 - CI writes `functions/.env` from these secrets at deploy time — there is no committed `functions/.env`. Local `firebase deploy` needs that file created by hand.
 - **Never** paste secret values into chat/terminal — they belong only in the GitHub secret store.
 
@@ -86,8 +86,8 @@ Never bypass `usePlan.js` for plan checks — don't add a second plan-resolution
 - Cloud Function save path for slides — abandoned, direct Firestore only
 
 ## Pending Ops (code complete — no code work needed)
-1. **🔴 Add the 8 missing GitHub Actions secrets** (see Deployment gate above) — this is the #1 blocker; nothing deploys until done. User adds via GitHub web UI. Test-mode Stripe keys OK.
-2. **Stripe go-live** — after #1, swap test → live keys, register live webhook for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Price IDs read from env (`import.meta.env.VITE_STRIPE_*` in `src/App.jsx`), not hardcoded.
+1. ✅ **DONE — GitHub Actions secrets added.** The deploy gate passes and `main` deploys clean (verified 2026-06-30). Hosting is live.
+2. **🔴 Stripe go-live (now the #1 remaining blocker for real revenue)** — Stripe is still in test mode. Swap test → live keys, register live webhook for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Price IDs read from env (`import.meta.env.VITE_STRIPE_*` in `src/App.jsx`), not hardcoded.
 3. **Mobile phone check** — manual test at 375px
 
 ## Landing Page (redesigned 2026-06-30)
