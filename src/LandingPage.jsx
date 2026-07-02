@@ -91,18 +91,20 @@ export default function LandingPage() {
           <a href="/" className="nav-logo">
             <img src="/assets/ofthedaylogi.png" alt="OfTheDay" className="nav-logo-img" />
           </a>
-          <ul className={`nav-links${navOpen ? ' open' : ''}`} id="nav-links">
-            <li><a href="#features" onClick={() => setNavOpen(false)}>Features</a></li>
-            <li><a href="#slides" onClick={() => setNavOpen(false)}>Lesson Slides</a></li>
-            <li><a href="#how-it-works" onClick={() => setNavOpen(false)}>How It Works</a></li>
-            <li><a href="#pricing" onClick={() => setNavOpen(false)}>Pricing</a></li>
-            <li><a href="#faq" onClick={() => setNavOpen(false)}>FAQ</a></li>
-            <li><Link to="/district" onClick={() => setNavOpen(false)}>For Districts</Link></li>
-          </ul>
-          <div className="nav-actions">
-            <Link to="/login" className="btn-ghost">Sign In</Link>
-            <Link to="/demo" className="btn-ghost">Live Demo</Link>
-            <Link to="/login?signup=1" className="btn-primary">Try It Free</Link>
+          <div className={`nav-collapse${navOpen ? ' open' : ''}`}>
+            <ul className="nav-links" id="nav-links">
+              <li><a href="#features" onClick={() => setNavOpen(false)}>Features</a></li>
+              <li><a href="#slides" onClick={() => setNavOpen(false)}>Lesson Slides</a></li>
+              <li><a href="#how-it-works" onClick={() => setNavOpen(false)}>How It Works</a></li>
+              <li><a href="#pricing" onClick={() => setNavOpen(false)}>Pricing</a></li>
+              <li><a href="#faq" onClick={() => setNavOpen(false)}>FAQ</a></li>
+              <li><Link to="/district" onClick={() => setNavOpen(false)}>For Districts</Link></li>
+            </ul>
+            <div className="nav-actions">
+              <Link to="/login" className="btn-ghost" onClick={() => setNavOpen(false)}>Sign In</Link>
+              <Link to="/demo" className="btn-ghost" onClick={() => setNavOpen(false)}>Live Demo</Link>
+              <Link to="/login?signup=1" className="btn-primary" onClick={() => setNavOpen(false)}>Try It Free</Link>
+            </div>
           </div>
           <button className="hamburger" onClick={() => setNavOpen(o => !o)} aria-label="Open menu">
             <span></span><span></span><span></span>
