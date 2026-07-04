@@ -1623,6 +1623,21 @@ button:focus-visible,
   .mobile-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; box-shadow: 0 -8px 24px rgba(28,28,46,0.08); }
 }
 
+@media (max-width: 540px) {
+  /* .topbar-right (grade chips + filter chips) is flex-shrink:0 and can be wider
+     than the viewport; without this, .topbar-left is squeezed to 0 width and its
+     text wraps one word per line. Stack them and let the chip row scroll instead. */
+  .topbar { flex-wrap: wrap; row-gap: 8px; }
+  .topbar-left { flex: 1 1 100%; min-width: 0; }
+  .topbar-right.grade-control-wrap {
+    flex: 1 1 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .topbar-right.grade-control-wrap::-webkit-scrollbar { display: none; }
+}
+
 /* ── pro success banner ── */
 .pro-success-banner {
   flex-shrink: 0;
