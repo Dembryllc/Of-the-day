@@ -3297,6 +3297,19 @@ function MainApp({ account, onSignOut }) {
                       </div>;
                     })}
                   </div>
+                  <div className="today-tools">
+                    <span className="today-tools-label">More classroom tools</span>
+                    <div className="library-pill-wrap">
+                      <div className="library-pill-row" aria-label="More classroom tools">
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("Word of the Day")}>📖 Word of the Day</button>
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("Do Now")}>✏️ Do Now</button>
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("On This Day")}>⏳ On This Day</button>
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("My Activities")}>🗂️ My Activities</button>
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("Favorites")}>♥ Favorites</button>
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("This Week")}>📅 This Week</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="cards-scroll">
                   {routine.map((a, index) => (
