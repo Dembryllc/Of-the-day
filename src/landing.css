@@ -234,32 +234,82 @@
 }
 .lp .mockup-word-chip strong { color: #F5A623; font-weight: 700; }
 
-/* ── TRUST BAR ── */
-.lp .trust-bar {
-  background: #fff;
-  border-top: 1px solid var(--lp-border);
-  border-bottom: 1px solid var(--lp-border);
-  padding: 28px 24px;
+/* ── PAIN SECTION ── */
+.lp .pain-section {
+  background: linear-gradient(135deg, #FAF8F4 0%, #FBF9F5 100%);
+  border-top: 1px solid rgba(0,0,0,0.05);
 }
-.lp .trust-bar-inner {
-  max-width: 900px; margin: 0 auto;
-  display: flex; align-items: center; justify-content: center;
-  gap: 0;
+.lp .pain-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px; margin-top: 48px;
 }
-.lp .trust-stat {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; gap: 4px; text-align: center;
-  padding: 0 20px;
+.lp .pain-card {
+  background: #fff; border-radius: 14px;
+  padding: 28px 24px; border: 1px solid rgba(0,0,0,0.06);
+  text-align: center; transition: transform 0.2s, box-shadow 0.2s;
 }
-.lp .trust-num {
-  font-size: 40px; font-weight: 800; color: var(--lp-ink);
-  letter-spacing: -0.04em; line-height: 1;
+.lp .pain-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
-.lp .trust-label {
-  font-size: 11px; color: var(--lp-muted); font-weight: 500;
+.lp .pain-icon {
+  font-size: 36px; margin-bottom: 12px; display: block;
 }
-.lp .trust-divider {
-  width: 1px; height: 36px; background: var(--lp-border); flex-shrink: 0;
+.lp .pain-card h3 {
+  font-size: 18px; font-weight: 800; color: var(--lp-ink);
+  margin-bottom: 8px; letter-spacing: -0.02em;
+}
+.lp .pain-card p {
+  font-size: 14px; color: var(--lp-ink2); line-height: 1.6;
+}
+
+/* ── MEETING STRUCTURE ── */
+.lp .meeting-structure {
+  background: #fff; border-top: 1px solid var(--lp-border);
+}
+.lp .meeting-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px; margin-top: 48px;
+}
+.lp .meeting-card {
+  background: #FAF8F4; border-radius: 14px;
+  padding: 28px 24px; border: 1px solid rgba(0,0,0,0.06);
+  text-align: center;
+}
+.lp .meeting-card h3 {
+  font-size: 18px; font-weight: 800; color: var(--lp-ink);
+  margin-bottom: 4px; letter-spacing: -0.02em;
+}
+.lp .meeting-color {
+  width: 8px; height: 8px; border-radius: 50%;
+  margin: 0 auto 12px; display: block;
+}
+.lp .meeting-purpose {
+  font-size: 14px; font-weight: 600; color: var(--lp-ink);
+  margin-bottom: 8px; line-height: 1.5;
+}
+.lp .meeting-card p:last-child {
+  font-size: 13px; color: var(--lp-ink2); line-height: 1.6;
+}
+
+/* ── FOUNDER STORY ── */
+.lp .founder-story {
+  background: linear-gradient(135deg, #FAF8F4 0%, #FBF9F5 100%);
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+.lp .founder-inner {
+  max-width: 720px; margin: 0 auto; text-align: center;
+}
+.lp .founder-inner h2 {
+  font-size: clamp(28px, 4vw, 40px); font-weight: 800;
+  color: var(--lp-ink); margin-bottom: 20px; letter-spacing: -0.03em;
+}
+.lp .founder-inner p {
+  font-size: 16px; color: var(--lp-ink2); line-height: 1.8;
+  margin-bottom: 16px;
+}
+.lp .founder-inner p em {
+  font-style: italic; color: var(--lp-muted);
 }
 
 /* ── TWO TOOLS ── */

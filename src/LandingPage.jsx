@@ -117,18 +117,17 @@ export default function LandingPage() {
         <div className="hero-inner">
           <div className="hero-content">
             <div className="hero-badge">
-              <span></span> Built for Teachers Who Run Tight Mornings
+              <span></span> For Teachers Who Care About Classroom Culture
             </div>
-            <h1>Your Classroom,<br /><em>Ready Before the Bell.</em></h1>
+            <h1>Start Every Day With a Morning Meeting<br /><em>Students Actually Look Forward To</em></h1>
             <p className="hero-sub">
-              Two tools in one app: an automatic Morning Meeting Builder and an AI Lesson Slide Creator.
-              Open OfTheDay.net — everything is ready.
+              Every day, OfTheDay builds a fresh, balanced Morning Meeting with greetings, sharing, group activities, and morning messages inspired by proven classroom routines — so your class starts with structure, connection, and energy.
             </p>
             <div className="hero-pills">
               <span className="hero-pill">☀️ Morning Meetings</span>
-              <span className="hero-pill">✨ AI Lesson Slides</span>
+              <span className="hero-pill">📚 Responsive Classroom-Inspired</span>
               <span className="hero-pill">🎓 Grades K–12</span>
-              <span className="hero-pill">⬇ PowerPoint Export</span>
+              <span className="hero-pill">🖥️ Projector Ready</span>
             </div>
             <div className="hero-ctas">
               <Link to="/login?signup=1" className="btn-primary-lg">Try It Free — No Credit Card</Link>
@@ -196,65 +195,64 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══════════ TRUST BAR ══════════ */}
-      <div className="trust-bar">
-        <div className="trust-bar-inner">
-          <div className="trust-stat">
-            <span className="trust-num">2</span>
-            <span className="trust-label">complete classroom tools in one app</span>
-          </div>
-          <div className="trust-divider" aria-hidden="true"/>
-          <div className="trust-stat">
-            <span className="trust-num">30s</span>
-            <span className="trust-label">to generate a lesson slide with AI</span>
-          </div>
-          <div className="trust-divider" aria-hidden="true"/>
-          <div className="trust-stat">
-            <span className="trust-num">180</span>
-            <span className="trust-label">school days covered, every year</span>
-          </div>
-          <div className="trust-divider" aria-hidden="true"/>
-          <div className="trust-stat">
-            <span className="trust-num">79+</span>
-            <span className="trust-label">activities ready to use today</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ══════════ TWO TOOLS ══════════ */}
-      <section className="two-tools">
+      {/* ══════════ PAIN SECTION ══════════ */}
+      <section className="pain-section">
         <div className="container">
           <div className="text-center">
-            <div className="section-label">Two Tools, One App</div>
-            <h2 className="section-title">Everything Before the Bell Rings.</h2>
-            <p className="section-sub">OfTheDay.net gives teachers two complete classroom tools — a morning routine builder and an AI-powered lesson slide creator — both ready the moment you open the app.</p>
+            <h2 className="section-title">Stop Reusing the Same Morning Meeting Slides</h2>
+            <p className="section-sub">You know Morning Meeting matters. But creating something fresh every day takes energy teachers do not always have at 7:15 AM. OfTheDay gives you a complete routine before students walk in — so your day starts with structure instead of scrambling.</p>
           </div>
-          <div className="tools-grid">
-            <div className="tool-card tool-card-meeting">
-              <div className="tool-icon-wrap tool-teal">☀️</div>
-              <h3>Morning Meeting Builder</h3>
-              <p>A complete Responsive Classroom routine — Greeting, Sharing, Group Activity, and Morning Message — automatically generated for your grade level every single day.</p>
-              <ul className="tool-list">
-                <li>100+ activities across 8 categories</li>
-                <li>Grade-level filtering: K–2, 3–5, 6–8, 9–12</li>
-                <li>Full-screen projector mode with 4 themes</li>
-                <li>Word of the Day &amp; Do Now warm-ups</li>
-                <li>Save and reuse your favorite routines</li>
-              </ul>
-              <Link to="/demo" className="tool-link tool-link-teal">See a Live Demo →</Link>
+          <div className="pain-grid">
+            <div className="pain-card">
+              <div className="pain-icon">🔁</div>
+              <h3>Running Out of Fresh Activities</h3>
+              <p>Greetings, sharing prompts, and group games cycle through faster than you'd like. By November, you're repeating.</p>
             </div>
-            <div className="tool-card tool-card-slides">
-              <div className="tool-icon-wrap tool-blue">✨</div>
-              <h3>AI Lesson Slide Creator</h3>
-              <p>Describe your lesson objective and AI generates a complete structured slide — learning target, essential question, success criteria, vocabulary, student task, and exit ticket — in under 30 seconds.</p>
-              <ul className="tool-list">
-                <li>AI-generated in under 30 seconds</li>
-                <li>4 visual themes for every classroom style</li>
-                <li>Export to PowerPoint or Google Slides</li>
-                <li>Simplify content for any reading level</li>
-                <li>Display full-screen on any projector</li>
-              </ul>
-              <Link to="/login?signup=1" className="tool-link tool-link-blue">Try It Free →</Link>
+            <div className="pain-card">
+              <div className="pain-icon">📋</div>
+              <h3>Repeating the Same Slides</h3>
+              <p>Yesterday's Morning Meeting looks a lot like today's. Your slides do too. Students notice.</p>
+            </div>
+            <div className="pain-card">
+              <div className="pain-icon">⏰</div>
+              <h3>Starting the Day Without Structure</h3>
+              <p>A meeting without clear parts, timing, and purpose feels chaotic. Students need predictability and energy.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ MEETING STRUCTURE ══════════ */}
+      <section className="meeting-structure">
+        <div className="container">
+          <div className="text-center">
+            <h2 className="section-title">A Complete Morning Meeting in Four Balanced Parts</h2>
+            <p className="section-sub">Each routine is assembled to create a balanced classroom experience — predictable enough for structure, fresh enough to keep students excited.</p>
+          </div>
+          <div className="meeting-grid">
+            <div className="meeting-card">
+              <div className="meeting-color" style={{background:'#7EC8A4'}}></div>
+              <h3>Greeting</h3>
+              <p className="meeting-purpose">Help students feel seen from the moment they enter.</p>
+              <p>A warm welcome that sets a positive tone and builds connection.</p>
+            </div>
+            <div className="meeting-card">
+              <div className="meeting-color" style={{background:'#7AACDA'}}></div>
+              <h3>Sharing</h3>
+              <p className="meeting-purpose">Give students a structured way to connect and communicate.</p>
+              <p>Prompts that invite participation without pressure.</p>
+            </div>
+            <div className="meeting-card">
+              <div className="meeting-color" style={{background:'#F2C06E'}}></div>
+              <h3>Group Activity</h3>
+              <p className="meeting-purpose">Build energy, movement, collaboration, and community.</p>
+              <p>Games and activities that get everyone involved.</p>
+            </div>
+            <div className="meeting-card">
+              <div className="meeting-color" style={{background:'#B09FDB'}}></div>
+              <h3>Morning Message</h3>
+              <p className="meeting-purpose">Set the tone, focus, and purpose for the day.</p>
+              <p>A clear, focused message to center student attention.</p>
             </div>
           </div>
         </div>
@@ -264,66 +262,70 @@ export default function LandingPage() {
       <section className="features" id="features">
         <div className="container">
           <div className="text-center">
-            <div className="section-label">Features</div>
-            <h2 className="section-title">Built for Your Entire Morning Prep</h2>
-            <p className="section-sub">Every feature reduces the time between "I need a lesson" and "class is ready."</p>
+            <h2 className="section-title">Everything Built Into Morning Meeting</h2>
+            <p className="section-sub">One app handles all the pieces of a fresh, structured start to the day.</p>
           </div>
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">☀️</div>
               <h3>Daily Routine Builder</h3>
-              <p>Automatic Greeting, Sharing, Group Activity, and Morning Message every day. Filter by grade, time, and energy level.</p>
+              <p>Never wonder what Morning Meeting looks like today. Get a complete Greeting, Sharing, Group Activity, and Morning Message ready for your grade band.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🖥️</div>
               <h3>Projector Mode</h3>
-              <p>One-click full-screen display for your classroom projector or smartboard. Four visual themes: Calm, Bright, Minimal, and Primary.</p>
-            </div>
-            <div className="feature-card feature-card-ai">
-              <div className="feature-icon feature-icon-blue">✨</div>
-              <h3>AI Lesson Slide Creator</h3>
-              <p>Describe any lesson and get a complete structured slide in seconds — learning target, vocabulary, success criteria, exit ticket, and more.</p>
+              <p>One click and your routine is classroom-ready on the board. Choose from 4 polished themes to match your classroom style.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">📖</div>
               <h3>Word of the Day</h3>
-              <p>Grade-level vocabulary words ready every morning. Rotate through the bank or pick manually to match your current unit.</p>
+              <p>Build vocabulary in a simple daily routine students can return to all year. Rotate through or pick to match your current unit.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">✏️</div>
               <h3>Do Now Warm-Ups</h3>
-              <p>Daily math and writing warm-up problems by grade band. Build custom problems to match your curriculum.</p>
-            </div>
-            <div className="feature-card feature-card-ai">
-              <div className="feature-icon feature-icon-green">📤</div>
-              <h3>Export to PowerPoint &amp; Google Slides</h3>
-              <p>Every AI-generated slide exports as a .pptx file — ready for PowerPoint or Google Slides, full formatting preserved.</p>
+              <p>Start class with quick academic warm-ups that match your grade level. Math and writing problems ready every morning.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">⏳</div>
               <h3>On This Day</h3>
-              <p>Classroom-appropriate historical facts for today's date, automatically filtered for student suitability.</p>
+              <p>Bring classroom-appropriate history into the day with facts filtered for student suitability. A built-in conversation starter.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🗂️</div>
               <h3>My Activities &amp; Routines</h3>
-              <p>Build custom activities and save favorite routine combinations. Your content is stored and ready whenever you need it.</p>
+              <p>Save your favorite activities and build custom routines that match your teaching style. Your content stays with you.</p>
+            </div>
+            <div className="feature-card feature-card-ai">
+              <div className="feature-icon feature-icon-blue">✨</div>
+              <h3>AI Lesson Slide Creator</h3>
+              <p>When you need a structured lesson slide fast, generate one in seconds. Describe your objective and export to PowerPoint or Google Slides.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🎯</div>
-              <h3>Grade-Level Intelligence</h3>
-              <p>One grade picker filters everything — activities, vocabulary, warm-ups, and AI slide content — to match your class.</p>
+              <h3>Grade-Level Filtering</h3>
+              <p>Choose your grade band once and keep activities, vocabulary, warm-ups, and slides aligned to your students all year.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">☁️</div>
               <h3>Cloud Sync</h3>
-              <p>Your routines, custom activities, and settings follow you across every device. Open on your phone at home, project from your laptop in class.</p>
+              <p>Your routines and custom activities follow you across devices. Open on your phone at home, project from your laptop in class.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🏫</div>
               <h3>No Student Data. Ever.</h3>
-              <p>Students don't create accounts. Nothing is collected from your class. FERPA-friendly by design — easy to clear with your IT department.</p>
+              <p>Use OfTheDay without uploading student names, student work, or personally identifiable student information. FERPA-friendly by design.</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ FOUNDER STORY ══════════ */}
+      <section className="founder-story">
+        <div className="container">
+          <div className="founder-inner">
+            <h2>Built From Real Classroom Experience</h2>
+            <p>Created by a veteran special education teacher after years of running Morning Meetings, repeating the same activities, and running out of fresh ideas. OfTheDay was built to give teachers a better way to start every day.</p>
           </div>
         </div>
       </section>
@@ -334,8 +336,8 @@ export default function LandingPage() {
           <div className="spotlight-grid">
             <div className="spotlight-copy">
               <div className="section-label spotlight-label">AI Lesson Slides</div>
-              <h2 className="section-title spotlight-title">30 Seconds to a Print-Ready Lesson Slide.</h2>
-              <p className="section-sub spotlight-sub">Describe your lesson objective, choose a visual theme, and AI fills in every structured field. Export directly to PowerPoint or Google Slides — no reformatting needed.</p>
+              <h2 className="section-title spotlight-title">Need a Lesson Slide Too? That's Built In.</h2>
+              <p className="section-sub spotlight-sub">When you need a clean, structured lesson slide fast, describe your objective and OfTheDay creates a print-ready or presentation-ready slide with learning target, vocabulary, success criteria, student task, discussion prompt, and exit ticket.</p>
               <ul className="spotlight-checklist">
                 <li>Learning target &amp; essential question</li>
                 <li>3 success criteria for student self-assessment</li>
