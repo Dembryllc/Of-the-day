@@ -204,17 +204,17 @@ export default function LandingPage() {
           </div>
           <div className="pain-grid">
             <div className="pain-card">
-              <div className="pain-icon">🔁</div>
+              <div className="pain-icon" aria-hidden="true">🔁</div>
               <h3>Running Out of Fresh Activities</h3>
               <p>Greetings, sharing prompts, and group games cycle through faster than you'd like. By November, you're repeating.</p>
             </div>
             <div className="pain-card">
-              <div className="pain-icon">📋</div>
+              <div className="pain-icon" aria-hidden="true">📋</div>
               <h3>Repeating the Same Slides</h3>
               <p>Yesterday's Morning Meeting looks a lot like today's. Your slides do too. Students notice.</p>
             </div>
             <div className="pain-card">
-              <div className="pain-icon">⏰</div>
+              <div className="pain-icon" aria-hidden="true">⏰</div>
               <h3>Starting the Day Without Structure</h3>
               <p>A meeting without clear parts, timing, and purpose feels chaotic. Students need predictability and energy.</p>
             </div>
@@ -231,25 +231,25 @@ export default function LandingPage() {
           </div>
           <div className="meeting-grid">
             <div className="meeting-card">
-              <div className="meeting-color" style={{background:'#7EC8A4'}}></div>
+              <div className="meeting-color" aria-hidden="true" style={{background:'#7EC8A4'}}></div>
               <h3>Greeting</h3>
               <p className="meeting-purpose">Help students feel seen from the moment they enter.</p>
               <p>A warm welcome that sets a positive tone and builds connection.</p>
             </div>
             <div className="meeting-card">
-              <div className="meeting-color" style={{background:'#7AACDA'}}></div>
+              <div className="meeting-color" aria-hidden="true" style={{background:'#7AACDA'}}></div>
               <h3>Sharing</h3>
               <p className="meeting-purpose">Give students a structured way to connect and communicate.</p>
               <p>Prompts that invite participation without pressure.</p>
             </div>
             <div className="meeting-card">
-              <div className="meeting-color" style={{background:'#F2C06E'}}></div>
+              <div className="meeting-color" aria-hidden="true" style={{background:'#F2C06E'}}></div>
               <h3>Group Activity</h3>
               <p className="meeting-purpose">Build energy, movement, collaboration, and community.</p>
               <p>Games and activities that get everyone involved.</p>
             </div>
             <div className="meeting-card">
-              <div className="meeting-color" style={{background:'#B09FDB'}}></div>
+              <div className="meeting-color" aria-hidden="true" style={{background:'#B09FDB'}}></div>
               <h3>Morning Message</h3>
               <p className="meeting-purpose">Set the tone, focus, and purpose for the day.</p>
               <p>A clear, focused message to center student attention.</p>

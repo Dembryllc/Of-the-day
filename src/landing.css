@@ -246,11 +246,12 @@
 .lp .pain-card {
   background: #fff; border-radius: 14px;
   padding: 28px 24px; border: 1px solid rgba(0,0,0,0.06);
-  text-align: center; transition: transform 0.2s, box-shadow 0.2s;
+  text-align: center; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 .lp .pain-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  border-color: rgba(0,0,0,0.09);
 }
 .lp .pain-icon {
   font-size: 36px; margin-bottom: 12px; display: block;
@@ -274,7 +275,12 @@
 .lp .meeting-card {
   background: #FAF8F4; border-radius: 14px;
   padding: 28px 24px; border: 1px solid rgba(0,0,0,0.06);
-  text-align: center;
+  text-align: center; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.lp .meeting-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  border-color: rgba(0,0,0,0.09);
 }
 .lp .meeting-card h3 {
   font-size: 18px; font-weight: 800; color: var(--lp-ink);
@@ -904,6 +910,11 @@
   .lp .theme-btn { font-size: 11px; padding: 9px 12px; }
   .lp .final-cta-actions { flex-direction: column; align-items: center; }
   .lp .trust-stat { flex: 0 0 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp .pain-card, .lp .meeting-card { transition: box-shadow 0.2s, border-color 0.2s; }
+  .lp .pain-card:hover, .lp .meeting-card:hover { transform: none; }
 }
 
 /* ── LEGAL PAGE ── */
