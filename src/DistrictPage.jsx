@@ -86,7 +86,7 @@ export default function DistrictPage() {
           <p>OfTheDay is a teacher-facing product. Children under 13 do not create accounts or interact with the service in any way. COPPA does not apply.</p>
 
           <h3>Data Processing Agreement (DPA)</h3>
-          <p>Because OfTheDay does not process student data, most districts find that a standard vendor DPA is unnecessary. However, if your district requires a DPA for all third-party software regardless of student data status, we will execute one. Email <a href="mailto:hello@oftheday.net?subject=DPA Request">hello@oftheday.net</a> with the subject "DPA Request" and we will respond within 2 business days.</p>
+          <p>Because OfTheDay does not process student data, most districts find that a standard vendor DPA is unnecessary. However, if your district requires a DPA for all third-party software regardless of student data status, we will execute one. Email <a href="mailto:dembryllc@gmail.com?subject=DPA Request">dembryllc@gmail.com</a> with the subject "DPA Request" and we will respond within 2 business days.</p>
 
           <h3>Data collected from teachers</h3>
           <ul>
@@ -151,14 +151,14 @@ export default function DistrictPage() {
           <p>Teachers can export their saved routines and custom activities at any time from their profile. Upon account deletion request, all data is permanently removed within 30 days.</p>
 
           <h3>Is there a W-9 or vendor registration form?</h3>
-          <p>Yes. Email <a href="mailto:hello@oftheday.net?subject=Vendor Registration">hello@oftheday.net</a> with the subject "Vendor Registration" and we'll return the completed form within 2 business days.</p>
+          <p>Yes. Email <a href="mailto:dembryllc@gmail.com?subject=Vendor Registration">dembryllc@gmail.com</a> with the subject "Vendor Registration" and we'll return the completed form within 2 business days.</p>
 
           <h3>Who is the company behind this?</h3>
           <p>OfTheDay.net is built by a team of educators and developers. The product was designed by a practicing K–12 special education teacher with 24 years of classroom experience. Questions go directly to the people who built it.</p>
 
           {/* Contact form */}
           <h2>Contact Us</h2>
-          <p>Fill out the form below and we'll respond within 1 business day. Or email us directly at <a href="mailto:hello@oftheday.net">hello@oftheday.net</a>.</p>
+          <p>Fill out the form below and we'll respond within 1 business day. Or email us directly at <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a>.</p>
 
           {submitted ? (
             <div style={{background:'#F0FDF4', border:'1.5px solid #86EFAC', borderRadius:12, padding:'20px 24px', marginBottom:32}}>
@@ -204,7 +204,7 @@ export default function DistrictPage() {
             <Link to="/">← Back to OfTheDay.net</Link>
             <Link to="/privacy">Privacy Policy</Link>
             <Link to="/terms">Terms of Service</Link>
-            <a href="mailto:hello@oftheday.net">hello@oftheday.net</a>
+            <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a>
           </div>
 
         </div>

@@ -117,7 +117,7 @@ export default function PrivacyPage() {
             The Children's Online Privacy Protection Act (COPPA) applies to websites directed
             at children under 13. OfTheDay.net is directed at adult educators, not children.
             We do not knowingly collect personal information from anyone under 13. If you
-            believe a minor has created an account, contact us at <a href="mailto:hello@oftheday.net">hello@oftheday.net</a> and
+            believe a minor has created an account, contact us at <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a> and
             we will delete it promptly.
           </p>
 
@@ -141,7 +141,7 @@ export default function PrivacyPage() {
             preferences) is permanently deleted within 30 days.
           </p>
           <p>
-            To request account deletion, email <a href="mailto:hello@oftheday.net">hello@oftheday.net</a> with
+            To request account deletion, email <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a> with
             the subject line "Delete My Account."
           </p>
 
@@ -180,7 +180,7 @@ export default function PrivacyPage() {
             <li><strong>Delete</strong> your account and all associated data</li>
           </ul>
           <p>
-            To exercise any of these rights, email <a href="mailto:hello@oftheday.net">hello@oftheday.net</a>.
+            To exercise any of these rights, email <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a>.
           </p>
 
           <h2>11. School and District Accounts</h2>
@@ -192,7 +192,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             Schools or districts that require a Data Processing Agreement (DPA) or Student
-            Data Privacy Agreement (SDPA) should contact us at <a href="mailto:hello@oftheday.net">hello@oftheday.net</a>.
+            Data Privacy Agreement (SDPA) should contact us at <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a>.
             Because OfTheDay does not process student data, a standard DPA is typically
             sufficient.
           </p>
@@ -209,7 +209,7 @@ export default function PrivacyPage() {
           <p>
             Questions about this policy or your data:<br />
             <strong>OfTheDay.net</strong><br />
-            <a href="mailto:hello@oftheday.net">hello@oftheday.net</a>
+            <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a>
           </p>
         </div>
       </div>
@@ -220,7 +220,7 @@ export default function PrivacyPage() {
           <a href="/#features">Features</a>
           <a href="/#pricing">Pricing</a>
           <a href="/#faq">FAQ</a>
-          <a href="mailto:hello@oftheday.net">Contact</a>
+          <a href="mailto:dembryllc@gmail.com">Contact</a>
           <Link to="/privacy">Privacy Policy</Link>
           <Link to="/terms">Terms of Service</Link>
           <Link to="/login">Sign In</Link>

@@ -70,7 +70,7 @@ export default function TermsPage() {
           <p>
             You are responsible for maintaining the confidentiality of your account
             credentials and for all activity that occurs under your account. Notify us
-            immediately at <a href="mailto:hello@oftheday.net">hello@oftheday.net</a> if
+            immediately at <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a> if
             you suspect unauthorized access.
           </p>
           <p>
@@ -129,7 +129,7 @@ export default function TermsPage() {
           <p>
             Monthly subscriptions are non-refundable. Annual subscriptions may be refunded
             on a pro-rata basis within 30 days of purchase if the service does not work as
-            described. Contact <a href="mailto:hello@oftheday.net">hello@oftheday.net</a> to
+            described. Contact <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a> to
             request a refund.
           </p>
 
@@ -161,7 +161,7 @@ export default function TermsPage() {
           <h2>7. Cancellation and Termination</h2>
           <p>
             You may cancel your subscription at any time from your account settings or by
-            contacting <a href="mailto:hello@oftheday.net">hello@oftheday.net</a>. Cancellation
+            contacting <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a>. Cancellation
             takes effect at the end of your current billing period. Your account reverts
             to the Free plan; your saved content is retained subject to Free plan limits.
           </p>
@@ -232,7 +232,7 @@ export default function TermsPage() {
           <p>
             Questions about these Terms:<br />
             <strong>OfTheDay.net</strong><br />
-            <a href="mailto:hello@oftheday.net">hello@oftheday.net</a>
+            <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a>
           </p>
         </div>
       </div>
@@ -243,7 +243,7 @@ export default function TermsPage() {
           <a href="/#features">Features</a>
           <a href="/#pricing">Pricing</a>
           <a href="/#faq">FAQ</a>
-          <a href="mailto:hello@oftheday.net">Contact</a>
+          <a href="mailto:dembryllc@gmail.com">Contact</a>
           <Link to="/privacy">Privacy Policy</Link>
           <Link to="/terms">Terms of Service</Link>
           <Link to="/login">Sign In</Link>

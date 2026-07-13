@@ -99,6 +99,9 @@ function parseModelJson(raw) {
 // ── Email helpers ─────────────────────────────────────────────────────────────
 // Requires MAILGUN_API_KEY and MAILGUN_DOMAIN in functions/.env
 const EMAIL_FROM = "OfTheDay <hello@oftheday.net>";
+// Interim until hello@ inbound forwarding exists (see CLAUDE.md Pending Ops).
+// From must stay on oftheday.net — a gmail.com From via Mailgun fails DMARC.
+const REPLY_TO = "dembryllc@gmail.com";
 const APP_URL = "https://oftheday.net";
 
 function getMailgun() {
@@ -119,6 +122,7 @@ async function sendEmail({ to, subject, html }) {
     to: [to],
     subject,
     html,
+    "h:Reply-To": REPLY_TO,
   });
   return true;
 }
@@ -160,7 +164,7 @@ grade-appropriate Greeting, Sharing, Group Activity, and Morning Message — rea
 </p>
 <a href="${APP_URL}/dashboard" style="display:inline-block;background:#F5A623;color:#1B2D5B;font-size:15px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;">Open Today's Meeting &rarr;</a>
 <p style="margin:24px 0 0;font-size:13px;color:#9CA3AF;">
-Questions? Reply to this email or reach us at <a href="mailto:hello@oftheday.net" style="color:#4DB896;">hello@oftheday.net</a>.
+Questions? Reply to this email or reach us at <a href="mailto:dembryllc@gmail.com" style="color:#4DB896;">dembryllc@gmail.com</a>.
 </p>
 `);
 }
@@ -197,7 +201,7 @@ All 10 activities are below — and here's a printable version for your desk:
 <a href="${APP_URL}/login?signup=1" style="display:inline-block;background:#F5A623;color:#1B2D5B;font-size:15px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;">Get Your Daily Routine Free &rarr;</a>
 <p style="margin:24px 0 0;font-size:13px;color:#9CA3AF;">
 You're receiving this because you signed up at oftheday.net with ${email}.
-<a href="mailto:hello@oftheday.net?subject=Unsubscribe" style="color:#9CA3AF;">Unsubscribe</a>
+<a href="mailto:dembryllc@gmail.com?subject=Unsubscribe" style="color:#9CA3AF;">Unsubscribe</a>
 </p>
 `);
 }
