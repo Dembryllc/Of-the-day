@@ -578,7 +578,12 @@ export default function LandingPage() {
           <h2>Get a Free Morning Meeting Resource Pack</h2>
           <p>10 ready-to-use activities — greetings, sharing prompts, group activities, and morning messages — sent straight to your inbox.</p>
           {captureSubmitted ? (
-            <div className="capture-success">🎉 Sent! Check your inbox — it should arrive in under a minute.</div>
+            <div className="capture-success">
+              🎉 Sent! Check your inbox — it should arrive in under a minute.
+              <a className="capture-download" href="/resources/morning-meeting-resource-pack.pdf" download>
+                Or download the pack directly (PDF) ↓
+              </a>
+            </div>
           ) : (
             <form className="capture-form" onSubmit={handleCapture}>
               <input type="email" placeholder="your@school.edu" required autoComplete="email" value={captureEmail} onChange={e => setCaptureEmail(e.target.value)} />

@@ -189,6 +189,10 @@ function resourcePackHtml(email) {
 </tr>`).join("");
   return emailBase(`
 <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1B2D5B;">Your Morning Meeting Resource Pack 🎉</h1>
+<p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6;">
+All 10 activities are below — and here's a printable version for your desk:
+</p>
+<a href="${APP_URL}/resources/morning-meeting-resource-pack.pdf" style="display:inline-block;background:#1B2D5B;color:#ffffff;font-size:14px;font-weight:700;padding:11px 22px;border-radius:8px;text-decoration:none;margin-bottom:24px;">Download the Printable PDF &darr;</a>
 <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">${rows}</table>
 <a href="${APP_URL}/login?signup=1" style="display:inline-block;background:#F5A623;color:#1B2D5B;font-size:15px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;">Get Your Daily Routine Free &rarr;</a>
 <p style="margin:24px 0 0;font-size:13px;color:#9CA3AF;">

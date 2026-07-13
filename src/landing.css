@@ -831,6 +831,8 @@
 .lp .capture-form button:hover { opacity: 0.88; }
 .lp .capture-note { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 12px; }
 .lp .capture-success { color: rgba(255,255,255,0.8); font-size: 16px; font-weight: 600; padding: 14px; }
+.lp .capture-download { display: block; margin-top: 10px; font-size: 14px; font-weight: 600; color: #4DB896; text-decoration: underline; text-underline-offset: 3px; }
+.lp .capture-download:hover { color: #6fcbab; }
 
 /* ── FINAL CTA ── */
 .lp .final-cta { text-align: center; padding: 112px 24px; background: #0A0F1E; }

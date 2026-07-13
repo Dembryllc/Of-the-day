@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Morning Meeting Resource Pack — OfTheDay.net</title>
+<style>
+  @font-face {
+    font-family: 'Outfit';
+    font-style: normal;
+    font-weight: 100 900;
+    src: url('OUTFIT_LATIN_DATA_URI') format('woff2');
+  }
+  :root {
+    --navy: #1B2D5B;
+    --teal: #4DB896;
+    --amber: #F5A623;
+    --ink: #374151;
+    --muted: #6B7280;
+    --line: #E5E7EB;
+    --wash: #F8F9FC;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); }
+  @page { size: Letter; margin: 0; }
+  .page {
+    width: 8.5in;
+    min-height: 11in;
+    padding: 0.65in 0.7in;
+    page-break-after: always;
+    position: relative;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* ── Wordmark ── */
+  .wordmark { display: flex; align-items: center; gap: 10px; }
+  .wordmark .wm-text { font-size: 22px; font-weight: 800; color: var(--navy); letter-spacing: -0.3px; }
+  .wordmark .wm-text .dot { color: var(--amber); }
+
+  /* ── Cover ── */
+  .cover { background:
+      radial-gradient(circle at 85% -10%, rgba(245,166,35,0.12), transparent 45%),
+      radial-gradient(circle at -10% 100%, rgba(77,184,150,0.10), transparent 40%),
+      #fff; }
+  .cover-band {
+    margin-top: 0.55in;
+    background: var(--navy);
+    border-radius: 18px;
+    padding: 44px 44px 40px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover-band::after {
+    content: '';
+    position: absolute; right: -60px; top: -60px;
+    width: 260px; height: 260px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(245,166,35,0.35), transparent 65%);
+  }
+  .cover-kicker {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--amber); margin-bottom: 14px;
+  }
+  .cover-band h1 { font-size: 44px; line-height: 1.08; font-weight: 800; letter-spacing: -1px; margin-bottom: 14px; }
+  .cover-band p { font-size: 15.5px; line-height: 1.55; color: rgba(255,255,255,0.85); max-width: 5.4in; }
+  .sunrise { position: absolute; right: 44px; bottom: 36px; }
+
+  /* ── Framework section ── */
+  .section-title { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); margin: 0.42in 0 14px; }
+  .framework { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fw-card { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: #fff; }
+  .fw-card .fw-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--navy); color: #fff; font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+  .fw-card h3 { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .fw-card p { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+
+  .howto { margin-top: 0.32in; background: var(--wash); border-radius: 12px; padding: 18px 20px; border: 1px solid var(--line); }
+  .howto h3 { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .howto p { font-size: 12.5px; line-height: 1.55; color: var(--ink); }
+
+  .cover-foot { position: absolute; bottom: 0.5in; left: 0.7in; right: 0.7in; display: flex; justify-content: space-between; font-size: 11px; color: #9CA3AF; }
+
+  /* ── Activity pages ── */
+  .page-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 2px solid var(--navy); margin-bottom: 18px; }
+  .page-head .ph-title { font-size: 13px; font-weight: 700; color: var(--navy); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card {
+    border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px 14px;
+    break-inside: avoid; background: #fff;
+    border-top: 3px solid var(--teal);
+  }
+  .card .chiprow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .chip { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); background: rgba(77,184,150,0.12); border-radius: 99px; padding: 3px 9px; }
+  .meta { font-size: 10px; color: #9CA3AF; font-weight: 600; }
+  .card h3 { font-size: 15.5px; font-weight: 800; color: var(--navy); margin-bottom: 4px; letter-spacing: -0.2px; }
+  .card .desc { font-size: 11.5px; line-height: 1.5; color: var(--muted); margin-bottom: 9px; }
+  .card ol { margin: 0 0 9px 16px; }
+  .card ol li { font-size: 11.5px; line-height: 1.5; color: var(--ink); margin-bottom: 3px; }
+  .tip { font-size: 10.5px; line-height: 1.45; color: var(--ink); background: rgba(245,166,35,0.10); border-radius: 8px; padding: 7px 10px; }
+  .tip strong { color: #B47A0E; font-weight: 700; }
+
+  .page-foot { position: absolute; bottom: 0.45in; left: 0.7in; right: 0.7in; display: flex; justify-content: space-between; font-size: 10.5px; color: #9CA3AF; }
+
+  /* ── CTA ── */
+  .cta {
+    margin-top: 0.35in;
+    background: var(--navy); border-radius: 16px; padding: 30px 34px;
+    color: #fff; display: flex; justify-content: space-between; align-items: center; gap: 24px;
+    break-inside: avoid;
+  }
+  .cta h2 { font-size: 21px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 6px; }
+  .cta p { font-size: 12.5px; line-height: 1.55; color: rgba(255,255,255,0.82); max-width: 4.6in; }
+  .cta .btn {
+    flex-shrink: 0; background: var(--amber); color: var(--navy);
+    font-size: 14px; font-weight: 700; padding: 13px 24px; border-radius: 9px; white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ PAGE 1 — COVER ═══════════ -->
+<div class="page cover">
+  <div class="wordmark">
+    <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+      <path d="M4 21 A13 13 0 0 1 30 21" stroke="#1B2D5B" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+      <path d="M11.5 19.5 A5.5 5.5 0 0 1 22.5 19.5 Z" fill="#F5A623"/>
+      <line x1="17" y1="8.5" x2="17" y2="11.5" stroke="#F5A623" stroke-width="2" stroke-linecap="round"/>
+      <line x1="10.5" y1="11" x2="12.4" y2="13.2" stroke="#F5A623" stroke-width="2" stroke-linecap="round"/>
+      <line x1="23.5" y1="11" x2="21.6" y2="13.2" stroke="#F5A623" stroke-width="2" stroke-linecap="round"/>
+      <path d="M6 24.5 Q11.5 22.5 17 24.5 T28 24.5" stroke="#4DB896" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <path d="M9 28.5 Q13 27 17 28.5 T25 28.5" stroke="#4DB896" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+    </svg>
+    <span class="wm-text">of<span class="dot">·</span>the<span class="dot">·</span>day</span>
+  </div>
+
+  <div class="cover-band">
+    <span class="cover-kicker">Free Teacher Resource</span>
+    <h1>Morning Meeting<br>Resource Pack</h1>
+    <p>10 ready-to-use activities — greetings, sharing prompts, group activities, and morning messages — to start any school day with connection and calm. No prep required.</p>
+    <svg class="sunrise" width="88" height="66" viewBox="0 0 88 66" fill="none">
+      <path d="M14 48 A30 30 0 0 1 74 48" stroke="rgba(255,255,255,0.5)" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M30 45 A14 14 0 0 1 58 45 Z" fill="#F5A623"/>
+      <line x1="44" y1="18" x2="44" y2="25" stroke="#F5A623" stroke-width="3" stroke-linecap="round"/>
+      <line x1="28" y1="24" x2="32.5" y2="29.5" stroke="#F5A623" stroke-width="3" stroke-linecap="round"/>
+      <line x1="60" y1="24" x2="55.5" y2="29.5" stroke="#F5A623" stroke-width="3" stroke-linecap="round"/>
+      <path d="M18 56 Q31 51.5 44 56 T70 56" stroke="#4DB896" stroke-width="3" stroke-linecap="round" fill="none"/>
+    </svg>
+  </div>
+
+  <div class="section-title">The Four Parts of a Morning Meeting</div>
+  <div class="framework">
+    <div class="fw-card">
+      <span class="fw-num">1</span>
+      <h3>Greeting</h3>
+      <p>Every student is welcomed by name. A predictable, friendly start that tells each child: you belong here today.</p>
+    </div>
+    <div class="fw-card">
+      <span class="fw-num">2</span>
+      <h3>Sharing</h3>
+      <p>Students share news or respond to a prompt while classmates practice listening and asking follow-up questions.</p>
+    </div>
+    <div class="fw-card">
+      <span class="fw-num">3</span>
+      <h3>Group Activity</h3>
+      <p>A short, whole-class activity that builds cooperation and gives everyone a reason to laugh together.</p>
+    </div>
+    <div class="fw-card">
+      <span class="fw-num">4</span>
+      <h3>Morning Message</h3>
+      <p>A brief written message or puzzle that bridges the meeting into the learning day ahead.</p>
+    </div>
+  </div>
+
+  <div class="howto">
+    <h3>How to use this pack</h3>
+    <p>Set aside 10–15 minutes at the start of the day. Pick one activity from each part for a full meeting, or use any single activity as a quick community builder. Every activity works with zero materials unless noted — just you, your students, and a circle.</p>
+  </div>
+
+  <div class="cover-foot">
+    <span>oftheday.net</span>
+    <span>hello@oftheday.net</span>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE 2 — ACTIVITIES 1–6 ═══════════ -->
+<div class="page">
+  <div class="page-head">
+    <span class="ph-title">10 Ready-to-Use Activities</span>
+    <div class="wordmark"><span class="wm-text" style="font-size:15px;">of<span class="dot">·</span>the<span class="dot">·</span>day</span></div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="chiprow"><span class="chip">Greeting</span><span class="meta">K–8 · 5–8 min</span></div>
+      <h3>Name + Gesture Greeting</h3>
+      <p class="desc">Each student says their name and invents a unique gesture. The class mirrors it back.</p>
+      <ol>
+        <li>Gather in a circle and model it yourself first — say your name and add a gesture.</li>
+        <li>The whole class echoes your name and mirrors your gesture.</li>
+        <li>Continue around the circle so every student gets their moment.</li>
+      </ol>
+      <div class="tip"><strong>Teacher tip:</strong> For older grades, turn it into a "gesture chain" — each student repeats the previous two gestures before adding their own.</div>
+    </div>
+
+    <div class="card">
+      <div class="chiprow"><span class="chip">Greeting</span><span class="meta">K–8 · 3–5 min</span></div>
+      <h3>Partner Greeting Remix</h3>
+      <p class="desc">Greet a partner by name, then add one kind sentence or question before switching.</p>
+      <ol>
+        <li>Pair students up. Each greets the other by name: "Good morning, ___!"</li>
+        <li>Each partner adds one kind sentence or a genuine question.</li>
+        <li>Rotate partners two or three times so students greet someone new.</li>
+      </ol>
+      <div class="tip"><strong>Teacher tip:</strong> Post sentence starters ("I hope you…", "Did you…?") for students who freeze up.</div>
+    </div>
+
+    <div class="card">
+      <div class="chiprow"><span class="chip">Sharing</span><span class="meta">K–8 · 5–10 min</span></div>
+      <h3>Weekend Highlight Share</h3>
+      <p class="desc">Share one moment from the weekend using the sentence starter: "One thing I did was…"</p>
+      <ol>
+        <li>Display the sentence starter and give 30 seconds of quiet think time.</li>
+        <li>Students share in pairs, or go around the circle.</li>
+        <li>Invite one or two follow-up questions from listeners.</li>
+      </ol>
+      <div class="tip"><strong>Teacher tip:</strong> Always allow a "pass." Inviting — never forcing — keeps sharing feeling safe.</div>
+    </div>
+
+    <div class="card">
+      <div class="chiprow"><span class="chip">Sharing</span><span class="meta">2–8 · 8–10 min</span></div>
+      <h3>Two Truths and a Wish</h3>
+      <p class="desc">Share two true things about yourself and one thing you wish were true. Class guesses the wish.</p>
+      <ol>
+        <li>Model your own two truths and a wish first.</li>
+        <li>Students jot down their three statements.</li>
+        <li>Volunteers share; classmates vote on which one is the wish.</li>
+      </ol>
+      <div class="tip"><strong>Teacher tip:</strong> Ask guessers "What made you think that?" — it quietly builds evidence-based reasoning.</div>
+    </div>
+
+    <div class="card">
+      <div class="chiprow"><span class="chip">Group Activity</span><span class="meta">K–8 · 5–8 min</span></div>
+      <h3>Commonality Circle</h3>
+      <p class="desc">Find one thing all students in a small group have in common. Groups share with the class.</p>
+      <ol>
+        <li>Split into groups of four or five.</li>
+        <li>Give two minutes to find something everyone in the group shares — beyond the obvious.</li>
+        <li>Each group announces its commonality to the class.</li>
+      </ol>
+      <div class="tip"><strong>Teacher tip:</strong> For round two, ban anything visible ("we all wear sneakers") to push toward foods, places, and favorites.</div>
+    </div>
+
+    <div class="card">
+      <div class="chiprow"><span class="chip">Group Activity</span><span class="meta">1–8 · 5 min</span></div>
+      <h3>Collaborative Counting</h3>
+      <p class="desc">The class counts to 20 together — but no two people can speak at the same time. Start over on overlap.</p>
+      <ol>
+        <li>No order, no signals — anyone may say the next number.</li>
+        <li>If two voices overlap, the count restarts at one.</li>
+        <li>Celebrate loudly when the class reaches 20.</li>
+      </ol>
+      <div class="tip"><strong>Teacher tip:</strong> Too easy? Raise the target to 30, or play with eyes closed.</div>
+    </div>
+  </div>
+
+  <div class="page-foot">
+    <span>Morning Meeting Resource Pack · oftheday.net</span>
+    <span>Page 2 of 3</span>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE 3 — ACTIVITIES 7–10 + CTA ═══════════ -->
+<div class="page">
+  <div class="page-head">
+    <span class="ph-title">10 Ready-to-Use Activities</span>
+    <div class="wordmark"><span class="wm-text" style="font-size:15px;">of<span class="dot">·</span>the<span class="dot">·</span>day</span></div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="chiprow"><span class="chip">Morning Message</span><span class="meta">K–8 · 3–5 min</span></div>
+      <h3>Riddle of the Day</h3>
+      <p class="desc">Display a grade-appropriate riddle. Students think quietly, then share guesses.</p>
+      <ol>
+        <li>Post the riddle before students arrive.</li>
+        <li>Students think silently as they settle in.</li>
+        <li>Collect guesses, then reveal the answer with a drumroll.</li>
+      </ol>
+      <div class="tip"><strong>Teacher tip:</strong> Keep a running tally of "class solves" — streaks make it a morning ritual.</div>
+    </div>
+
+    <div class="card">
+      <div class="chiprow"><span class="chip">Morning Message</span><span class="meta">2–8 · 3–5 min</span></div>
+      <h3>Connection Question</h3>
+      <p class="desc">Post a question on the board. Students write a one-sentence answer before the meeting begins.</p>
+      <ol>
+        <li>Post a question tied to today's learning or your classroom community.</li>
+        <li>Students answer in one sentence — sticky note or journal.</li>
+        <li>Read a few aloud (with permission) to open the meeting.</li>
+      </ol>
+      <div class="tip"><strong>Teacher tip:</strong> Save the strongest answers — they make great discussion prompts later in the week.</div>
+    </div>
+
+    <div class="card">
+      <div class="chiprow"><span class="chip">SEL Prompt</span><span class="meta">K–8 · 3–5 min</span></div>
+      <h3>Emoji Check-In</h3>
+      <p class="desc">Each student chooses an emoji that matches their energy this morning and briefly explains why.</p>
+      <ol>
+        <li>Display six to eight emoji options on the board.</li>
+        <li>Each student picks one and explains in a single sentence.</li>
+        <li>Quietly follow up later with students who chose low-energy emojis.</li>
+      </ol>
+      <div class="tip"><strong>Teacher tip:</strong> Chart the class mood across a week, then discuss the patterns together on Friday.</div>
+    </div>
+
+    <div class="card">
+      <div class="chiprow"><span class="chip">Brain Teaser</span><span class="meta">K–8 · 5 min</span></div>
+      <h3>What Comes Next?</h3>
+      <p class="desc">Show a visual or number pattern. Students identify the rule and predict what comes next.</p>
+      <ol>
+        <li>Display a pattern — shapes, numbers, or colors.</li>
+        <li>Independent think time, then pair-share the rule.</li>
+        <li>The class predicts the next item and tests the prediction.</li>
+      </ol>
+      <div class="tip"><strong>Teacher tip:</strong> Hand it over — let a student design tomorrow's pattern.</div>
+    </div>
+  </div>
+
+  <div class="cta">
+    <div>
+      <h2>Want this done for you — every single morning?</h2>
+      <p>OfTheDay builds a complete, grade-appropriate morning meeting automatically: Greeting, Sharing, Group Activity, and Morning Message, ready when you walk in. Plus AI-generated lesson slides for the rest of your day.</p>
+    </div>
+    <span class="btn">Try it free → oftheday.net</span>
+  </div>
+
+  <div class="page-foot">
+    <span>© 2026 OfTheDay.net · Built for teachers who love their mornings</span>
+    <span>Page 3 of 3</span>
+  </div>
+</div>
+
+</body>
+</html>
