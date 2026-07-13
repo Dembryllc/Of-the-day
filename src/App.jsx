@@ -3650,7 +3650,7 @@ function UpgradePage({ account }) {
 
   const checkout = async (priceId) => {
     if (!priceId) {
-      setError('Checkout is not configured yet. Please contact hello@oftheday.net.');
+      setError('Checkout is not configured yet. Please contact dembryllc@gmail.com.');
       return;
     }
     setBusy(true);

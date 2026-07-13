@@ -12,11 +12,11 @@ const FAQ_ITEMS = [
   { id: 'chromebook', q: 'Does it work on a Chromebook?', a: 'Yes. OfTheDay.net is a web app that runs in any modern browser — Chrome, Safari, Firefox, or Edge. No download or installation required.' },
   { id: 'projector', q: 'Can I use it with my classroom projector or smartboard?', a: 'Yes. Pro includes a dedicated full-screen projector view that opens in a second browser window. Choose from four visual themes — Calm, Bright, Minimal, or Primary — to match your classroom.' },
   { id: 'grades', q: 'What grade levels are supported?', a: 'K–2, 3–5, 6–8, and 9–12. The grade picker filters activities, vocabulary words, Do Now problems, and AI slide content to match your students.' },
-  { id: 'purchase', q: 'Does my school need to purchase it, or can I pay myself?', a: 'Individual teachers can subscribe directly with a credit card. School and district licensing (single invoice, multiple seats) is also available — contact us at hello@oftheday.net.' },
+  { id: 'purchase', q: 'Does my school need to purchase it, or can I pay myself?', a: 'Individual teachers can subscribe directly with a credit card. School and district licensing (single invoice, multiple seats) is also available — contact us at dembryllc@gmail.com.' },
   { id: 'rc', q: 'Is this specifically for Responsive Classroom?', a: "It's built with Responsive Classroom structure in mind — the four Morning Meeting components are the foundation. But the activities work for any morning meeting format, including PBIS morning circles and SEL-focused check-in routines." },
   { id: 'cancel', q: 'What happens to my saved routines if I cancel?', a: "Your routines and custom activities are yours. If you cancel Pro, you keep your account and any saved content — you'll just be moved to the Free tier limits." },
   { id: 'student-data', q: 'Does OfTheDay store student data?', a: 'No. OfTheDay.net is a teacher planning tool — students do not create accounts and submit no information through this service. We collect only teacher account information (name, email, grade preference, saved routines). No student PII is ever collected or stored.' },
-  { id: 'dpa', q: 'Is a Data Privacy Agreement (DPA) available?', a: 'Yes. Because OfTheDay does not process student data, a standard DPA is typically sufficient for district procurement. Email hello@oftheday.net with the subject "DPA Request" and we will respond within 2 business days.' },
+  { id: 'dpa', q: 'Is a Data Privacy Agreement (DPA) available?', a: 'Yes. Because OfTheDay does not process student data, a standard DPA is typically sufficient for district procurement. Email dembryllc@gmail.com with the subject "DPA Request" and we will respond within 2 business days.' },
 ];
 
 const SLIDE_THEMES = [
@@ -541,7 +541,7 @@ export default function LandingPage() {
             </div>
           </div>
           <p style={{textAlign:'center', marginTop:'24px', fontSize:'13px', color:'#9CA3AF'}}>
-            School and district licensing available. <a href="mailto:hello@oftheday.net?subject=School Pricing" style={{color:'#9CA3AF'}}>Contact us</a> for a quote.
+            School and district licensing available. <a href="mailto:dembryllc@gmail.com?subject=School Pricing" style={{color:'#9CA3AF'}}>Contact us</a> for a quote.
           </p>
         </div>
       </section>
@@ -578,7 +578,12 @@ export default function LandingPage() {
           <h2>Get a Free Morning Meeting Resource Pack</h2>
           <p>10 ready-to-use activities — greetings, sharing prompts, group activities, and morning messages — sent straight to your inbox.</p>
           {captureSubmitted ? (
-            <div className="capture-success">🎉 Sent! Check your inbox — it should arrive in under a minute.</div>
+            <div className="capture-success">
+              🎉 Sent! Check your inbox — it should arrive in under a minute.
+              <a className="capture-download" href="/resources/morning-meeting-resource-pack.pdf" download>
+                Or download the pack directly (PDF) ↓
+              </a>
+            </div>
           ) : (
             <form className="capture-form" onSubmit={handleCapture}>
               <input type="email" placeholder="your@school.edu" required autoComplete="email" value={captureEmail} onChange={e => setCaptureEmail(e.target.value)} />
@@ -609,7 +614,7 @@ export default function LandingPage() {
           <a href="#slides">Lesson Slides</a>
           <a href="#pricing">Pricing</a>
           <a href="#faq">FAQ</a>
-          <a href="mailto:hello@oftheday.net">Contact</a>
+          <a href="mailto:dembryllc@gmail.com">Contact</a>
           <Link to="/district">For Districts</Link>
           <Link to="/privacy">Privacy Policy</Link>
           <Link to="/terms">Terms of Service</Link>

@@ -53,6 +53,12 @@ Slide saves go directly to Firestore from the frontend. **Do not add a Cloud Fun
 - Renders all 4 themes (focus/soft/blocks/depth) with a 16:9 instructional layout; detects new vs legacy slide format via `data.essentialQuestion !== undefined`.
 - Wired into `src/LessonSlideCreator.jsx` (Create view + each saved-slide card).
 
+## Lead Magnet — Morning Meeting Resource Pack (added 2026-07-13)
+- The landing-page capture form → Firestore `waitlist` doc + `sendLeadMagnet` callable → Mailgun email with 10 activities inline **plus** a download button for the printable PDF.
+- The PDF is a real static file: `public/resources/morning-meeting-resource-pack.pdf` (3 pages, US Letter), served at `/resources/morning-meeting-resource-pack.pdf` (Firebase Hosting serves exact static files before the `**` SPA rewrite — no rewrite change needed).
+- Regenerate it with `scripts/resource-pack/render.js` (see header comment; needs `playwright-core` + a Chromium). The 10 activities in `scripts/resource-pack/pack.html` must stay in sync with `RESOURCE_PACK_ACTIVITIES` in `functions/index.js`.
+- The capture success state also links the PDF directly (`.capture-download`), so the pack is reachable even if email delivery fails.
+
 ## Demo Mode
 - Route: `/demo` — uses `DEMO_ACCOUNT = { uid: null, name: 'Guest Teacher', ... }`
 - All cloud operations guarded by `if (!account?.uid) return`
@@ -87,6 +93,7 @@ Never bypass `usePlan.js` for plan checks — don't add a second plan-resolution
 1. ~~Add the 8 missing GitHub Actions secrets~~ — done, deploy gate cleared 2026-07-02 (see Deployment gate above).
 2. **Stripe go-live** — swap test → live keys, register live webhook for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Price IDs read from env (`import.meta.env.VITE_STRIPE_*` in `src/App.jsx`), not hardcoded. This is a business decision (real payments) — coordinate with co-founder before flipping, per Co-founder Note below.
 3. ~~Mobile phone check~~ — done 2026-07-04 via Playwright at 375px. Found and fixed a real bug: see "Mobile Topbar Bug" below.
+4. **hello@oftheday.net inbound mail** — nothing RECEIVES mail there yet. Mailgun on `mg.oftheday.net` is send-only; fix is a ~10-min DNS task at Netlify (the domain registrar) + ImprovMX forwarding — exact steps: `notes/2026-07-13-session.md`. **Interim state (2026-07-13, user-approved):** all site-visible contact references were swapped to `dembryllc@gmail.com`, and outgoing email sets `Reply-To: dembryllc@gmail.com` (`REPLY_TO` in `functions/index.js`). `EMAIL_FROM` must STAY `hello@oftheday.net` — a gmail.com From via Mailgun fails DMARC. Once forwarding is live, swap back: grep `dembryllc@gmail.com` across `src/`, `functions/index.js` (REPLY_TO), and `scripts/resource-pack/pack.html` (then regenerate the PDF).
 
 ## Mobile Topbar Bug — Fixed 2026-07-04
 At ≤540px, `.topbar-right.grade-control-wrap` (grade chips + filter chips on the Today/Library/etc. topbars) is `flex-shrink: 0` and wider than the viewport. In a `justify-content: space-between` flex row, all the shrink pressure fell on `.topbar-left`, collapsing it to `width: 0` — its text (date/component summary) rendered one word per line instead of wrapping normally. Landing-page nav was fine (fixed 2026-07-02); this was a separate bug in the app shell itself, not caught by that fix.
