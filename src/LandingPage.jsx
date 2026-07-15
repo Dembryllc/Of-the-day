@@ -114,6 +114,7 @@ export default function LandingPage() {
 
       {/* ══════════ HERO ══════════ */}
       <section className="hero">
+        <img src="/assets/sunrise-mark.png" alt="" aria-hidden="true" className="hero-sunrise-mark" />
         <div className="hero-inner">
           <div className="hero-content">
             <div className="hero-badge">

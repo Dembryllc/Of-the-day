@@ -46,7 +46,7 @@
   flex-shrink: 0;
 }
 .lp .nav-logo-img {
-  width: 148px;
+  width: 168px;
   height: auto;
   object-fit: contain;
   display: block;
@@ -134,6 +134,14 @@
   background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
   background-size: 28px 28px;
   pointer-events: none;
+}
+.lp .hero-sunrise-mark {
+  position: absolute; top: -60px; right: -60px;
+  width: 560px; height: auto;
+  opacity: 0.22;
+  filter: drop-shadow(0 0 90px rgba(245,166,35,0.35));
+  pointer-events: none;
+  z-index: 0;
 }
 .lp .hero-inner {
   max-width: 1100px; margin: 0 auto;
@@ -874,6 +882,7 @@
   .lp .nav-collapse.open .nav-actions .btn-primary { display: block; text-align: center; margin-top: 6px; padding: 14px; font-size: 16px; }
   .lp .hamburger { display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .lp .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+  .lp .hero-sunrise-mark { width: 340px; top: -30px; right: -60px; opacity: 0.18; }
   .lp .app-mockup { max-width: 420px; margin: 0 auto; }
   .lp .mockup-body { height: 200px; }
   .lp .tools-grid { grid-template-columns: 1fr; }
@@ -893,6 +902,7 @@
   .lp .lp-nav { padding: 0 16px; }
   .lp .nav-inner { gap: 10px; }
   .lp .nav-logo-img { width: 132px; }
+  .lp .hero-sunrise-mark { width: 220px; top: -16px; right: -50px; opacity: 0.14; }
   .lp section { padding: 72px 20px; }
   .lp .slide-spotlight { padding: 72px 20px; }
   .lp .hero { padding: 64px 20px 60px; }
