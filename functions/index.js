@@ -45,6 +45,56 @@ function anthropicPost(apiKey, payload) {
   });
 }
 
+// ── ActiveCampaign ────────────────────────────────────────────────────────────
+// Requires AC_API_KEY in functions/.env. List 11 = "OfTheDay - Free Users" —
+// subscribing triggers the "Automation for Lead Magnet - OfTheDay" automation,
+// which sends the resource pack email. AC owns that email now, not this file.
+const AC_API_URL = "databilityweb.api-us1.com";
+const AC_LEAD_MAGNET_LIST_ID = 11;
+
+function activeCampaignRequest(apiPath, method, payload) {
+  return new Promise((resolve, reject) => {
+    const body = payload ? JSON.stringify(payload) : undefined;
+    const req = https.request({
+      hostname: AC_API_URL,
+      port: 443,
+      path: apiPath,
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        "Api-Token": process.env.AC_API_KEY,
+        ...(body ? { "Content-Length": Buffer.byteLength(body) } : {}),
+      },
+    }, (res) => {
+      let data = "";
+      res.on("data", chunk => { data += chunk; });
+      res.on("end", () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try { resolve(JSON.parse(data)); }
+          catch (e) { reject(new Error("JSON parse: " + data.slice(0, 100))); }
+        } else {
+          reject(new Error("ActiveCampaign " + res.statusCode + ": " + data.slice(0, 200)));
+        }
+      });
+    });
+    req.on("error", reject);
+    if (body) req.write(body);
+    req.end();
+  });
+}
+
+// Creates or updates the contact, then subscribes to the lead-magnet list.
+// AC's automation (trigger: subscribes to list) sends the actual email.
+async function activeCampaignSubscribe(email, listId) {
+  const synced = await activeCampaignRequest("/api/3/contact/sync", "POST", {
+    contact: { email },
+  });
+  const contactId = synced.contact.id;
+  await activeCampaignRequest("/api/3/contactLists", "POST", {
+    contactList: { list: listId, contact: contactId, status: 1 },
+  });
+}
+
 // ── Lesson Slide AI ───────────────────────────────────────────────────────────
 // Requires ANTHROPIC_API_KEY in functions/.env
 
@@ -165,43 +215,6 @@ grade-appropriate Greeting, Sharing, Group Activity, and Morning Message — rea
 <a href="${APP_URL}/dashboard" style="display:inline-block;background:#F5A623;color:#1B2D5B;font-size:15px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;">Open Today's Meeting &rarr;</a>
 <p style="margin:24px 0 0;font-size:13px;color:#9CA3AF;">
 Questions? Reply to this email or reach us at <a href="mailto:dembryllc@gmail.com" style="color:#4DB896;">dembryllc@gmail.com</a>.
-</p>
-`);
-}
-
-const RESOURCE_PACK_ACTIVITIES = [
-  { cat: "Greeting", title: "Name + Gesture Greeting", desc: "Each student says their name and invents a unique gesture. The class mirrors it back." },
-  { cat: "Greeting", title: "Partner Greeting Remix", desc: "Greet a partner by name, then add one kind sentence or question before switching." },
-  { cat: "Sharing", title: "Weekend Highlight Share", desc: 'Share one moment from the weekend using the sentence starter: "One thing I did was…"' },
-  { cat: "Sharing", title: "Two Truths and a Wish", desc: "Share two true things about yourself and one thing you wish were true. Class guesses the wish." },
-  { cat: "Group Activity", title: "Commonality Circle", desc: "Find one thing all students in a small group have in common. Groups share with the class." },
-  { cat: "Group Activity", title: "Collaborative Counting", desc: "The class counts to 20 together — but no two people can speak at the same time. Start over on overlap." },
-  { cat: "Morning Message", title: "Riddle of the Day", desc: "Display a grade-appropriate riddle. Students think quietly, then share guesses." },
-  { cat: "Morning Message", title: "Connection Question", desc: "Post a question on the board. Students write a one-sentence answer before the meeting begins." },
-  { cat: "SEL Prompt", title: "Emoji Check-In", desc: "Each student chooses an emoji that matches their energy this morning and briefly explains why." },
-  { cat: "Brain Teaser", title: "What Comes Next?", desc: "Show a visual or number pattern. Students identify the rule and predict what comes next." },
-];
-
-function resourcePackHtml(email) {
-  const rows = RESOURCE_PACK_ACTIVITIES.map(a => `
-<tr>
-<td style="padding:10px 0;border-bottom:1px solid #F3F4F6;">
-<span style="font-size:11px;font-weight:700;color:#4DB896;text-transform:uppercase;letter-spacing:0.06em;">${a.cat}</span>
-<strong style="display:block;font-size:14px;color:#1B2D5B;margin:2px 0;">${a.title}</strong>
-<span style="font-size:13px;color:#6B7280;line-height:1.5;">${a.desc}</span>
-</td>
-</tr>`).join("");
-  return emailBase(`
-<h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1B2D5B;">Your Morning Meeting Resource Pack 🎉</h1>
-<p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6;">
-All 10 activities are below — and here's a printable version for your desk:
-</p>
-<a href="${APP_URL}/resources/morning-meeting-resource-pack.pdf" style="display:inline-block;background:#1B2D5B;color:#ffffff;font-size:14px;font-weight:700;padding:11px 22px;border-radius:8px;text-decoration:none;margin-bottom:24px;">Download the Printable PDF &darr;</a>
-<table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">${rows}</table>
-<a href="${APP_URL}/login?signup=1" style="display:inline-block;background:#F5A623;color:#1B2D5B;font-size:15px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;">Get Your Daily Routine Free &rarr;</a>
-<p style="margin:24px 0 0;font-size:13px;color:#9CA3AF;">
-You're receiving this because you signed up at oftheday.net with ${email}.
-<a href="mailto:dembryllc@gmail.com?subject=Unsubscribe" style="color:#9CA3AF;">Unsubscribe</a>
 </p>
 `);
 }
@@ -402,19 +415,15 @@ exports.onUserCreate = functionsV1.auth.user().onCreate(async (user) => {
 exports.sendLeadMagnet = onCall(async (request) => {
   const email = (request.data?.email || "").trim().toLowerCase();
   if (!email || !email.includes("@")) throw new Error("Valid email required");
-  if (!process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
-    console.warn("MAILGUN_API_KEY or MAILGUN_DOMAIN not set — skipping lead magnet email");
+  if (!process.env.AC_API_KEY) {
+    console.warn("AC_API_KEY not set — skipping lead magnet signup");
     return { sent: false };
   }
   try {
-    await sendEmail({
-      to: email,
-      subject: "Your Morning Meeting Resource Pack is here 🎉",
-      html: resourcePackHtml(email),
-    });
+    await activeCampaignSubscribe(email, AC_LEAD_MAGNET_LIST_ID);
     return { sent: true };
   } catch (err) {
-    console.error("Failed to send lead magnet email:", err);
+    console.error("Failed to subscribe lead magnet contact:", err);
     return { sent: false };
   }
 });
