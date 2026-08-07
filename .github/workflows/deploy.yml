@@ -37,6 +37,7 @@ jobs:
           [ -z "$MAILGUN_API_KEY" ]                    && echo "MISSING: MAILGUN_API_KEY"                    && MISSING=1
           [ -z "$MAILGUN_DOMAIN" ]                     && echo "MISSING: MAILGUN_DOMAIN"                     && MISSING=1
           [ -z "$ANTHROPIC_API_KEY" ]                 && echo "MISSING: ANTHROPIC_API_KEY"                 && MISSING=1
+          [ -z "$AC_API_KEY" ]                        && echo "MISSING: AC_API_KEY"                        && MISSING=1
           if [ $MISSING -eq 1 ]; then
             echo "ERROR: One or more required secrets are not set in GitHub Actions."
             echo "Go to: GitHub repo → Settings → Secrets and variables → Actions"
@@ -59,6 +60,7 @@ jobs:
           MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
           MAILGUN_DOMAIN: ${{ vars.MAILGUN_DOMAIN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AC_API_KEY: ${{ secrets.AC_API_KEY }}
 
       - name: Build frontend
         run: npm run build
@@ -82,6 +84,7 @@ jobs:
             echo "MAILGUN_API_KEY=${MAILGUN_API_KEY}"
             echo "MAILGUN_DOMAIN=${MAILGUN_DOMAIN}"
             echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}"
+            echo "AC_API_KEY=${AC_API_KEY}"
           } > functions/.env
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
@@ -91,6 +94,7 @@ jobs:
           MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
           MAILGUN_DOMAIN: ${{ vars.MAILGUN_DOMAIN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AC_API_KEY: ${{ secrets.AC_API_KEY }}
 
       - name: Install functions dependencies
         run: npm install --prefix functions
