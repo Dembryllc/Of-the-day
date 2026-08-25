@@ -7,7 +7,7 @@
 - Firebase Auth (email/password + Google) + Firestore + Firebase Hosting
 - Cloud Functions (Node 22 — upgraded from 20 on 2026-06-23)
 - Firebase project: `oftheday-c6490` — never confuse with Datability or Easy Annotate projects
-- Stripe (test mode — live-key swap still pending, see Pending Ops), Mailgun (`mg.oftheday.net`), Anthropic Claude
+- Stripe (LIVE keys are active as of 2026-08-25 — checkout creates real `cs_live_` sessions — but the live webhook is NOT registered, see Pending Ops #2), Mailgun (`mg.oftheday.net`), Anthropic Claude
 
 ## Deployment
 - GitHub Actions auto-deploys on push to `main`: hosting + functions + Firestore rules (~1 min hosting, ~3 min with functions)
@@ -30,10 +30,13 @@
 | `generateSlide` | 1 | `httpsV1.onRequest` | Bearer token — NOT onCall |
 | `simplifySlide` | 1 | `httpsV1.onRequest` | Bearer token — NOT onCall |
 | `onthisday` | 1 | `httpsV1.onRequest` | Wikipedia scraper |
-| `onUserCreate` | 1 | auth.onCreate | Writes plan:'trial' + welcome email |
+| `onUserCreate` | 1 | auth.onCreate | Welcome email only — see note below |
 | `createCheckoutSession` | 2 | onCall | Stripe checkout |
 | `stripeWebhook` | 2 | onRequest | Stripe lifecycle |
 | `sendLeadMagnet` | 2 | onCall | Mailgun resource email |
+
+## Trial Setup Is Client-Side, Not Server-Side (fixed 2026-08-25)
+`onUserCreate` used to also write `plan:'trial'`+`trialStartedAt` via the Admin SDK, but that write failed `PERMISSION_DENIED` on every single signup — the Gen 1 auth-trigger service account lacks Firestore access, unlike Gen 2 functions (`createCheckoutSession` writes to Firestore fine). This did **not** actually break trials: `AuthScreen.jsx` (email signup) and `App.jsx`'s `onAuthStateChanged` handler (Google sign-in, comment: "New Google user — Cloud Function may not have run yet") both already write the same fields client-side under the user's own auth, which Firestore rules allow. The redundant, permanently-failing Admin SDK write was removed from `onUserCreate` — it only sends the welcome email now. If you ever want server-side trial setup back, the real fix is granting the App Engine default service account (`oftheday-c6490@appspot.gserviceaccount.com`) the Cloud Datastore User role — not re-adding this write as-is.
 
 ## Slide Saves — Direct Firestore (Not Cloud Function)
 Slide saves go directly to Firestore from the frontend. **Do not add a Cloud Function save path.** A function-based save path was tried and abandoned as unreliable.
@@ -91,7 +94,7 @@ Never bypass `usePlan.js` for plan checks — don't add a second plan-resolution
 
 ## Pending Ops (code complete — no code work needed)
 1. ~~Add the 8 missing GitHub Actions secrets~~ — done, deploy gate cleared 2026-07-02 (see Deployment gate above).
-2. **Stripe go-live** — swap test → live keys, register live webhook for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Price IDs read from env (`import.meta.env.VITE_STRIPE_*` in `src/App.jsx`), not hardcoded. This is a business decision (real payments) — coordinate with co-founder before flipping, per Co-founder Note below.
+2. **🔴 Stripe live webhook — NOT registered, checkout is live and broken end-to-end.** Confirmed 2026-08-25: live keys are already active (`createCheckoutSession` returns real `cs_live_...` sessions — 3 successful invocations in Cloud Functions logs), but `stripeWebhook` has **zero log entries ever**. That means anyone who completes a real payment right now gets charged and never gets flipped to `tier: 'pro'` — silent revenue with no product delivered. Fix: register the live-mode webhook endpoint (`stripeWebhook`'s Cloud Functions URL) in the Stripe Dashboard for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. This needs either dashboard access or a Stripe API key with write scope for the OfTheDay account — coordinate with co-founder, since going live was apparently already decided but the webhook step got missed.
 3. ~~Mobile phone check~~ — done 2026-07-04 via Playwright at 375px. Found and fixed a real bug: see "Mobile Topbar Bug" below.
 4. **hello@oftheday.net inbound mail** — nothing RECEIVES mail there yet. Mailgun on `mg.oftheday.net` is send-only; fix is a ~10-min DNS task at Netlify (the domain registrar) + ImprovMX forwarding — exact steps: `notes/2026-07-13-session.md`. **Interim state (2026-07-13, user-approved):** all site-visible contact references were swapped to `dembryllc@gmail.com`, and outgoing email sets `Reply-To: dembryllc@gmail.com` (`REPLY_TO` in `functions/index.js`). `EMAIL_FROM` must STAY `hello@oftheday.net` — a gmail.com From via Mailgun fails DMARC. Once forwarding is live, swap back: grep `dembryllc@gmail.com` across `src/`, `functions/index.js` (REPLY_TO), and `scripts/resource-pack/pack.html` (then regenerate the PDF).
 

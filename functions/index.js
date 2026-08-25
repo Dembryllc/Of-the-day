@@ -426,16 +426,12 @@ function prioritize(items) {
 
 // ── Auth trigger ──────────────────────────────────────────────────────────────
 exports.onUserCreate = functionsV1.auth.user().onCreate(async (user) => {
-  try {
-    await admin.firestore().collection("users").doc(user.uid).set({
-      email: user.email || "",
-      plan: "trial",
-      trialStartedAt: admin.firestore.FieldValue.serverTimestamp(),
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true });
-  } catch (err) {
-    console.error("Failed to create user document on sign-up:", err);
-  }
+  // The trial/plan doc is created client-side (AuthScreen.jsx on email signup,
+  // App.jsx's onAuthStateChanged fallback on Google sign-in) under the user's
+  // own auth, which Firestore rules already allow. This function's own write
+  // used to duplicate that here via the Admin SDK, but the Gen 1 auth-trigger
+  // service account doesn't have Firestore access (unlike Gen 2 functions),
+  // so it failed on every signup — dead weight, removed. Welcome email only.
   if (!user.email) return;
   try {
     await sendEmail({
