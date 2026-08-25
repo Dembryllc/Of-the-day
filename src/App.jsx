@@ -1612,9 +1612,10 @@ function DoNowScreen({ grade, subject, problem, problems, revealAnswer, onReveal
               className={`subnav-item${key === subject ? " active" : ""}`}
               type="button"
               disabled={!item.enabled}
+              title={item.enabled ? undefined : `${item.label} Do Now — coming soon`}
               onClick={() => onSubjectChange(key)}
             >
-              {item.label}
+              {item.label}{!item.enabled && <span className="subnav-soon">Soon</span>}
             </button>
           ))}
         </aside>
@@ -2538,27 +2539,32 @@ function MainApp({ account, onSignOut }) {
     addActivityToRoutine(doNowToActivity(doNowProblem, currentGrade, doNowSubject));
   }, [doNowProblem, currentGrade, doNowSubject, addActivityToRoutine]);
 
+  const onThisDayRequestRef = useRef(0);
   const loadOnThisDay = useCallback(async () => {
+    const requestId = ++onThisDayRequestRef.current;
+    const gradeAtRequest = currentGrade;
     setHistoryLoading(true);
-    const fallback = getGradeHistoryItems(currentGrade, [], new Date());
+    const fallback = getGradeHistoryItems(gradeAtRequest, [], new Date());
     try {
       const res = await fetch("/api/on-this-day");
       if (!res.ok) throw new Error("History source unavailable");
       const data = await res.json();
+      if (requestId !== onThisDayRequestRef.current) return; // a newer request superseded this one
       const liveEvents = Array.isArray(data.events) ? data.events : [];
-      const events = getGradeHistoryItems(currentGrade, liveEvents, new Date());
+      const events = getGradeHistoryItems(gradeAtRequest, liveEvents, new Date());
       setHistoryItems(events);
       setSelectedHistoryItem(events[0]);
-      const gradeBand = gradeToBand(currentGrade);
+      const gradeBand = gradeToBand(gradeAtRequest);
       setHistorySource(gradeBand === "K–2" || gradeBand === "3–5" ? "Elementary classroom fact bank" : (data.source || ON_THIS_DAY_SOURCE.name));
       setHistorySourceUrl(data.sourceUrl || onThisDayUrl());
     } catch {
+      if (requestId !== onThisDayRequestRef.current) return; // a newer request superseded this one
       setHistoryItems(fallback);
       setSelectedHistoryItem(fallback[0]);
-      setHistorySource(gradeToBand(currentGrade) === "K–2" || gradeToBand(currentGrade) === "3–5" ? "Elementary classroom fact bank" : "Built-in classroom fallback");
+      setHistorySource(gradeToBand(gradeAtRequest) === "K–2" || gradeToBand(gradeAtRequest) === "3–5" ? "Elementary classroom fact bank" : "Built-in classroom fallback");
       setHistorySourceUrl(onThisDayUrl());
     } finally {
-      setHistoryLoading(false);
+      if (requestId === onThisDayRequestRef.current) setHistoryLoading(false);
     }
   }, [currentGrade]);
 
@@ -3189,16 +3195,6 @@ function MainApp({ account, onSignOut }) {
             <div className="topbar-right grade-control-wrap"><GradePicker value={currentGrade} onChange={handleGradeChange}/></div>
           </div>
         )}
-        {activeNav === "Routines" && (
-          <div className="topbar">
-            <div className="topbar-left">
-              <div className="topbar-title">Routines</div>
-              <div className="topbar-date">{savedRoutines.length} saved</div>
-            </div>
-            <div className="topbar-right grade-control-wrap"><GradePicker value={currentGrade} onChange={handleGradeChange}/></div>
-          </div>
-        )}
-
         {/* BODY */}
         <div className="body">
 

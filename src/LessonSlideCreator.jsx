@@ -383,12 +383,19 @@ export default function LessonSlideCreator({
   }, [account?.uid]);
 
   const handleNewSlide = useCallback(() => {
+    const hasContent = Boolean(
+      slide.lessonName || slide.learningTarget || slide.essentialQuestion ||
+      slide.studentTask || slide.discussionPrompt || slide.exitTicket ||
+      (slide.successCriteria || []).some(c => c) ||
+      (slide.vocabulary || []).some(v => v.word || v.definition)
+    );
+    if (hasContent && !window.confirm('Start a new slide? Anything you haven’t saved will be lost.')) return;
     setSlide(blankSlide(account?.grade));
     setTopic('');
     setPreserveLanguage('');
     setGenError('');
     setSaveMsg('');
-  }, [account?.grade]);
+  }, [account?.grade, slide]);
 
   const handleExportPptx = useCallback(async (target = null) => {
     const s = target || slide;
