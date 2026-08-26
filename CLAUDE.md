@@ -7,7 +7,7 @@
 - Firebase Auth (email/password + Google) + Firestore + Firebase Hosting
 - Cloud Functions (Node 22 — upgraded from 20 on 2026-06-23)
 - Firebase project: `oftheday-c6490` — never confuse with Datability or Easy Annotate projects
-- Stripe (LIVE keys are active as of 2026-08-25 — checkout creates real `cs_live_` sessions — but the live webhook is NOT registered, see Pending Ops #2), Mailgun (`mg.oftheday.net`), Anthropic Claude
+- Stripe (LIVE — real charges; account `acct_1ArtSdB2eRKsbhTp`, shown in the dashboard as "Iepdata"/Dembry LLC and shared with other Dembry products, so always check you're on the right endpoint/product before changing anything), Mailgun (`mg.oftheday.net`), Anthropic Claude
 
 ## Deployment
 - GitHub Actions auto-deploys on push to `main`: hosting + functions + Firestore rules (~1 min hosting, ~3 min with functions)
@@ -37,6 +37,13 @@
 
 ## Trial Setup Is Client-Side, Not Server-Side (fixed 2026-08-25)
 `onUserCreate` used to also write `plan:'trial'`+`trialStartedAt` via the Admin SDK, but that write failed `PERMISSION_DENIED` on every single signup — the Gen 1 auth-trigger service account lacks Firestore access, unlike Gen 2 functions (`createCheckoutSession` writes to Firestore fine). This did **not** actually break trials: `AuthScreen.jsx` (email signup) and `App.jsx`'s `onAuthStateChanged` handler (Google sign-in, comment: "New Google user — Cloud Function may not have run yet") both already write the same fields client-side under the user's own auth, which Firestore rules allow. The redundant, permanently-failing Admin SDK write was removed from `onUserCreate` — it only sends the welcome email now. If you ever want server-side trial setup back, the real fix is granting the App Engine default service account (`oftheday-c6490@appspot.gserviceaccount.com`) the Cloud Datastore User role — not re-adding this write as-is.
+
+## Stripe Live Webhook (registered 2026-08-25)
+Before this, live keys were active but the only webhook endpoints registered were **test mode**, so `stripeWebhook` had never once been invoked — real payments would have charged the card and never set `tier:'pro'`.
+- Live endpoint: **"OfTheDay production"**, `we_1U8VdEB2eRKsbhTpKzrx1k12` → `https://stripewebhook-qznlc6fzoa-uc.a.run.app` (that Cloud Run URL *is* this project's `stripeWebhook`; confirmed via the function's own audit log).
+- Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. API version pinned to **2017-06-05** to match the old test endpoints — deliberate: newer versions moved `current_period_end` off the subscription onto its items, which would break the `sub.current_period_end` read in `stripeWebhook`.
+- `STRIPE_WEBHOOK_SECRET` was updated to the new live endpoint's signing secret and redeployed. Each endpoint has its **own** secret — if you ever roll it or add another endpoint, update this secret and redeploy or every event 400s.
+- **Not yet proven end to end.** Live mode offers no synthetic test events, so the first real subscription is the actual test. Watch Stripe → Webhooks → "OfTheDay production" → Event deliveries: 200 means it works, 400 means the secret is mismatched. Nothing had been delivered as of setup.
 
 ## Slide Saves — Direct Firestore (Not Cloud Function)
 Slide saves go directly to Firestore from the frontend. **Do not add a Cloud Function save path.** A function-based save path was tried and abandoned as unreliable.
@@ -94,7 +101,7 @@ Never bypass `usePlan.js` for plan checks — don't add a second plan-resolution
 
 ## Pending Ops (code complete — no code work needed)
 1. ~~Add the 8 missing GitHub Actions secrets~~ — done, deploy gate cleared 2026-07-02 (see Deployment gate above).
-2. **🔴 Stripe live webhook — NOT registered, checkout is live and broken end-to-end.** Confirmed 2026-08-25: live keys are already active (`createCheckoutSession` returns real `cs_live_...` sessions — 3 successful invocations in Cloud Functions logs), but `stripeWebhook` has **zero log entries ever**. That means anyone who completes a real payment right now gets charged and never gets flipped to `tier: 'pro'` — silent revenue with no product delivered. Fix: register the live-mode webhook endpoint (`stripeWebhook`'s Cloud Functions URL) in the Stripe Dashboard for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. This needs either dashboard access or a Stripe API key with write scope for the OfTheDay account — coordinate with co-founder, since going live was apparently already decided but the webhook step got missed.
+2. ~~Stripe live webhook not registered~~ — **registered 2026-08-25**, see "Stripe Live Webhook" below.
 3. ~~Mobile phone check~~ — done 2026-07-04 via Playwright at 375px. Found and fixed a real bug: see "Mobile Topbar Bug" below.
 4. **hello@oftheday.net inbound mail** — nothing RECEIVES mail there yet. Mailgun on `mg.oftheday.net` is send-only; fix is a ~10-min DNS task at Netlify (the domain registrar) + ImprovMX forwarding — exact steps: `notes/2026-07-13-session.md`. **Interim state (2026-07-13, user-approved):** all site-visible contact references were swapped to `dembryllc@gmail.com`, and outgoing email sets `Reply-To: dembryllc@gmail.com` (`REPLY_TO` in `functions/index.js`). `EMAIL_FROM` must STAY `hello@oftheday.net` — a gmail.com From via Mailgun fails DMARC. Once forwarding is live, swap back: grep `dembryllc@gmail.com` across `src/`, `functions/index.js` (REPLY_TO), and `scripts/resource-pack/pack.html` (then regenerate the PDF).
 
