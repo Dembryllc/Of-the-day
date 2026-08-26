@@ -43,7 +43,14 @@ Before this, live keys were active but the only webhook endpoints registered wer
 - Live endpoint: **"OfTheDay production"**, `we_1U8VdEB2eRKsbhTpKzrx1k12` → `https://stripewebhook-qznlc6fzoa-uc.a.run.app` (that Cloud Run URL *is* this project's `stripeWebhook`; confirmed via the function's own audit log).
 - Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. API version pinned to **2017-06-05** to match the old test endpoints — deliberate: newer versions moved `current_period_end` off the subscription onto its items, which would break the `sub.current_period_end` read in `stripeWebhook`.
 - `STRIPE_WEBHOOK_SECRET` was updated to the new live endpoint's signing secret and redeployed. Each endpoint has its **own** secret — if you ever roll it or add another endpoint, update this secret and redeploy or every event 400s.
-- **Not yet proven end to end.** Live mode offers no synthetic test events, so the first real subscription is the actual test. Watch Stripe → Webhooks → "OfTheDay production" → Event deliveries: 200 means it works, 400 means the secret is mismatched. Nothing had been delivered as of setup.
+- **Proven end to end 2026-08-25** with a real live subscription: `checkout.session.completed` delivered → 200 `{received:true}` → Firestore `tier:'pro'` → app showed Pro. Live mode has no synthetic test events, so this took a real checkout (free at the time: `trial_period_days: 14` means $0 due today, so a test subscription costs nothing if cancelled inside the trial).
+- That first real test immediately caught a **latent handler crash** — see below. Signature verification was never the problem; the handler was.
+
+## `current_period_end` Is Not On The Subscription Anymore (fixed 2026-08-25)
+The first real `checkout.session.completed` verified fine, then the handler threw `Cannot use "undefined" as a Firestore value (found in field "currentPeriodEnd")`, so the whole `set()` was discarded and the paying user never got `tier:'pro'` — a 500, which Stripe then retried.
+- Cause: recent API versions moved `current_period_end` off the Subscription object onto its **items**. Pinning the webhook endpoint to 2017-06-05 preserves the old shape for **event payloads only** — `stripe.subscriptions.retrieve()` is a separate API call that uses the **SDK's** version (`stripe@^22`), where the top-level field is gone.
+- Fix: `periodEndOf(sub)` reads `sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end ?? null`. The `?? null` is load-bearing — Firestore rejects `undefined` and throws away the entire write, so one missing field silently cost a subscriber their access.
+- If you ever bump the endpoint's API version or the stripe package, re-check this.
 
 ## Slide Saves — Direct Firestore (Not Cloud Function)
 Slide saves go directly to Firestore from the frontend. **Do not add a Cloud Function save path.** A function-based save path was tried and abandoned as unreliable.
