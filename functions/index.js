@@ -548,6 +548,29 @@ exports.createCheckoutSession = onCall(async (request) => {
   return { url: session.url };
 });
 
+// Stripe-hosted billing portal: where a subscriber updates their card, sees
+// invoices, or cancels. Requires the Customer portal to be activated once in
+// the Stripe Dashboard (Settings → Billing → Customer portal) — without that
+// the create() call throws and the caller shows a contact-support message.
+exports.createPortalSession = onCall(async (request) => {
+  const { userId } = request.data || {};
+  if (!userId) throw new Error("userId is required");
+  if (!request.auth || request.auth.uid !== userId) {
+    throw new Error("You must be signed in as this user to manage billing");
+  }
+  const db = admin.firestore();
+  const userSnap = await db.collection("users").doc(userId).get();
+  const stripeCustomerId = (userSnap.data() || {}).stripeCustomerId;
+  // No customer record means they never reached checkout — nothing to manage.
+  if (!stripeCustomerId) throw new Error("NO_SUBSCRIPTION");
+  const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+  const session = await stripe.billingPortal.sessions.create({
+    customer: stripeCustomerId,
+    return_url: "https://oftheday.net/dashboard",
+  });
+  return { url: session.url };
+});
+
 exports.stripeWebhook = onRequest(async (req, res) => {
   const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

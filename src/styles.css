@@ -219,7 +219,25 @@ body { font-family: 'Outfit', sans-serif; color: #1C1C2E; -webkit-font-smoothing
 .sidebar-profile-chevron { font-size: 18px; color: rgba(255,255,255,0.25); flex-shrink: 0; }
 
 /* Profile sheet */
-.profile-sheet { max-width: 420px; }
+/* Bottom-anchored with no max-height, this sheet clipped its own footer
+   (Save / Sign out) off-screen on short windows with no way to scroll to it.
+   Cap the height and let the body scroll so the footer is always reachable. */
+.profile-sheet { max-width: 420px; max-height: 92vh; display: flex; flex-direction: column; }
+.profile-sheet .sheet-handle,
+.profile-sheet .sheet-title,
+.profile-sheet .sheet-footer { flex: 0 0 auto; }
+.profile-sheet .sheet-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.profile-billing {
+  border-top: 1px solid #F0EDE8;
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.profile-billing-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); }
+.profile-billing-text { font-size: 13px; line-height: 1.45; color: var(--ink2); }
+.profile-billing-error { font-size: 12.5px; line-height: 1.4; color: #DC2626; font-weight: 600; }
 .profile-avatar-row { display: flex; align-items: flex-start; gap: 14px; }
 .profile-avatar-lg {
   width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;

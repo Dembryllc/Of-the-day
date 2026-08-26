@@ -1117,6 +1117,25 @@ function ProfileSheet({ account, displayName, trialDaysLeft, effectivePlan, onCl
   const [grade, setGrade] = useState(account?.grade || '3');
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [billingBusy, setBillingBusy] = useState(false);
+  const [billingError, setBillingError] = useState('');
+
+  const openBillingPortal = async () => {
+    setBillingBusy(true);
+    setBillingError('');
+    try {
+      const fn = httpsCallable(functions, 'createPortalSession');
+      const { data } = await fn({ userId: account.uid });
+      window.location.href = data.url;
+    } catch (err) {
+      setBillingError(
+        String(err?.message || '').includes('NO_SUBSCRIPTION')
+          ? "You don't have a paid subscription yet — nothing to manage."
+          : 'Could not open billing. Email dembryllc@gmail.com and we’ll cancel it for you.'
+      );
+      setBillingBusy(false);
+    }
+  };
 
   const handleShare = () => {
     const msg = 'I use OfTheDay.net for my morning meetings — a complete, grade-appropriate routine in seconds. Try it free: https://oftheday.net';
@@ -1177,6 +1196,22 @@ function ProfileSheet({ account, displayName, trialDaysLeft, effectivePlan, onCl
               </select>
             </label>
           </div>
+          {account?.uid && (
+          <div className="profile-billing">
+            <div className="profile-billing-label">Subscription</div>
+            <div className="profile-billing-text">
+              {account?.tier === 'pro'
+                ? 'Update your payment method, view invoices, or cancel anytime.'
+                : trialDaysLeft !== null
+                  ? "You're on the free trial — no card has been charged. If you upgraded, manage or cancel it here."
+                  : "You're on the free plan. If you previously subscribed, manage or cancel it here."}
+            </div>
+            <button className="btn-secondary" type="button" disabled={billingBusy} onClick={openBillingPortal}>
+              {billingBusy ? 'Opening…' : 'Manage or cancel subscription'}
+            </button>
+            {billingError && <div className="profile-billing-error">{billingError}</div>}
+          </div>
+          )}
         </div>
         <div className="sheet-footer" style={{flexDirection:'column', gap: 12}}>
           <button className="btn-primary" type="button" style={{width:'100%'}} disabled={saving} onClick={handleSave}>
