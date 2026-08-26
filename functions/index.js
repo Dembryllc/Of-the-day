@@ -590,6 +590,14 @@ exports.stripeWebhook = onRequest(async (req, res) => {
     const snap = await db.collection("users").where("stripeCustomerId", "==", customerId).limit(1).get();
     return snap.empty ? null : snap.docs[0].ref;
   };
+  // `current_period_end` moved off the Subscription object onto its items in
+  // recent API versions. Event payloads follow this endpoint's pinned version
+  // (2017-06-05, where it's top-level), but stripe.subscriptions.retrieve()
+  // uses the SDK's own version (v22, where it is not) — so check both. Falling
+  // back to null matters: Firestore rejects an undefined value outright, which
+  // threw away the whole write and left a paying user stuck off Pro.
+  const periodEndOf = (sub) =>
+    sub?.current_period_end ?? sub?.items?.data?.[0]?.current_period_end ?? null;
   try {
     switch (event.type) {
       case "checkout.session.completed": {
@@ -597,14 +605,14 @@ exports.stripeWebhook = onRequest(async (req, res) => {
         const ref = await userByCustomer(session.customer);
         if (ref) {
           const sub = await stripe.subscriptions.retrieve(session.subscription);
-          await ref.set({ tier: "pro", subscriptionId: session.subscription, stripeCustomerId: session.customer, currentPeriodEnd: sub.current_period_end }, { merge: true });
+          await ref.set({ tier: "pro", subscriptionId: session.subscription, stripeCustomerId: session.customer, currentPeriodEnd: periodEndOf(sub) }, { merge: true });
         }
         break;
       }
       case "customer.subscription.updated": {
         const sub = event.data.object;
         const ref = await userByCustomer(sub.customer);
-        if (ref) await ref.set({ tier: sub.status === "active" || sub.status === "trialing" ? "pro" : "free", currentPeriodEnd: sub.current_period_end }, { merge: true });
+        if (ref) await ref.set({ tier: sub.status === "active" || sub.status === "trialing" ? "pro" : "free", currentPeriodEnd: periodEndOf(sub) }, { merge: true });
         break;
       }
       case "customer.subscription.deleted": {
