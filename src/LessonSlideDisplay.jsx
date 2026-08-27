@@ -1,7 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useLayoutEffect } from 'react';
 
 // Scale helper: projector vs preview value (accepts numbers OR CSS strings)
 const s = (pm, big, small) => pm ? big : small;
+
+// Shrink a group of fixed-height text boxes to the largest font size at which
+// they ALL still fit. Projector text wants to be as large as possible, but the
+// author-facing character limits allow more text than the biggest size can
+// hold — without this, a long Student Task silently loses its last line
+// mid-lesson, which is worse than it simply being a bit smaller.
+function useFitFontSize(refs, enabled, maxPx, minPx, deps) {
+  useLayoutEffect(() => {
+    if (!enabled) return;
+    const fit = () => {
+      const els = refs.map(r => r.current).filter(Boolean);
+      if (!els.length) return;
+      let lo = minPx, hi = maxPx, best = minPx;
+      // Binary search: text height is non-linear in font size, so stepping
+      // down one px at a time is both slower and no more accurate.
+      for (let i = 0; i < 14 && hi - lo > 0.4; i++) {
+        const mid = (lo + hi) / 2;
+        els.forEach(el => { el.style.fontSize = mid + 'px'; });
+        if (els.every(el => el.scrollHeight <= el.clientHeight + 1)) { best = mid; lo = mid; }
+        else hi = mid;
+      }
+      els.forEach(el => { el.style.fontSize = best + 'px'; });
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+}
 
 // ── Brand mark ─────────────────────────────────────────────────────────────
 function BrandMark({ pm, invert = false }) {
@@ -434,12 +463,28 @@ const INSTR_THEMES = {
 function InstructionalSlide({ slide, pm }) {
   const themeKey = ALIAS[slide.theme] || slide.theme || 'focus';
   const c = INSTR_THEMES[themeKey] || INSTR_THEMES.focus;
+  // Projector sizing is deliberately large: this is read from the back of a
+  // classroom, not from a laptop. The old caps bottomed out around 18px of
+  // body text on a 1080p smartboard while leaving ~80% of each column empty.
+  // vmin (not vw) keeps it height-bound so taller content still fits.
   const hp  = s(pm, 56, 13);
-  const bsz = s(pm, 'clamp(13px, 1.7vmin, 24px)', '13px');
-  const lsz = s(pm, 'clamp(9px, 1.1vmin, 13px)', '7px');
-  const ltSz = s(pm, 'clamp(20px, 3vmin, 44px)', '18px');
-  const eqSz = s(pm, 'clamp(13px, 1.8vmin, 26px)', '12px');
-  const igap = s(pm, 'clamp(6px, 1.1vmin, 14px)', '5px');
+  const bsz = s(pm, 'clamp(15px, 3vmin, 44px)', '13px');
+  const lsz = s(pm, 'clamp(10px, 1.6vmin, 24px)', '7px');
+  const ltSz = s(pm, 'clamp(24px, 5vmin, 76px)', '18px');
+  const eqSz = s(pm, 'clamp(15px, 3vmin, 44px)', '12px');
+  const igap = s(pm, 'clamp(6px, 1.8vmin, 26px)', '5px');
+  // Col 3 stacks three sections in the height cols 1-2 give to one, and its
+  // Student Task allows 300 chars vs 250, so it runs denser or it clips.
+  const bsz3 = s(pm, 'clamp(13px, 2.5vmin, 36px)', '13px');
+
+  const taskRef = useRef(null), discRef = useRef(null), exitRef = useRef(null);
+  const vmin = typeof window !== 'undefined' ? Math.min(window.innerWidth, window.innerHeight) / 100 : 10;
+  useFitFontSize(
+    [taskRef, discRef, exitRef], pm,
+    Math.min(36, Math.max(13, 2.5 * vmin)),
+    Math.min(22, Math.max(11, 1.5 * vmin)),
+    [pm, slide.studentTask, slide.discussionPrompt, slide.exitTicket, slide.theme]
+  );
 
   const ColHdr = ({ bg, border, label, color }) => (
     <div style={{ flexShrink: 0, padding: `${s(pm, 14, 3.5)}px ${hp}px`, background: bg, borderBottom: `1px solid ${border}` }}>
@@ -455,11 +500,11 @@ function InstructionalSlide({ slide, pm }) {
 
       {/* Header */}
       <div style={{ flexShrink: 0, padding: `${s(pm, 14, 3)}px ${hp}px`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${c.divider}` }}>
-        <span style={{ fontSize: s(pm, 19, 6.5), fontWeight: 700, color: c.invert ? 'rgba(255,255,255,0.45)' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <span style={{ fontSize: s(pm, 'clamp(14px, 2vmin, 30px)', '6.5px'), fontWeight: 700, color: c.invert ? 'rgba(255,255,255,0.45)' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {slide.lessonName || 'Lesson'}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: s(pm, 18, 7) }}>
-          <span style={{ fontSize: s(pm, 17, 6), color: c.invert ? 'rgba(255,255,255,0.3)' : '#C0C5CF' }}>{[slide.subject, slide.grade].filter(Boolean).join(' · ')}</span>
+          <span style={{ fontSize: s(pm, 'clamp(12px, 1.8vmin, 26px)', '6px'), color: c.invert ? 'rgba(255,255,255,0.3)' : '#C0C5CF' }}>{[slide.subject, slide.grade].filter(Boolean).join(' · ')}</span>
           <BrandMark pm={pm} invert={c.invert} />
         </div>
       </div>
@@ -510,21 +555,21 @@ function InstructionalSlide({ slide, pm }) {
 
         {/* Col 3: Task / Discussion / Exit Ticket */}
         <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderBottom: `1px solid ${c.divider}`, overflow: 'hidden' }}>
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', borderBottom: `1px solid ${c.divider}`, overflow: 'hidden' }}>
             <ColHdr bg={c.tkHdr} border={c.tkHdrBdr} label="📝 Student Task" color={c.tkLabel} />
-            <div style={{ flex: 1, padding: `${s(pm, 10, 3)}px ${hp}px`, fontSize: bsz, color: c.body, lineHeight: 1.4, overflow: 'hidden' }}>
+            <div ref={taskRef} style={{ flex: 1, padding: `${s(pm, 10, 3)}px ${hp}px`, fontSize: bsz3, color: c.body, lineHeight: 1.4, overflow: 'hidden' }}>
               {slide.studentTask || <span style={{ opacity: 0.3 }}>Student task will appear here</span>}
             </div>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderBottom: `1px solid ${c.divider}`, overflow: 'hidden' }}>
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', borderBottom: `1px solid ${c.divider}`, overflow: 'hidden' }}>
             <ColHdr bg={c.dcHdr} border={c.dcHdrBdr} label="💬 Discussion" color={c.dcLabel} />
-            <div style={{ flex: 1, padding: `${s(pm, 10, 3)}px ${hp}px`, fontSize: bsz, color: c.body, lineHeight: 1.4, overflow: 'hidden' }}>
+            <div ref={discRef} style={{ flex: 1, padding: `${s(pm, 10, 3)}px ${hp}px`, fontSize: bsz3, color: c.body, lineHeight: 1.4, overflow: 'hidden' }}>
               {slide.discussionPrompt || <span style={{ opacity: 0.3 }}>Discussion prompt will appear here</span>}
             </div>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <ColHdr bg={c.exHdr} border={c.exHdrBdr} label="🎫 Exit Ticket" color={c.exLabel} />
-            <div style={{ flex: 1, padding: `${s(pm, 10, 3)}px ${hp}px`, fontSize: bsz, color: c.body, lineHeight: 1.4, overflow: 'hidden' }}>
+            <div ref={exitRef} style={{ flex: 1, padding: `${s(pm, 10, 3)}px ${hp}px`, fontSize: bsz3, color: c.body, lineHeight: 1.4, overflow: 'hidden' }}>
               {slide.exitTicket || <span style={{ opacity: 0.3 }}>Exit ticket will appear here</span>}
             </div>
           </div>
