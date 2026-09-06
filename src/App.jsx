@@ -10,6 +10,10 @@ import DisplayMode from './DisplayMode';
 import LessonSlideCreator from './LessonSlideCreator';
 import LessonSlideDisplay from './LessonSlideDisplay';
 import { CAT_META, MORNING_MEETING_CATS } from './lib/catMeta';
+import { POOL } from './data/activities';
+import { VOCAB_WORDS } from './data/vocab';
+import { DO_NOW_MATH, DO_NOW_WRITING } from './data/doNow';
+import { ON_THIS_DAY_FALLBACK, ELEMENTARY_ON_THIS_DAY } from './data/onThisDay';
 import {
   PROJECTOR_THEMES, THEME_BACKGROUND_PRESETS, PROJECTOR_BACKGROUNDS, DEFAULT_PROJECTOR_STYLE,
   normalizeColor, normalizeBackgroundUrl, isLikelyDirectImageUrl,
@@ -92,68 +96,6 @@ function getAvailableActivities(activities, type, userTier) {
   return catActivities.slice(0, FREE_ACTIVITY_LIMIT);
 }
 
-const POOL = [
-  { id:1,  cat:"Greeting",       title:"Would You Rather Welcome",      meta:"2 min · Low",    time:120, prompt:"Would you rather have the power to fly or be invisible? Share with someone near you!", starter:"I would rather… because…",          directions:"Students pair up and share with a reason. Give 60 sec, then hear 2–3 pairs." },
-  { id:2,  cat:"Greeting",       title:"Two Truths and a Tall Tale",    meta:"3 min · Medium", time:180, prompt:"Share two true things and one made-up thing about your weekend.",                  starter:"One true thing about my weekend was…", directions:"Go around the room; class guesses which is the tall tale." },
-  { id:3,  cat:"Greeting",       title:"Rose, Bud, Thorn",              meta:"3 min · Calm",   time:180, prompt:"Share one highlight, one thing you're looking forward to, and one challenge.",     starter:"My rose is… my bud is… my thorn is…",  directions:"Model your own first to set the tone." },
-  { id:4,  cat:"Greeting",       title:"High-Five Check-In",            meta:"2 min · Low",    time:120, prompt:"On a scale of 1–5 fingers, how are you feeling right now? Show me!",               starter:"I'm at a… because…",                   directions:"Students hold up fingers, then turn and share their number with a partner." },
-  { id:5,  cat:"SEL Prompt",     title:"What helped you this week?",    meta:"3 min · Calm",   time:180, prompt:"What is one thing that helped you feel successful this week?",                     starter:"One thing that helped me was…",         directions:"Ask students to think silently first, then turn and talk with a partner." },
-  { id:6,  cat:"SEL Prompt",     title:"When I feel overwhelmed I…",    meta:"3 min · Calm",   time:180, prompt:"Describe one strategy you use when school feels like a lot.",                      starter:"When I feel overwhelmed, I usually…",   directions:"Normalize struggle before sharing. Avoid calling on students cold." },
-  { id:7,  cat:"SEL Prompt",     title:"Something I'm proud of",        meta:"2 min · Calm",   time:120, prompt:"Name something you did recently that you feel good about — big or small.",         starter:"I'm proud that I…",                    directions:"Remind students that small wins count. Celebrate specifics." },
-  { id:8,  cat:"SEL Prompt",     title:"One Word Check-In",             meta:"2 min · Low",    time:120, prompt:"If you had to describe how you're feeling with just one word, what would it be?",  starter:"My word is… because…",                 directions:"Quick whip-around the room. Accept all answers without judgment." },
-  { id:9,  cat:"Brain Teaser",   title:"The Mystery Number",            meta:"5 min · Medium", time:300, prompt:"I am a two-digit number. My tens digit is 3 more than my ones digit. My digits add up to 9. What am I?", starter:"I think the answer is… because…", directions:"Give students 2 min alone, then open discussion. Ask for reasoning, not just answers." },
-  { id:10, cat:"Brain Teaser",   title:"Word Ladder",                   meta:"5 min · Medium", time:300, prompt:"Change COLD to WARM in four steps — change only one letter at a time. Each step must be a real word.", starter:"My first step is…",          directions:"Allow partners. Hint: CORD is one of the steps." },
-  { id:11, cat:"Brain Teaser",   title:"The Three Switches",            meta:"5 min · Medium", time:300, prompt:"Three switches control three light bulbs inside a room. You can flip switches but only enter the room once. How do you figure out which switch controls which bulb?", starter:"My plan is to…", directions:"Let students discuss in pairs before class share-out." },
-  { id:12, cat:"Brain Teaser",   title:"Pattern Predictor",             meta:"4 min · Medium", time:240, prompt:"What comes next? 2, 6, 12, 20, 30, ___. Can you explain the rule?",               starter:"The next number is… because…",          directions:"Students write their answer and rule before sharing." },
-  { id:13, cat:"Movement Break", title:"Four Corners",                  meta:"3 min · Active", time:180, prompt:"Each corner of the room is labeled A, B, C, or D. Move to the corner that matches your answer!", starter:"I chose corner… because…", directions:"Read a question aloud; students move to their answer corner and briefly discuss." },
-  { id:14, cat:"Movement Break", title:"Mirror Stretch",                meta:"2 min · Calm",   time:120, prompt:"Face a partner and take turns leading slow stretches. Your partner mirrors every move.", starter:"",                             directions:"Pairs stand facing each other. Leader moves slowly; switch every 30 seconds." },
-  { id:15, cat:"Movement Break", title:"Simon Says Brain Edition",      meta:"4 min · Active", time:240, prompt:"Follow Simon's commands — but only if Simon says! Stay sharp.",                    starter:"",                                     directions:"Combine movement with a cognitive challenge: Simon says pat your head AND count back from 20." },
-  { id:16, cat:"Mindfulness",    title:"54321 Grounding",               meta:"3 min · Calm",   time:180, prompt:"Name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 you can taste.", starter:"Five things I can see are…", directions:"Guide slowly through each sense. Soft background music helps." },
-  { id:17, cat:"Mindfulness",    title:"Box Breathing",                 meta:"2 min · Calm",   time:120, prompt:"Breathe in for 4 counts. Hold for 4. Out for 4. Hold for 4. Repeat.",              starter:"",                                     directions:"Model it with the class. Count aloud together for the first round." },
-  { id:18, cat:"Mindfulness",    title:"Gratitude Snapshot",            meta:"3 min · Calm",   time:180, prompt:"Close your eyes and picture one thing you're grateful for right now. What does it look like? Feel like?", starter:"I'm grateful for… because…", directions:"Students can share or keep private. Both are valid." },
-  {id:19,cat:"Greeting",title:"Partner Greeting Remix",meta:"3 min · Medium",time:180,prompt:"Greet a partner by name, then add one kind sentence or question before switching partners.",starter:"Good morning, ___. One thing I want to ask is...",directions:"Model a respectful greeting first. Students greet one partner, rotate, and repeat with a new question.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:20,cat:"Greeting",title:"Secret Handshake Hello",meta:"4 min · Active",time:240,prompt:"Create a silent two-step handshake with a partner, then use it to greet two other classmates.",starter:"Our handshake starts with...",directions:"Keep movements simple and school-appropriate. Invite pairs to teach their handshake to another pair.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:21,cat:"Greeting",title:"Greeting Choice Board",meta:"3 min · Low",time:180,prompt:"Choose a wave, fist bump, elbow tap, or verbal hello. Greet three classmates by name.",starter:"Good morning, ___!",directions:"Offer non-contact choices. Emphasize names, eye contact if comfortable, and a calm pace.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:22,cat:"SEL Prompt",title:"Favorite Season Reason",meta:"3 min · Calm",time:180,prompt:"Which season fits your mood today, and why?",starter:"Today feels like ___ because...",directions:"Give quiet think time first, then use partner sharing before inviting a few whole-class responses.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:23,cat:"SEL Prompt",title:"Book Memory Chain",meta:"4 min · Calm",time:240,prompt:"Share a book, story, or character you remember well. Why did it stick with you?",starter:"A story I remember is...",directions:"After sharing, ask partners to repeat back one detail they heard to practice careful listening.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:24,cat:"SEL Prompt",title:"Themed Share Round",meta:"4 min · Medium",time:240,prompt:"Today’s theme is “something that helps me learn.” Share one example and listen for patterns.",starter:"One thing that helps me learn is...",directions:"Choose a theme connected to your classroom goal. Close by naming two or three common themes students mentioned.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:25,cat:"SEL Prompt",title:"Skillful Commenting",meta:"4 min · Calm",time:240,prompt:"Practice responding to a classmate with a comment that adds on, asks more, or shows appreciation.",starter:"I want to add...",directions:"Teach three response stems: “I noticed,” “I wonder,” and “I appreciate.” Students practice in pairs.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:26,cat:"Brain Teaser",title:"Academic Skill Circle",meta:"5 min · Medium",time:300,prompt:"Pass a quick academic challenge around the circle: one fact, word, equation, or clue at a time.",starter:"My contribution is...",directions:"Choose a current topic. Keep turns short and allow students to pass once if needed.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:27,cat:"Brain Teaser",title:"Science Noticing Share",meta:"5 min · Medium",time:300,prompt:"Look closely at an object, image, or question. Share one observation and one wondering.",starter:"I notice... I wonder...",directions:"Use any simple classroom object or projected image. Separate observations from guesses.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:28,cat:"Brain Teaser",title:"Responsibility Word Builder",meta:"4 min · Medium",time:240,prompt:"Choose a responsibility word like respect, effort, or care. Give an example of what it looks like today.",starter:"Today, ___ looks like...",directions:"Write the word where everyone can see it. Collect concrete examples and connect them to the day’s work.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:29,cat:"Movement Break",title:"Restless Reset Choices",meta:"3 min · Active",time:180,prompt:"Choose one reset: stretch tall, wall push, chair squeeze, or slow shoulder roll. Notice how your body feels after.",starter:"The reset that helped me was...",directions:"Offer choices so students can regulate without calling attention to themselves. Keep the tone calm and matter-of-fact.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:30,cat:"Movement Break",title:"Encore Pattern",meta:"4 min · Active",time:240,prompt:"Copy a short clap, snap, or movement pattern. When the class gets it, call “Encore!” and try a harder one.",starter:"The pattern I noticed was...",directions:"Start with a two-part pattern. Invite students to lead only after expectations are clear.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:31,cat:"Movement Break",title:"Imagination Walk",meta:"4 min · Active",time:240,prompt:"Move around the room as if you are walking through mud, snow, moon dust, or a quiet library.",starter:"I imagined...",directions:"Name one setting at a time. Students move safely, then freeze and describe what they imagined.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:32,cat:"Mindfulness",title:"Calm Greeting Breath",meta:"2 min · Calm",time:120,prompt:"Before greeting someone, take one slow breath in and out. Then say hello in a calm voice.",starter:"A calm greeting sounds like...",directions:"Use this when greetings have become too silly or rushed. Practice the breath, then the greeting.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:33,cat:"Greeting",title:"ELL-Friendly Hello",meta:"3 min · Low",time:180,prompt:"Practice a short greeting with a gesture, a name, and an optional language from home.",starter:"Hello, ___. I’m glad you’re here.",directions:"Display the sentence frame. Allow students to use home languages or gestures without requiring public translation.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:34,cat:"SEL Prompt",title:"Holiday Choice Share",meta:"4 min · Calm",time:240,prompt:"Share a tradition, food, song, quiet day, or family routine that matters to you, or share something you prefer not to celebrate.",starter:"One tradition or routine in my life is...",directions:"Keep the prompt inclusive and optional. Students may share a non-holiday routine if that feels better.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:101,cat:"Sharing",title:"Favorite Season Reason",meta:"3 min · Calm",time:180,prompt:"Which season fits your mood today, and why?",starter:"Today feels like ___ because...",directions:"Give quiet think time first. Students share with a partner, then invite two or three volunteers to share with the class.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:102,cat:"Sharing",title:"Book Memory Chain",meta:"4 min · Calm",time:240,prompt:"Share a book, story, or character you remember well. Why did it stick with you?",starter:"A story I remember is...",directions:"After sharing, partners repeat back one detail they heard to practice careful listening and responding.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:103,cat:"Sharing",title:"Themed Share Round",meta:"4 min · Medium",time:240,prompt:"Today’s theme is something that helps me learn. Share one example and listen for patterns.",starter:"One thing that helps me learn is...",directions:"Choose a theme connected to your classroom goal. Close by naming two or three common patterns students mentioned.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:104,cat:"Sharing",title:"Skillful Commenting",meta:"4 min · Calm",time:240,prompt:"Practice responding to a classmate with a comment that adds on, asks more, or shows appreciation.",starter:"I want to add...",directions:"Teach three response stems: I noticed, I wonder, and I appreciate. Students practice in pairs before whole-group sharing.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:201,cat:"Sharing",title:"School Bright Spot",meta:"3 min · Calm",time:180,prompt:"What is one part of school that usually helps you feel ready to learn?",starter:"One part of school that helps me is...",directions:"Use a quick think-pair-share. Encourage students to name people, places, routines, or subjects.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:202,cat:"Sharing",title:"Proud Moment Share",meta:"3 min · Calm",time:180,prompt:"What is something you have done recently that made you feel proud?",starter:"I felt proud when...",directions:"Give examples of academic, social, and personal wins so students know small moments count.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:203,cat:"Sharing",title:"Future Me",meta:"4 min · Calm",time:240,prompt:"When you imagine yourself in the future, what is one thing you hope you are doing?",starter:"In the future, I hope I am...",directions:"Students may answer seriously or creatively. Invite partners to ask one follow-up question.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:204,cat:"Sharing",title:"Cheer-Up Choice",meta:"3 min · Calm",time:180,prompt:"What is one safe, kind thing that helps you cheer yourself up on a hard day?",starter:"Something that helps me is...",directions:"Keep the focus on healthy strategies. Build a quick class list of helpful choices.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:205,cat:"Sharing",title:"Admire and Explain",meta:"4 min · Calm",time:240,prompt:"Think of someone you admire. What is one quality they show that you respect?",starter:"I admire ___ because...",directions:"Students can name a real person, character, or public figure. Emphasize qualities, not popularity.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:206,cat:"Sharing",title:"After-School Joy",meta:"3 min · Calm",time:180,prompt:"What is something you enjoy doing when school is over, and what do you like about it?",starter:"After school, I like to...",directions:"Use partner sharing first so every student gets a voice before volunteers share out.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:207,cat:"Sharing",title:"Dream Trip",meta:"4 min · Medium",time:240,prompt:"If our class could take an imaginary trip anywhere, where should we go and why?",starter:"I would take the class to...",directions:"Invite students to include one detail: something they would see, learn, taste, or try.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:208,cat:"Sharing",title:"Superpower for Good",meta:"3 min · Medium",time:180,prompt:"If you could choose one superpower to help people, what would it be?",starter:"I would choose... because...",directions:"After sharing, ask students how they can show a tiny version of that power today.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:209,cat:"Sharing",title:"Invent a Helpful App",meta:"4 min · Medium",time:240,prompt:"If you could design an app that solved one everyday problem, what would it do?",starter:"My app would help people...",directions:"Great for grades 6 and up. Invite students to name the problem, user, and first button.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:210,cat:"Sharing",title:"One Rule for a Better Day",meta:"4 min · Calm",time:240,prompt:"If you could add one rule that would make school better for everyone, what would it be?",starter:"One helpful rule would be...",directions:"Guide students toward rules that are fair, realistic, and community-minded.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:211,cat:"Sharing",title:"Novel Title About You",meta:"3 min · Calm",time:180,prompt:"If a book were written about your week, what would the title be?",starter:"The title would be...",directions:"Students can answer with humor or honesty. Invite one sentence explaining the title.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:212,cat:"Sharing",title:"Hidden Strength",meta:"4 min · Calm",time:240,prompt:"What is something you are good at that classmates might not know yet?",starter:"Something people may not know is...",directions:"Model a low-pressure answer first. Students may share a skill, interest, responsibility, or kindness.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:213,cat:"Sharing",title:"Past or Future Visit",meta:"4 min · Medium",time:240,prompt:"Would you rather visit a time long ago or a time far in the future? What would you want to see?",starter:"I would visit... because...",directions:"Students choose a side, then share one detail they would investigate.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:214,cat:"Sharing",title:"Hard Goal, First Step",meta:"4 min · Calm",time:240,prompt:"What is one goal that may take real effort, and what is one small first step?",starter:"A goal that will take effort is...",directions:"Keep the tone supportive. Close by naming how small steps make hard goals feel possible.",source:"Centervention Morning Meeting Questions",sourceUrl:"https://www.centervention.com/morning-meeting-questions/"},
-  {id:111,cat:"Group Activity",title:"Encore Pattern",meta:"4 min · Active",time:240,prompt:"Copy a short clap, snap, or movement pattern. When the class gets it, call Encore and try a harder one.",starter:"The pattern I noticed was...",directions:"Start with a two-part pattern. Invite students to lead only after expectations are clear and the pace is safe.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:112,cat:"Group Activity",title:"Academic Skill Circle",meta:"5 min · Medium",time:300,prompt:"Pass a quick academic challenge around the circle: one fact, word, equation, or clue at a time.",starter:"My contribution is...",directions:"Choose a current topic. Keep turns short and allow students to pass once if needed.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:113,cat:"Group Activity",title:"Imagination Walk",meta:"4 min · Active",time:240,prompt:"Move around the room as if you are walking through mud, snow, moon dust, or a quiet library.",starter:"I imagined...",directions:"Name one setting at a time. Students move safely, then freeze and describe what they imagined.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:114,cat:"Group Activity",title:"Science Noticing Share",meta:"5 min · Medium",time:300,prompt:"Look closely at an object, image, or question. Share one observation and one wondering.",starter:"I notice... I wonder...",directions:"Use any simple classroom object or projected image. Separate observations from guesses.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:121,cat:"Morning Message",title:"Good Morning, Learners",meta:"2 min · Calm",time:120,prompt:"Good morning, learners. Today we will build our classroom community by listening carefully and helping each other begin well.",starter:"One way I can help our class today is...",directions:"Display the message as students enter. Read it together and ask students to name one action that will help the class start strong.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
-  {id:122,cat:"Morning Message",title:"Responsibility Word Builder",meta:"3 min · Medium",time:180,prompt:"Today’s responsibility word is effort. What does effort look like, sound like, and feel like in our classroom?",starter:"Today, effort looks like...",directions:"Write the word where everyone can see it. Collect concrete examples and connect them to the day’s first lesson.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
-  {id:123,cat:"Morning Message",title:"Community Goal Message",meta:"2 min · Calm",time:120,prompt:"Today our goal is to make sure every classmate feels included. What is one small move that helps someone feel like they belong?",starter:"One small move is...",directions:"Read the message chorally. Students turn and talk, then choose one class goal to practice before lunch.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
-  {id:124,cat:"Morning Message",title:"Preview the Learning Day",meta:"3 min · Calm",time:180,prompt:"Today we will read, solve, create, and reflect. Which part of the day will need the most perseverance?",starter:"I may need perseverance when...",directions:"Use the message to preview the day. Invite students to identify one moment where a learning strategy will help.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"}
-];
 
 const DEFAULT_CATS = ["Greeting", "Sharing", "Group Activity", "Morning Message"];
 const GRADE_RITUAL_ACTIVITY_IDS = {
@@ -173,106 +115,7 @@ const ON_THIS_DAY_SOURCE = {
   url: "https://www.onthisday.com/"
 };
 
-const ON_THIS_DAY_FALLBACK = {
-  "01-01": [
-    { year: "1892", title: "Ellis Island opened in New York Harbor. Millions of people later came through this station when moving to the United States.", category: "History" },
-    { year: "1801", title: "Giuseppe Piazzi discovered Ceres, the largest object in the asteroid belt between Mars and Jupiter.", category: "Space" },
-    { year: "1863", title: "The Emancipation Proclamation took effect. It became an important step toward freedom in the United States.", category: "Civics" }
-  ],
-  "02-01": [
-    { year: "1960", title: "Four college students began a peaceful sit-in in Greensboro, North Carolina. Their courage helped more people work for fair treatment.", category: "Civics" },
-    { year: "1884", title: "The first part of the Oxford English Dictionary was published, helping people learn about words and their histories.", category: "Language" },
-    { year: "2003", title: "NASA learned important safety lessons from the Space Shuttle Columbia mission.", category: "Space" }
-  ],
-  "03-14": [
-    { year: "1879", title: "Albert Einstein was born. He became famous for asking big questions about light, energy, space, and time.", category: "Science" },
-    { year: "1988", title: "Pi Day was first celebrated at the Exploratorium in San Francisco. Pi helps people measure circles.", category: "Math" },
-    { year: "1995", title: "Astronaut Norman Thagard became the first American to ride to space on a Russian spacecraft.", category: "Space" }
-  ],
-  "04-22": [
-    { year: "1970", title: "The first Earth Day was celebrated. People used the day to learn how to protect air, water, animals, and land.", category: "Nature" },
-    { year: "1838", title: "The steamship Sirius completed an early trip across the Atlantic Ocean using steam power.", category: "Transportation" },
-    { year: "1993", title: "The first web browser for many home computers helped more people explore the World Wide Web.", category: "Technology" }
-  ],
-  "04-30": [
-    { year: "1789", title: "George Washington became the first president of the United States. Students can ask what makes a good leader.", category: "Civics" },
-    { year: "1993", title: "CERN shared World Wide Web technology for anyone to use freely, helping the internet grow.", category: "Technology" },
-    { year: "1803", title: "The Louisiana Purchase doubled the size of the United States and changed maps of North America.", category: "Geography" }
-  ],
-  "05-05": [
-    { year: "1961", title: "Alan Shepard became the first American to travel into space. His short flight helped NASA learn more about human space travel.", category: "Space" },
-    { year: "1862", title: "The Battle of Puebla later became connected to Cinco de Mayo, a celebration of Mexican history and culture.", category: "Culture" },
-    { year: "1904", title: "Cy Young pitched baseball's first perfect game in the modern era.", category: "Sports" }
-  ],
-  "06-19": [
-    { year: "1865", title: "Juneteenth marks the day many enslaved people in Texas learned they were free.", category: "Civics" },
-    { year: "2021", title: "Juneteenth became a federal holiday in the United States.", category: "Civics" },
-    { year: "1978", title: "The comic strip Garfield first appeared in newspapers.", category: "Arts & Culture" }
-  ],
-  "07-20": [
-    { year: "1969", title: "Apollo 11 astronauts Neil Armstrong and Buzz Aldrin walked on the Moon.", category: "Space" },
-    { year: "1976", title: "NASA's Viking 1 lander reached Mars and sent pictures back to Earth.", category: "Space" },
-    { year: "1940", title: "The first Billboard music popularity chart was published.", category: "Arts & Culture" }
-  ],
-  "08-28": [
-    { year: "1963", title: "Martin Luther King Jr. shared his famous dream for fairness during the March on Washington.", category: "Civics" },
-    { year: "1993", title: "The Galileo spacecraft flew by an asteroid named Ida and discovered it had a tiny moon.", category: "Space" },
-    { year: "1907", title: "UPS began as a small messenger company in Seattle before growing into a worldwide delivery service.", category: "Inventions" }
-  ],
-  "09-17": [
-    { year: "1787", title: "Delegates signed the United States Constitution in Philadelphia.", category: "Civics" },
-    { year: "1976", title: "NASA publicly introduced the first space shuttle, Enterprise.", category: "Space" },
-    { year: "1920", title: "The National Football League began as a small group of teams.", category: "Sports" }
-  ],
-  "10-04": [
-    { year: "1957", title: "Sputnik 1 became the first artificial satellite to orbit Earth.", category: "Space" },
-    { year: "1822", title: "Rutherford B. Hayes was born. He later became the 19th U.S. president.", category: "Famous People" },
-    { year: "1535", title: "The first complete English Bible was printed, helping more people read it in English.", category: "Language" }
-  ],
-  "11-09": [
-    { year: "1989", title: "The Berlin Wall opened. Families and friends who had been separated could visit each other again.", category: "History" },
-    { year: "1967", title: "The first issue of Rolling Stone magazine was published, sharing stories about music and culture.", category: "Arts & Culture" },
-    { year: "1934", title: "Astronomer Carl Sagan was born. He helped many people get excited about space.", category: "Space" }
-  ],
-  "12-10": [
-    { year: "1901", title: "The first Nobel Prizes were awarded to people who made important contributions to the world.", category: "Science" },
-    { year: "1948", title: "The United Nations adopted the Universal Declaration of Human Rights.", category: "Civics" },
-    { year: "1815", title: "Ada Lovelace was born. She is remembered for early ideas about computer programming.", category: "Technology" }
-  ],
-  default: [
-    { year: "1969", title: "Apollo 11 astronauts walked on the Moon. What do you think teamwork sounded like during the mission?", category: "Space" },
-    { year: "1970", title: "Earth Day began as a way for people to learn how to protect nature and the planet.", category: "Nature" },
-    { year: "1903", title: "The Wright brothers made one of the first powered airplane flights. It lasted less than a minute.", category: "Inventions" },
-    { year: "1934", title: "Jane Goodall was born. She later studied chimpanzees and taught people to care about animals.", category: "Animals" },
-    { year: "1955", title: "Marian Anderson became the first Black singer to perform with the Metropolitan Opera.", category: "Arts & Culture" },
-    { year: "1947", title: "Jackie Robinson joined Major League Baseball and helped professional sports become more fair.", category: "Sports" },
-    { year: "1990", title: "The Hubble Space Telescope launched and began helping people see deep into space.", category: "Space" },
-    { year: "1958", title: "LEGO bricks began using their modern interlocking design, making creative building easier.", category: "Inventions" }
-  ]
-};
 
-const ELEMENTARY_ON_THIS_DAY = {
-  "K–2": [
-    { year: "1934", title: "Jane Goodall was born. She grew up loving animals and later studied chimpanzees.", category: "Animals", prompt: "What animal would you like to learn more about?" },
-    { year: "1958", title: "LEGO bricks began using their modern snap-together design.", category: "Inventions", prompt: "What would you build if you had unlimited bricks?" },
-    { year: "1969", title: "Astronauts walked on the Moon for the first time.", category: "Space", prompt: "What would you want to see on the Moon?" },
-    { year: "1970", title: "Earth Day began so people could learn how to take care of our planet.", category: "Nature", prompt: "What is one way our class can help the Earth?" },
-    { year: "1903", title: "The Wright brothers flew an early airplane for less than one minute.", category: "Inventions", prompt: "Why do you think trying again matters?" },
-    { year: "1990", title: "The Hubble Space Telescope went to space and began taking pictures of stars and galaxies.", category: "Space", prompt: "What do you wonder about space?" },
-    { year: "1947", title: "Jackie Robinson helped make baseball more fair for everyone.", category: "Sports", prompt: "What does fairness look like in a game?" },
-    { year: "1983", title: "Sally Ride became the first American woman to travel into space.", category: "Space", prompt: "What brave thing might an astronaut need to do?" }
-  ],
-  "3–5": [
-    { year: "1888", title: "The National Geographic Society was founded to help people learn about maps, animals, cultures, and Earth.", category: "Geography", prompt: "What place, animal, or culture would you like to investigate?" },
-    { year: "1876", title: "Alexander Graham Bell received a patent for the telephone, helping people talk across long distances.", category: "Inventions", prompt: "How did phones change the way people communicate?" },
-    { year: "1962", title: "Mae Jemison was born. She later became the first Black woman to travel into space.", category: "Famous People", prompt: "What character trait helps someone do something new?" },
-    { year: "1928", title: "Alexander Fleming noticed something that helped lead to penicillin, an important medicine.", category: "Science", prompt: "Why is careful observation important in science?" },
-    { year: "1914", title: "Garrett Morgan patented safety equipment that helped protect rescue workers.", category: "Inventions", prompt: "What problem would you invent something to solve?" },
-    { year: "1869", title: "The first U.S. transcontinental railroad helped people and goods travel across the country faster.", category: "Transportation", prompt: "How does transportation change communities?" },
-    { year: "1706", title: "Benjamin Franklin was born. He became a writer, inventor, scientist, and leader.", category: "Famous People", prompt: "Why might curiosity help someone learn many things?" },
-    { year: "1901", title: "The first Nobel Prizes honored people whose work helped the world.", category: "Science", prompt: "What kind of helpful work should be celebrated?" }
-  ]
-};
 
 function rotateHistoryItems(items, date = new Date(), count = 6) {
   if (!items.length) return [];
@@ -324,75 +167,7 @@ function historyToActivity(item, sourceUrl) {
   };
 }
 
-const DO_NOW_MATH = {
-  "K–2": [
-    { title:"Count and Compare", problem:"Which is greater: 14 or 17? How do you know?", hint:"Use a number line or count forward from 14.", answer:"17 is greater because it comes after 14 when counting.", teacherNote:"Listen for students using order, counting, or place-value language." },
-    { title:"Missing Addend", problem:"5 + ___ = 9. What number is missing?", hint:"Count up from 5 to 9.", answer:"4 is missing because 5 + 4 = 9.", teacherNote:"Ask students to show the count-up strategy on fingers or drawings." },
-    { title:"Shape Hunt", problem:"Name a shape with 3 sides. Where do you see one in the room?", hint:"Count the sides and corners.", answer:"A triangle has 3 sides.", teacherNote:"Accept real-world examples if students can justify the shape." },
-    { title:"Ten Frame Think", problem:"You have 8 counters. How many more do you need to make 10?", hint:"Think 8 and what makes 10?", answer:"2 more counters make 10.", teacherNote:"Connect to complements of ten." }
-  ],
-  "3–5": [
-    { title:"Fraction Match", problem:"Which is larger: 1/2 or 3/8? Explain your reasoning.", hint:"Compare both fractions to 4/8.", answer:"1/2 is larger because 1/2 = 4/8, and 4/8 > 3/8.", teacherNote:"Look for equivalent fraction reasoning, not just an answer." },
-    { title:"Place Value Puzzle", problem:"A number has 6 hundreds, 4 tens, and 9 ones. What is the number?", hint:"Write the hundreds, tens, and ones in order.", answer:"649.", teacherNote:"Ask students to represent it in expanded form: 600 + 40 + 9." },
-    { title:"Multiply Efficiently", problem:"Solve 8 × 25 mentally. What strategy did you use?", hint:"25 is one quarter of 100.", answer:"200. One strategy: 4 × 25 = 100, so 8 × 25 = 200.", teacherNote:"Invite multiple strategies: doubling, grouping, or using 100." },
-    { title:"Remainder Reasoning", problem:"23 students form groups of 4. How many full groups can they make, and how many students are left?", hint:"Think 4 × 5 and 4 × 6.", answer:"5 full groups with 3 students left.", teacherNote:"Connect the result to division with remainders." }
-  ],
-  "6–8": [
-    { title:"Ratio Table", problem:"A recipe uses 3 cups of flour for every 2 cups of sugar. How much sugar is needed for 12 cups of flour?", hint:"3 cups of flour becomes 12 cups by multiplying by 4.", answer:"8 cups of sugar.", teacherNote:"Emphasize scaling both parts of the ratio by the same factor." },
-    { title:"Integer Change", problem:"The temperature was -3°F and rose 11 degrees. What is the new temperature?", hint:"Move 11 spaces to the right from -3 on a number line.", answer:"8°F.", teacherNote:"Ask students to model the change with a number line." },
-    { title:"Solve the Equation", problem:"Solve: 3x + 5 = 23.", hint:"Undo +5 first, then divide by 3.", answer:"x = 6.", teacherNote:"Look for inverse-operation reasoning." },
-    { title:"Percent Quick Check", problem:"What is 15% of 80?", hint:"10% of 80 is 8, and 5% is half of that.", answer:"12.", teacherNote:"Encourage benchmark percent strategies." }
-  ],
-  "9–12": [
-    { title:"Linear Function", problem:"A line has slope 3 and passes through (0, -2). Write its equation.", hint:"Use y = mx + b.", answer:"y = 3x - 2.", teacherNote:"Confirm students understand the y-intercept from (0, -2)." },
-    { title:"Quadratic Roots", problem:"Solve x² - 9 = 0.", hint:"This is a difference of squares.", answer:"x = -3 or x = 3.", teacherNote:"Ask why both positive and negative values work." },
-    { title:"Function Evaluation", problem:"If f(x) = 2x² - 1, what is f(3)?", hint:"Substitute 3 for x before simplifying.", answer:"17, because 2(3²) - 1 = 18 - 1.", teacherNote:"Watch order of operations." },
-    { title:"Data Reasoning", problem:"A data set has mean 72. One low score of 40 is removed. Will the mean increase, decrease, or stay the same?", hint:"Think about whether 40 is below or above the mean.", answer:"The mean will increase because a below-average value was removed.", teacherNote:"Prioritize conceptual reasoning over calculation." }
-  ]
-};
 
-const DO_NOW_WRITING = {
-  "K–2": [
-    { title:"Favorite Place", problem:"Write one sentence about a place you like to visit. Add one detail that helps us picture it.", hint:"Start with: I like to visit...", answer:"Student responses will vary.", teacherNote:"Inspired by early-grade place and personal-experience topics. Look for one clear idea and one concrete detail." },
-    { title:"Animal Expert", problem:"Write two things you know about an animal.", hint:"Choose one animal. Tell what it looks like, eats, or does.", answer:"Student responses will vary.", teacherNote:"Builds explanatory writing from high-interest topics like animals and nature." },
-    { title:"How To Help", problem:"Write one way people can help keep a classroom, playground, or neighborhood clean.", hint:"Use should or can.", answer:"Student responses will vary.", teacherNote:"A quick persuasive prompt with a real classroom/community connection." },
-    { title:"Tiny Story", problem:"Write two sentences about a lost mitten.", hint:"Sentence 1: Who found it? Sentence 2: What happened next?", answer:"Student responses will vary.", teacherNote:"Encourage a clear beginning and ending." },
-    { title:"What If Toys Talked?", problem:"Pick a toy. Write what it might say if it could talk.", hint:"Use quotation marks if students are ready.", answer:"Student responses will vary.", teacherNote:"Creative prompt adapted from imaginative early-grade topic patterns." },
-    { title:"Book Friend", problem:"Name a character from a book. Write why you would or would not want to meet them.", hint:"Use because.", answer:"Student responses will vary.", teacherNote:"Short response-to-reading practice with opinion support." },
-    { title:"Funny Words", problem:"Write a word that sounds funny to you. Tell why it makes you smile.", hint:"Try saying the word quietly first.", answer:"Student responses will vary.", teacherNote:"Good for phonological play and low-pressure writing fluency." },
-    { title:"I Wonder", problem:"Write one question you wonder about animals, space, weather, or the ocean.", hint:"Start with: I wonder why... or I wonder how...", answer:"Student responses will vary.", teacherNote:"Seed research curiosity without requiring research time." }
-  ],
-  "3–5": [
-    { title:"Best Recess Game", problem:"Explain how to play a recess or playground game so a new student could join.", hint:"Use steps like first, next, then.", answer:"Student responses will vary.", teacherNote:"Procedural/explanatory writing based on familiar school topics." },
-    { title:"School Needs This", problem:"What is one thing our school really needs? Write your opinion and one strong reason.", hint:"Claim + because + example.", answer:"Student responses will vary.", teacherNote:"Persuasive writing with a concrete audience and purpose." },
-    { title:"Special Photograph", problem:"Describe a photo you remember. What is happening, and why does it matter?", hint:"Include who, where, and one feeling.", answer:"Student responses will vary.", teacherNote:"Narrative-memory prompt inspired by personal photograph topics." },
-    { title:"Invention Idea", problem:"Invent a machine that would solve a small everyday problem. What does it do?", hint:"Name the problem before describing the machine.", answer:"Student responses will vary.", teacherNote:"Creative/explanatory blend; useful before science or design thinking." },
-    { title:"Ocean Question", problem:"Write one thing you know about the ocean and one question you could research.", hint:"Separate facts from questions.", answer:"Student responses will vary.", teacherNote:"Research readiness: fact/question distinction." },
-    { title:"Author Move", problem:"Think about a book you like. What is one thing the author does well?", hint:"They might use funny dialogue, suspense, description, or strong characters.", answer:"Student responses will vary.", teacherNote:"Response-to-literature prompt that names craft." },
-    { title:"Storm Moment", problem:"Write the first five sentences of a story that begins during a big storm.", hint:"Use sound, movement, and one character reaction.", answer:"Student responses will vary.", teacherNote:"Creative narrative with sensory detail." },
-    { title:"Team Sports", problem:"Are team sports good for students? Give one reason for your answer.", hint:"You may agree, disagree, or partly agree.", answer:"Student responses will vary.", teacherNote:"Supports nuanced opinion writing." }
-  ],
-  "6–8": [
-    { title:"New Student Guide", problem:"Write advice for a new student who wants to have a good first week here.", hint:"Give two specific tips and explain why they help.", answer:"Student responses will vary.", teacherNote:"Explanatory writing grounded in authentic audience." },
-    { title:"Change School Life", problem:"What change would improve school life? Write a claim and two reasons.", hint:"Make the change realistic enough to discuss.", answer:"Student responses will vary.", teacherNote:"Argument writing inspired by school-improvement topic patterns." },
-    { title:"Memorable Ride", problem:"Write about a bus, car, train, bike, or walking trip that you remember.", hint:"Focus on one moment instead of the whole trip.", answer:"Student responses will vary.", teacherNote:"Narrative practice with narrowing focus." },
-    { title:"Future Self", problem:"Imagine meeting yourself five years from now. What question would you ask, and what answer might you hope to hear?", hint:"Make the answer reveal a goal or value.", answer:"Student responses will vary.", teacherNote:"Reflective/creative prompt adapted from future-self topics." },
-    { title:"Book to Screen", problem:"Should a favorite book be made into a movie or show? Explain one opportunity and one risk.", hint:"Think about characters, setting, and what might change.", answer:"Student responses will vary.", teacherNote:"Response-to-literature plus argument." },
-    { title:"Job Worth Trying", problem:"Choose a job you might like to try. What would you need to learn first?", hint:"Name a skill, habit, or responsibility.", answer:"Student responses will vary.", teacherNote:"Research/career writing in short form." },
-    { title:"Rule Check", problem:"Is a rule always right just because it is a rule? Write a careful answer.", hint:"Use an example, but keep it respectful.", answer:"Student responses will vary.", teacherNote:"Good for civic reasoning and classroom norms." },
-    { title:"Cloud People", problem:"Write a scene set in a community that lives above the clouds.", hint:"Include one ordinary detail and one impossible detail.", answer:"Student responses will vary.", teacherNote:"Creative prompt that invites world-building without a long setup." }
-  ],
-  "9–12": [
-    { title:"Necessary Change", problem:"What is one change that would make school more meaningful for students? Write a claim, reason, and possible objection.", hint:"Acknowledge why someone might disagree.", answer:"Student responses will vary.", teacherNote:"Argument practice with counterargument." },
-    { title:"Routine Breaker", problem:"What do you do, or wish you could do, to break routine? Explain what that reveals about you.", hint:"Move from action to reflection.", answer:"Student responses will vary.", teacherNote:"Personal essay seed drawn from self-reflection topic patterns." },
-    { title:"Invention We Need", problem:"What invention would you like to see in your lifetime? Explain the problem it would solve.", hint:"Be specific about who benefits.", answer:"Student responses will vary.", teacherNote:"Explanatory/argument hybrid that can lead into research." },
-    { title:"Meaningful Gift", problem:"Write about a meaningful gift you gave, received, or wish you could give.", hint:"The gift can be an object, time, advice, or help.", answer:"Student responses will vary.", teacherNote:"Narrative reflection with emotional specificity." },
-    { title:"Color Meaning", problem:"Choose a color and explain what it means to you. Use one memory or image.", hint:"Avoid listing; build around one example.", answer:"Student responses will vary.", teacherNote:"Good mini-practice for symbolism and concrete detail." },
-    { title:"Crime Stories", problem:"Why are people drawn to mystery or crime stories? Offer one explanation.", hint:"Consider suspense, justice, fear, puzzles, or character.", answer:"Student responses will vary.", teacherNote:"Analytical writing connected to popular media." },
-    { title:"Alternate Energy", problem:"Should communities push harder for alternate forms of energy? Write a claim and one evidence need.", hint:"If you need a fact, say what fact would help prove your point.", answer:"Student responses will vary.", teacherNote:"Argument plus research planning." },
-    { title:"Author's Style", problem:"Think of a writer, songwriter, filmmaker, or speaker with a distinct style. What makes their style recognizable?", hint:"Point to word choice, structure, tone, image, rhythm, or theme.", answer:"Student responses will vary.", teacherNote:"Response-to-text/craft analysis, broadened beyond books." }
-  ]
-};
 
 const DO_NOW_SECTIONS = {
   math: {
@@ -412,40 +187,6 @@ const DO_NOW_SECTIONS = {
   socialStudies: { label: "Social Studies", enabled: false }
 };
 
-const VOCAB_WORDS = {
-  "K–2": [
-    { word:"chuckle", type:"verb", meaning:"to laugh quietly or gently", example:"I heard Maya chuckle at the funny line.", tryIt:"Show a quiet chuckle, then use the word in a sentence." },
-    { word:"frost", type:"noun", meaning:"a thin icy layer that forms when it is very cold", example:"Frost sparkled on the grass in the morning.", tryIt:"Name one place you might see frost." },
-    { word:"glance", type:"verb", meaning:"to look quickly", example:"I took a glance at the clock before packing up.", tryIt:"Glance at something blue, then tell a partner what you saw." },
-    { word:"joy", type:"noun", meaning:"a feeling of great happiness", example:"The class felt joy when the project was finished.", tryIt:"Share one small thing that brings you joy." },
-    { word:"whisper", type:"verb", meaning:"to speak very softly", example:"Please whisper while the group is reading.", tryIt:"Whisper the word to a partner, then say its meaning." },
-    { word:"brave", type:"adjective", meaning:"showing courage even when something feels hard", example:"It was brave to try again after a mistake.", tryIt:"Finish this sentence: I can be brave when..." }
-  ],
-  "3–5": [
-    { word:"baffle", type:"verb", meaning:"to confuse or puzzle someone", example:"The tricky riddle began to baffle the group.", tryIt:"Describe something that might baffle a detective." },
-    { word:"remedy", type:"noun", meaning:"something that helps fix a problem", example:"A short walk was the perfect remedy for feeling restless.", tryIt:"Name a remedy for a noisy classroom." },
-    { word:"frail", type:"adjective", meaning:"weak or easily damaged", example:"The frail leaf broke when I touched it.", tryIt:"Think of an object that could be described as frail." },
-    { word:"diversity", type:"noun", meaning:"a mix of different people, ideas, or things", example:"Our classroom has diversity in languages, interests, and talents.", tryIt:"List two kinds of diversity that make a group stronger." },
-    { word:"acquire", type:"verb", meaning:"to get or learn something over time", example:"Readers acquire new vocabulary by meeting words often.", tryIt:"What skill would you like to acquire this year?" },
-    { word:"fabricate", type:"verb", meaning:"to invent or make something up", example:"The character tried to fabricate an excuse.", tryIt:"Create a sentence where fabricate means make up a story." }
-  ],
-  "6–8": [
-    { word:"belligerent", type:"adjective", meaning:"hostile or ready to argue", example:"The debate became less useful when the tone turned belligerent.", tryIt:"Rewrite a belligerent comment so it sounds respectful." },
-    { word:"accumulate", type:"verb", meaning:"to gather or build up little by little", example:"Questions began to accumulate as we studied the evidence.", tryIt:"Name something that can accumulate during a busy week." },
-    { word:"adept", type:"adjective", meaning:"skilled or very capable at something", example:"She became adept at explaining her reasoning.", tryIt:"What is one thing you are becoming adept at?" },
-    { word:"animosity", type:"noun", meaning:"strong dislike or hostility", example:"The characters had to overcome years of animosity.", tryIt:"What action could reduce animosity between two people?" },
-    { word:"incessant", type:"adjective", meaning:"continuing without stopping", example:"The incessant tapping made it hard to focus.", tryIt:"Use incessant to describe a sound, thought, or habit." },
-    { word:"infamous", type:"adjective", meaning:"well known for a bad reason", example:"The infamous storm changed the town forever.", tryIt:"Explain the difference between famous and infamous." }
-  ],
-  "9–12": [
-    { word:"meticulous", type:"adjective", meaning:"showing extreme care and attention to detail", example:"The lab report was meticulous, with every measurement recorded.", tryIt:"Describe a task that requires meticulous work." },
-    { word:"eloquent", type:"adjective", meaning:"clear, powerful, and expressive in speech or writing", example:"Her eloquent argument persuaded the committee.", tryIt:"Turn a plain sentence into a more eloquent one." },
-    { word:"ambivalent", type:"adjective", meaning:"having mixed or conflicting feelings", example:"He felt ambivalent about leaving a familiar school.", tryIt:"Describe a decision that could make someone feel ambivalent." },
-    { word:"conspicuous", type:"adjective", meaning:"easy to notice; standing out", example:"The missing paragraph left a conspicuous gap in the essay.", tryIt:"What would be conspicuous in a silent library?" },
-    { word:"cajole", type:"verb", meaning:"to persuade someone with gentle pressure or flattery", example:"The speaker tried to cajole the audience into volunteering.", tryIt:"Write a sentence where someone tries to cajole a friend." },
-    { word:"plethora", type:"noun", meaning:"a very large amount or variety", example:"The article offered a plethora of possible solutions.", tryIt:"Use plethora to describe a useful abundance, not just many things." }
-  ]
-};
 
 function getEnergy(activity) {
   return (activity.meta || "").split("·").map(x => x.trim()).pop();
