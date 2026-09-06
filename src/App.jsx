@@ -12,7 +12,9 @@ import LessonSlideDisplay from './LessonSlideDisplay';
 import { CAT_META, MORNING_MEETING_CATS } from './lib/catMeta';
 import { POOL } from './data/activities';
 import { VOCAB_WORDS } from './data/vocab';
-import { DO_NOW_MATH, DO_NOW_WRITING } from './data/doNow';
+import {
+  DO_NOW_MATH, DO_NOW_WRITING, DO_NOW_ELA, DO_NOW_SCIENCE, DO_NOW_SOCIAL_STUDIES,
+} from './data/doNow';
 import { ON_THIS_DAY_FALLBACK, ELEMENTARY_ON_THIS_DAY } from './data/onThisDay';
 import {
   PROJECTOR_THEMES, THEME_BACKGROUND_PRESETS, PROJECTOR_BACKGROUNDS, DEFAULT_PROJECTOR_STYLE,
@@ -174,17 +176,45 @@ const DO_NOW_SECTIONS = {
     label: "Math",
     eyebrow: "Math Do Now",
     enabled: true,
+    noun: "Problem",
     bank: DO_NOW_MATH
   },
   writing: {
     label: "Writing",
     eyebrow: "Writing Do Now",
     enabled: true,
+    noun: "Prompt",
     bank: DO_NOW_WRITING
   },
-  ela: { label: "ELA", enabled: false },
-  science: { label: "Science", enabled: false },
-  socialStudies: { label: "Social Studies", enabled: false }
+  ela: {
+    label: "ELA",
+    eyebrow: "ELA Do Now",
+    enabled: true,
+    noun: "Question",
+    bank: DO_NOW_ELA
+  },
+  science: {
+    label: "Science",
+    eyebrow: "Science Do Now",
+    enabled: true,
+    noun: "Question",
+    bank: DO_NOW_SCIENCE
+  },
+  socialStudies: {
+    label: "Social Studies",
+    eyebrow: "Social Studies Do Now",
+    enabled: true,
+    noun: "Question",
+    bank: DO_NOW_SOCIAL_STUDIES
+  }
+};
+
+const DO_NOW_CATS = {
+  math: "Math Do Now",
+  writing: "Writing Do Now",
+  ela: "ELA Do Now",
+  science: "Science Do Now",
+  socialStudies: "Social Studies Do Now"
 };
 
 
@@ -333,7 +363,7 @@ function doNowToActivity(problem, grade = "3–5", subject = "math") {
   const section = DO_NOW_SECTIONS[subject] || DO_NOW_SECTIONS.math;
   return {
     id: contentKey(subject, grade, problem, "title"),
-    cat: subject === "math" ? "Math Do Now" : subject === "writing" ? "Writing Do Now" : "Brain Teaser",
+    cat: DO_NOW_CATS[subject] || "Brain Teaser",
     title: `${section.label}: ${problem.title}`,
     meta: "5 min · Medium",
     time: 300,
@@ -346,10 +376,12 @@ function doNowToActivity(problem, grade = "3–5", subject = "math") {
 
 function buildContentActivities(grade = "3–5", customVocab = {}, customDoNow = {}) {
   const words = getVocabBank(grade, customVocab).map(word => vocabToActivity(word, grade));
-  const math = getDoNowBank("math", grade, customDoNow).map(problem => doNowToActivity(problem, grade, "math"));
-  const writing = getDoNowBank("writing", grade, customDoNow).map(prompt => doNowToActivity(prompt, grade, "writing"));
+  const doNow = Object.entries(DO_NOW_SECTIONS)
+    .filter(([, section]) => section.enabled && section.bank)
+    .flatMap(([subject]) => getDoNowBank(subject, grade, customDoNow)
+      .map(item => doNowToActivity(item, grade, subject)));
   const history = getFallbackHistory().slice(0, 6).map(item => historyToActivity(item, onThisDayUrl()));
-  return [...words, ...math, ...writing, ...history];
+  return [...words, ...doNow, ...history];
 }
 
 function uniqueActivities(activities = []) {
@@ -1170,7 +1202,7 @@ function DoNowEditorSheet({ grade, subject, initialProblem, onSave, onClose }) {
     <div className="overlay dialog-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="filter-sheet custom-sheet">
         <div className="sheet-handle"/>
-        <div className="sheet-title">{initialProblem ? "Edit Problem" : "Add Problem"} · {DO_NOW_SECTIONS[subject].label} · {grade}</div>
+        <div className="sheet-title">{`${initialProblem ? "Edit" : "Add"} ${DO_NOW_SECTIONS[subject]?.noun || "Prompt"}`} · {DO_NOW_SECTIONS[subject].label} · {grade}</div>
         <div className="sheet-body custom-form">
           <label className="form-field"><span>Title</span><input value={draft.title} onChange={e => setField("title", e.target.value)}/></label>
           <label className="form-field"><span>Problem</span><textarea rows="3" value={draft.problem} onChange={e => setField("problem", e.target.value)}/></label>
@@ -1376,7 +1408,7 @@ function DoNowScreen({ grade, subject, problem, problems, revealAnswer, onReveal
         <div className="header-actions">
           <button className="btn-primary btn-compact" type="button" onClick={onProject}>Project</button>
           <button className="btn-secondary btn-compact" type="button" aria-label={`Add ${problem.title} to routine builder`} onClick={onAddToRoutine}>Add to Routine</button>
-          <button className="btn-secondary btn-compact" type="button" onClick={onCreate}>{subject === "math" ? "+ Add Problem" : "+ Add Prompt"}</button>
+          <button className="btn-secondary btn-compact" type="button" onClick={onCreate}>{`+ Add ${section.noun || "Prompt"}`}</button>
           <button className="btn-secondary btn-compact" type="button" onClick={onRefresh}>New Prompt</button>
         </div>
       </div>
@@ -1396,7 +1428,7 @@ function DoNowScreen({ grade, subject, problem, problems, revealAnswer, onReveal
           ))}
         </aside>
         <div className="chooser-panel">
-          <div className="chooser-title">{subject === "math" ? "Choose a Problem" : "Choose a Prompt"}</div>
+          <div className="chooser-title">{`Choose a ${section.noun || "Prompt"}`}</div>
           {problems.map(item => (
             <div key={item.id || item.title} className={`chooser-card${item.title === problem.title ? " active" : ""}`}>
               <button type="button" onClick={() => onChoose(item)}>
