@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import {
+  getFirestore,
   initializeFirestore,
   persistentLocalCache,
   persistentMultipleTabManager,
@@ -37,7 +38,22 @@ export const auth = getAuth(app);
 // persistentMultipleTabManager is required, not optional: projector mode opens
 // a second window (?projector=1) which imports this module too. Single-tab
 // persistence would fail its lock acquisition with 'failed-precondition'.
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-});
+// Guarded on purpose. This module throws at import time if it throws at all,
+// which is BEFORE React and the ErrorBoundary exist — a failure here is a white
+// screen, not a caught error. IndexedDB is unavailable or blocked on some
+// managed school devices and in some private-browsing modes, so persistence is
+// best-effort: if it cannot initialize, fall back to the previous memory-only
+// behavior rather than taking the whole app down.
+function createDb() {
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    });
+  } catch (err) {
+    console.warn('Firestore offline persistence unavailable; using memory cache', err);
+    return getFirestore(app);
+  }
+}
+
+export const db = createDb();
 export const functions = getFunctions(app);
