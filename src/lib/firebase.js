@@ -1,6 +1,10 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
@@ -21,5 +25,19 @@ if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.proj
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Persistent (IndexedDB) cache, not the default memory-only cache.
+//
+// School wifi drops constantly. Firebase Auth keeps its own session in
+// IndexedDB, so a teacher stays signed in offline — but every Firestore read
+// used to go to the network, hang for ~10s, and throw. That is what bounced a
+// signed-in teacher to /login mid-morning-meeting (see the catch in App.jsx).
+// With a persistent cache the user doc and saved routines are served from disk
+// and writes queue until the network returns.
+//
+// persistentMultipleTabManager is required, not optional: projector mode opens
+// a second window (?projector=1) which imports this module too. Single-tab
+// persistence would fail its lock acquisition with 'failed-precondition'.
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+});
 export const functions = getFunctions(app);

@@ -3500,6 +3500,57 @@ function UpgradePage({ account }) {
   );
 }
 
+const ACCOUNT_CACHE_PREFIX = "ofd:lastAccount:";
+
+// Remember the last successfully loaded user doc so an offline boot can use the
+// teacher's real plan and grade instead of guessing.
+function cacheAccount(account) {
+  if (!account?.uid) return;
+  try {
+    localStorage.setItem(ACCOUNT_CACHE_PREFIX + account.uid, JSON.stringify({
+      name: account.name,
+      grade: account.grade,
+      plan: account.plan,
+      trialStartedAt: account.trialStartedAt,
+      tier: account.tier,
+      behavioralExpectations: account.behavioralExpectations,
+    }));
+  } catch {}
+}
+
+// Offline fallback account. Access fails open (she stays signed in and can run
+// her meeting); entitlements fail closed (an uncached device gets free, not
+// Pro). The real doc overwrites this the moment Firestore answers.
+function readCachedAccount(user) {
+  const base = {
+    uid: user.uid,
+    email: user.email,
+    emailVerified: user.emailVerified,
+    name: user.displayName || "",
+    grade: "3",
+    plan: "free",
+    trialStartedAt: null,
+    tier: null,
+    behavioralExpectations: [],
+  };
+  try {
+    const raw = localStorage.getItem(ACCOUNT_CACHE_PREFIX + user.uid);
+    if (!raw) return base;
+    const cached = JSON.parse(raw);
+    return {
+      ...base,
+      name: cached.name || base.name,
+      grade: cached.grade || base.grade,
+      plan: cached.plan || base.plan,
+      trialStartedAt: cached.trialStartedAt ?? null,
+      tier: cached.tier ?? null,
+      behavioralExpectations: cached.behavioralExpectations || [],
+    };
+  } catch {
+    return base;
+  }
+}
+
 function App() {
   const isProjectorWindow = new URLSearchParams(window.location.search).get("projector") === "1";
   const isSlideProjectorWindow = new URLSearchParams(window.location.search).get("slideProjector") === "1";
@@ -3544,10 +3595,21 @@ function App() {
           tier: userDoc?.tier || null,
           behavioralExpectations: userDoc?.behavioralExpectations || [],
         };
-        await migrateFromLocalStorage(user.uid);
+        cacheAccount(account);
         setAuthState({ loading: false, account });
-      } catch {
-        setAuthState({ loading: false, account: null });
+        // Housekeeping, not a gate. This is a one-time-per-browser Firestore
+        // round trip; awaiting it used to hold the whole app on "Loading…".
+        migrateFromLocalStorage(user.uid).catch(() => {});
+      } catch (err) {
+        // Firestore is unreachable — almost always flaky school wifi, not a
+        // real sign-out. Auth resolved this user from its own cached session,
+        // so she IS signed in. Nulling the account here sent /dashboard to
+        // <Navigate to="/login" />, which dumped a signed-in teacher onto the
+        // login screen with her class already on the rug. Keep her in.
+        console.error("Could not load user document; continuing offline", err);
+        // NOTE: nothing renders `offline` yet — it is the hook for a visible
+        // "working offline" indicator, which is a deliberate follow-up.
+        setAuthState({ loading: false, offline: true, account: readCachedAccount(user) });
       }
     });
     return unsubscribe;
