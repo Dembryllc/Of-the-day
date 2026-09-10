@@ -3009,7 +3009,7 @@ function MainApp({ account, onSignOut }) {
           {/* TODAY */}
           {activeNav === "Today" && (
             <>
-              <div className="routine-col">
+              <div className="routine-col today-col">
                 {showWelcome && (
                 <div className="welcome-card">
                   <button className="welcome-dismiss" type="button" aria-label="Dismiss" onClick={() => dismissWelcome(null)}>✕</button>
@@ -3095,10 +3095,23 @@ function MainApp({ account, onSignOut }) {
                   <div className="component-rail" aria-label="Meeting components">
                     {DEFAULT_CATS.map((cat, i) => {
                       const cm = CAT_META[cat] || {};
-                      return <div key={cat} className="component-pill" style={{ borderTop: `3px solid ${cm.color || "#DDD"}` }}>
+                      // These are styled like the cards below them, so they read as
+                      // clickable. They used to be inert divs. Clicking one now
+                      // selects that component, which is what it always looked like
+                      // it would do.
+                      const step = routine.find(a => a.cat === cat);
+                      return <button
+                        key={cat}
+                        type="button"
+                        className="component-pill"
+                        style={{ borderTop: `3px solid ${cm.color || "#DDD"}` }}
+                        disabled={!step}
+                        aria-label={step ? `Step ${i + 1}: ${cat} — ${step.title}` : `Step ${i + 1}: ${cat}`}
+                        onClick={() => step && handleSelect(step)}
+                      >
                         <div className="component-pill-step">Step {i + 1}</div>
                         <div className="component-pill-name">{cm.emoji} {cat}</div>
-                      </div>;
+                      </button>;
                     })}
                   </div>
                   <div className="today-tools">

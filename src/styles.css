@@ -1593,6 +1593,27 @@ button:focus-visible,
   border-radius: 12px;
   padding: 10px 12px;
   min-height: 64px;
+  /* It is a <button> now. Reset the UA styles so it renders exactly as the
+     old div did, then give it the interactive affordances it was missing. */
+  width: 100%;
+  display: block;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.component-pill:hover:not(:disabled) {
+  border-color: var(--teal, #0e9f8e);
+  box-shadow: 0 2px 8px rgba(16, 42, 67, 0.08);
+}
+.component-pill:focus-visible {
+  outline: 2px solid var(--teal, #0e9f8e);
+  outline-offset: 2px;
+}
+.component-pill:disabled { cursor: default; opacity: .6; }
+@media (prefers-reduced-motion: reduce) {
+  .component-pill { transition: none; }
 }
 .component-pill-step { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .component-pill-name { margin-top: 4px; font-size: 14px; font-weight: 800; color: var(--ink); }
@@ -1944,3 +1965,31 @@ select.slide-field-input { cursor: pointer; }
   transition: color 0.13s;
 }
 .slide-lib-delete:hover { color: #DC2626; background: #FEF2F2; }
+
+
+/* ── Today screen: scroll as one page ─────────────────────────────────────────
+   The routine used to sit in an inner .cards-scroll region while
+   .routine-header (hero + step rail + tools, ~347px) never shrank and
+   .routine-col was overflow:hidden. On a 700px laptop viewport that left a
+   185px window onto 552px of routine — and the mouse wheel did nothing unless
+   the cursor happened to be inside that strip, because the rest of the column
+   could not scroll. Teachers reported it as "I can't scroll to my routine."
+   Letting the whole column scroll makes the wheel work anywhere and lets the
+   header move out of the way. */
+.routine-col.today-col { overflow-y: auto; overflow-x: hidden; }
+.today-col .cards-scroll { flex: none; overflow: visible; min-height: 0; }
+
+/* Reclaim vertical space on short viewports (laptops, and any screen with
+   browser chrome plus a taskbar). Height-based, not width-based: the constraint
+   here is height, and a wide 1536x640 laptop needs this as much as a small one.
+   Tall screens keep the full hero. */
+@media (max-height: 820px) {
+  .morning-hero { padding: 14px; margin-top: 10px; }
+  .morning-hero-title { font-size: clamp(20px, 2.2vw, 26px); }
+  .morning-hero-text { display: none; }
+  .component-rail { margin-top: 10px; gap: 6px; }
+  .component-pill { min-height: 52px; padding: 8px 10px; }
+  .today-tools { margin-top: 10px; }
+  .today-tools-label { display: none; }
+  .routine-header { padding: 12px 28px 8px; }
+}
