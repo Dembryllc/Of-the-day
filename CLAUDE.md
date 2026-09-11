@@ -76,6 +76,23 @@ Slide saves go directly to Firestore from the frontend. **Do not add a Cloud Fun
 - Regenerate it with `scripts/resource-pack/render.js` (see header comment; needs `playwright-core` + a Chromium). The 10 activities in `scripts/resource-pack/pack.html` must stay in sync with `RESOURCE_PACK_ACTIVITIES` in `functions/index.js`.
 - The capture success state also links the PDF directly (`.capture-download`), so the pack is reachable even if email delivery fails.
 
+## Today View Layout — Four Activities Above The Fold (2026-09-11)
+The Today screen is optimized so all four routine cards are visible without scrolling. Three things buy that room — do not undo them casually:
+- **No step rail.** The four `.component-pill` "Step 1 Greeting / Step 2 Sharing / …" boxes were removed. They duplicated the numbered badge + category label already on each routine card, and cost ~76px. Do not re-add them.
+- **Compact hero.** `.morning-hero` is a single wrapping flex row: short title (~20–24px, was up to 38px), the `Ready · N components · ~X min` line, and the actions. The long descriptive paragraph (`.morning-hero-text`) is gone. `Save for later` moved from a pinned bottom `.today-save-bar` into the hero actions — that bar is deleted, and mobile (which used to hide it entirely) now gets a save button for the first time.
+- **Single-row routine cards.** `.component-card.use-now .card-inner` is a 2×2 grid (`"cat meta" / "title actions"`), ~76px per card instead of ~112px. **`.cards-scroll > .card { flex-shrink: 0 }` is load-bearing** — the cards are flex children of a scroll container, so without it they silently squash to fit and overlap each other.
+- Verified with Playwright at 1440×900, 1024×768, and 375×812: 4/4 cards fully visible, no horizontal overflow. On first run the welcome card costs one card's worth of space until it is dismissed.
+
+## Do Now — All Five Subjects Are Live (2026-09-11)
+`DO_NOW_SECTIONS` used to enable only `math` and `writing`; `ela`, `science`, and `socialStudies` rendered as disabled "Soon" chips. All five are now enabled with full banks for every grade band (K–2, 3–5, 6–8, 9–12), 4 items each.
+- Each section now carries its own `cat` field. `doNowToActivity` reads `section.cat` instead of the old `math ? … : writing ? … : "Brain Teaser"` ternary — a new subject needs a `cat` here **and** a matching entry in `src/lib/catMeta.js`, or its Library cards fall back to Brain Teaser.
+- `buildContentActivities` iterates every *enabled* subject rather than naming math and writing, so new subjects reach the Library automatically.
+- The `!item.enabled` / "Soon" branch in `DoNowScreen` is still wired up — it just has nothing to show now.
+
+## Activity Pool Size (2026-09-11)
+`POOL` grew 60 → 106. Group Activity and Morning Message were the thin categories (4 each) and drove repeat routines; they are now 16 each, with Greeting 8 → 18 and Sharing 18 → 30.
+- **Every new id must be added to `GRADE_RITUAL_ACTIVITY_IDS`.** `activityMatchesGrade` looks the id up in that band's Set, so an activity absent from all four bands is invisible everywhere — it will not error, it just never appears.
+
 ## Demo Mode
 - Route: `/demo` — uses `DEMO_ACCOUNT = { uid: null, name: 'Guest Teacher', ... }`
 - All cloud operations guarded by `if (!account?.uid) return`

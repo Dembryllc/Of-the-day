@@ -152,15 +152,61 @@ const POOL = [
   {id:121,cat:"Morning Message",title:"Good Morning, Learners",meta:"2 min · Calm",time:120,prompt:"Good morning, learners. Today we will build our classroom community by listening carefully and helping each other begin well.",starter:"One way I can help our class today is...",directions:"Display the message as students enter. Read it together and ask students to name one action that will help the class start strong.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
   {id:122,cat:"Morning Message",title:"Responsibility Word Builder",meta:"3 min · Medium",time:180,prompt:"Today’s responsibility word is effort. What does effort look like, sound like, and feel like in our classroom?",starter:"Today, effort looks like...",directions:"Write the word where everyone can see it. Collect concrete examples and connect them to the day’s first lesson.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
   {id:123,cat:"Morning Message",title:"Community Goal Message",meta:"2 min · Calm",time:120,prompt:"Today our goal is to make sure every classmate feels included. What is one small move that helps someone feel like they belong?",starter:"One small move is...",directions:"Read the message chorally. Students turn and talk, then choose one class goal to practice before lunch.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
-  {id:124,cat:"Morning Message",title:"Preview the Learning Day",meta:"3 min · Calm",time:180,prompt:"Today we will read, solve, create, and reflect. Which part of the day will need the most perseverance?",starter:"I may need perseverance when...",directions:"Use the message to preview the day. Invite students to identify one moment where a learning strategy will help.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"}
+  {id:124,cat:"Morning Message",title:"Preview the Learning Day",meta:"3 min · Calm",time:180,prompt:"Today we will read, solve, create, and reflect. Which part of the day will need the most perseverance?",starter:"I may need perseverance when...",directions:"Use the message to preview the day. Invite students to identify one moment where a learning strategy will help.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:131,cat:"Greeting",title:"Compliment Circle",meta:"3 min · Calm",time:180,prompt:"Greet the person beside you by name and add one specific compliment about their work or effort.",starter:"Good morning, ___. I noticed you...",directions:"Model a specific compliment versus a generic one. Go one direction around the circle so every student is both greeted and complimented.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:132,cat:"Greeting",title:"Name and Motion",meta:"3 min · Active",time:180,prompt:"Say your name with a small movement. The class repeats your name and your movement back to you.",starter:"My name is ___ and my move is...",directions:"Keep movements seated-friendly if space is tight. Repeat the whole sequence once at the end for a quick memory challenge.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:133,cat:"Greeting",title:"Weather Report Greeting",meta:"2 min · Low",time:120,prompt:"Greet a neighbor and describe your morning as a weather report: sunny, cloudy, stormy, or clearing up.",starter:"Good morning, ___. Today I am feeling mostly...",directions:"Post the four weather words. Students greet by name first, then give the report. No explanation is required.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:134,cat:"Greeting",title:"Numbered Greeting",meta:"3 min · Medium",time:180,prompt:"Count off around the circle. Greet the classmate whose number matches yours when doubled or halved.",starter:"Good morning, number ___...",directions:"Great pairing with a math warm-up. Adjust the rule to match what you are practicing that week.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:135,cat:"Greeting",title:"Question Toss",meta:"4 min · Active",time:240,prompt:"Greet a classmate by name, ask them one question from the board, then toss the ball to someone new.",starter:"Good morning, ___. My question for you is...",directions:"Use a soft ball or beanbag. Post three or four safe questions so no student is caught without something to ask.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:136,cat:"Greeting",title:"Silent Signal Greeting",meta:"2 min · Calm",time:120,prompt:"Greet three classmates using only eye contact, a nod, and a silent gesture you agree on as a class.",starter:"",directions:"Useful on high-energy days or in shared spaces. Decide the gesture together first so every student knows the expectation.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:137,cat:"Greeting",title:"Alphabet Hello",meta:"3 min · Medium",time:180,prompt:"Greet a classmate and name something you like that starts with the same letter as their first name.",starter:"Good morning, ___. You make me think of...",directions:"Model an example with your own name. Allow students to pass to a partner if they get stuck on a letter.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:138,cat:"Greeting",title:"One-Word Forecast",meta:"2 min · Low",time:120,prompt:"Greet the person next to you and give a one-word forecast for your day.",starter:"Good morning, ___. My word today is...",directions:"Keep it to one word so the round moves fast. Note any repeated words aloud at the end without commenting on individuals.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:139,cat:"Greeting",title:"Around the World Hello",meta:"3 min · Low",time:180,prompt:"Greet a classmate using a hello from another language or a home language in our classroom.",starter:"___ means good morning in...",directions:"Invite volunteers to teach their greeting rather than requiring it. Post two or three greetings on the board as options.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:140,cat:"Greeting",title:"Would You Rather Line-Up",meta:"4 min · Active",time:240,prompt:"Greet the classmates nearest you, then move to the side of the room that matches your answer.",starter:"Good morning, ___. I chose this side because...",directions:"Read one would-you-rather question. After students move, have two students from each side greet each other and explain.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:221,cat:"Sharing",title:"Weekend Headline",meta:"3 min · Calm",time:180,prompt:"If a newspaper covered your weekend, what would the headline say?",starter:"My headline would be...",directions:"Model a headline that is short and specific. Students share with a partner first, then three or four volunteers share out.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:222,cat:"Sharing",title:"Small Win Report",meta:"3 min · Calm",time:180,prompt:"Name one small thing that went right for you recently, no matter how minor.",starter:"One small thing that went right was...",directions:"Explicitly say that tiny wins count. This is a strong choice after a difficult day or a hard assessment.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:223,cat:"Sharing",title:"Ask Me About",meta:"4 min · Medium",time:240,prompt:"Finish this sentence: Ask me about ___. Then take two questions from classmates.",starter:"Ask me about...",directions:"Students choose their own topic, which keeps the risk low. Teach question stems before the first round.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:224,cat:"Sharing",title:"Two Stars and a Wish",meta:"4 min · Calm",time:240,prompt:"Share two things that went well this week and one thing you wish had gone differently.",starter:"Two stars for me were... and my wish is...",directions:"Model with your own week so students see that adults have wishes too. Keep wishes about actions, not people.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:225,cat:"Sharing",title:"The Best Advice I Got",meta:"4 min · Calm",time:240,prompt:"What is one piece of advice someone gave you that actually helped?",starter:"Someone once told me...",directions:"Collect the advice on the board as students share. Revisit the list later when the class faces a challenge.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:226,cat:"Sharing",title:"What I Would Teach",meta:"4 min · Medium",time:240,prompt:"If you taught the class for ten minutes, what would you teach us?",starter:"I would teach everyone how to...",directions:"Accept academic and non-academic skills. Consider inviting one student to actually teach theirs later in the week.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:227,cat:"Sharing",title:"Hardest Part of Yesterday",meta:"4 min · Calm",time:240,prompt:"What was the hardest part of yesterday, and what got you through it?",starter:"The hardest part was... and what helped was...",directions:"Name up front that students may pass. Close by highlighting the strategies students used, not the problems.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:228,cat:"Sharing",title:"A Skill I Am Building",meta:"3 min · Calm",time:180,prompt:"Name one skill you are actively getting better at right now.",starter:"I am getting better at...",directions:"Emphasize in-progress over finished. Ask one follow-up: what is the next step in that skill?",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:229,cat:"Sharing",title:"Someone Who Helped Me",meta:"3 min · Calm",time:180,prompt:"Think of someone who helped you this week. What exactly did they do?",starter:"___ helped me by...",directions:"Push for the specific action rather than the label of nice. Students may name classmates, family, or staff.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:230,cat:"Sharing",title:"Change One Thing",meta:"4 min · Medium",time:240,prompt:"If you could change one thing about how our school day runs, what would it be and why?",starter:"I would change... because...",directions:"Ask for a reason every time. Note any realistic suggestions and follow up on one of them.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:231,cat:"Sharing",title:"My Ideal School Day",meta:"4 min · Medium",time:240,prompt:"Describe one part of a school day that works really well for how you learn.",starter:"I learn best when the day...",directions:"Use this to gather real information about pacing, movement, and grouping preferences in your class.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:232,cat:"Sharing",title:"What I Am Curious About",meta:"3 min · Calm",time:180,prompt:"Name one thing you are genuinely curious about right now.",starter:"I have been wondering...",directions:"Keep a running curiosity list. Pull from it when choosing research topics or read-alouds.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:141,cat:"Group Activity",title:"Human Bar Graph",meta:"4 min · Active",time:240,prompt:"Line up under the answer choice that matches you. Look at the shape our class makes.",starter:"Our graph shows that most of us...",directions:"Post three or four answer choices along one wall. After students line up, ask two questions about what the graph shows.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:142,cat:"Group Activity",title:"Silent Line-Up",meta:"4 min · Active",time:240,prompt:"Without talking, arrange yourselves in order by birthday month, height, or another given rule.",starter:"Our strategy was to...",directions:"Give one rule at a time. Afterward, ask how the group communicated without words.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:143,cat:"Group Activity",title:"Category Chain",meta:"4 min · Medium",time:240,prompt:"Go around the circle naming items in one category without repeating. Keep the chain alive.",starter:"My item is...",directions:"Choose a category tied to current content. Allow one pass per student to keep the pace comfortable.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:144,cat:"Group Activity",title:"Zip Zap Zop",meta:"3 min · Active",time:180,prompt:"Pass the energy around the circle with a clap and a word. Stay focused and keep the rhythm.",starter:"",directions:"Teach the three words and the pointing motion first. Play two short rounds rather than one long one.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:145,cat:"Group Activity",title:"Guess My Rule",meta:"5 min · Medium",time:300,prompt:"I will sort items into two groups. Watch carefully and figure out my sorting rule.",starter:"I think the rule is... because...",directions:"Sort four or five items before taking guesses. Works with numbers, words, shapes, or classroom objects.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:146,cat:"Group Activity",title:"Group Count to Twenty",meta:"3 min · Medium",time:180,prompt:"As a class, count to twenty. Anyone can say the next number, but if two people speak at once we start over.",starter:"",directions:"Eyes closed makes it harder and calmer. Debrief what the class did differently on the successful attempt.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:147,cat:"Group Activity",title:"Tournament Cheer",meta:"4 min · Active",time:240,prompt:"Play rock paper scissors. When you lose, become your winner's cheering section and follow them.",starter:"",directions:"Everyone stays involved because losers join a cheer squad. End when two finalists remain and the whole class is cheering.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:148,cat:"Group Activity",title:"Sentence Relay",meta:"5 min · Medium",time:300,prompt:"Build one sentence as a class. Each person adds exactly one word that keeps it grammatical.",starter:"The next word is...",directions:"Write the sentence on the board as it grows. Read the finished sentence aloud together and check it makes sense.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:149,cat:"Group Activity",title:"Mingle and Match",meta:"4 min · Active",time:240,prompt:"Move around with your card and find the classmate whose card matches yours.",starter:"We match because...",directions:"Make cards from current content: word and definition, problem and answer, cause and effect. Pairs explain the match.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:150,cat:"Group Activity",title:"Four Corners Debate",meta:"5 min · Active",time:300,prompt:"Move to the corner that matches your opinion, then explain your thinking to someone in your corner.",starter:"I chose this corner because...",directions:"Label corners strongly agree through strongly disagree. Take one voice from each corner before moving on.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:151,cat:"Group Activity",title:"Beat the Clock Brainstorm",meta:"4 min · Medium",time:240,prompt:"In ninety seconds, how many examples can our class name together?",starter:"One more example is...",directions:"Tally aloud as students call out. Try to beat the class record on a later day with a related prompt.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:152,cat:"Group Activity",title:"Concentric Circles",meta:"5 min · Active",time:300,prompt:"Form two circles facing each other. Answer the prompt with your partner, then the outside circle rotates.",starter:"My answer for this round is...",directions:"Three rotations is usually enough. Use a signal for rotating so transitions stay quick and calm.",source:"Responsive Classroom Activity Ideas",sourceUrl:"https://www.responsiveclassroom.org/category/morning-meeting/activity-ideas/"},
+  {id:161,cat:"Morning Message",title:"Challenge Word of the Day",meta:"3 min · Medium",time:180,prompt:"Today's challenge word is perseverance. Where might our class need it today?",starter:"We might need perseverance when...",directions:"Swap the word weekly to match your classroom focus. Ask students to watch for the word during the day and report back.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:162,cat:"Morning Message",title:"Question of the Day Board",meta:"3 min · Calm",time:180,prompt:"Good morning. Add your answer to today's question on the board as you come in.",starter:"My answer is...",directions:"Post the question before students arrive. Read the tallied answers aloud at the start of the meeting.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:163,cat:"Morning Message",title:"Fill In the Blank",meta:"3 min · Medium",time:180,prompt:"Good morning, readers. Today we will ___ and ___ . One thing that will help me is ___ .",starter:"One thing that will help me is...",directions:"Leave real blanks in the posted message. Call on students to fill each one before reading the whole message together.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:164,cat:"Morning Message",title:"Number of the Day",meta:"3 min · Medium",time:180,prompt:"Today's number is 24. How many ways can we make it?",starter:"One way to make 24 is...",directions:"Collect four or five expressions on the board. Change the number daily to match your current math unit.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:165,cat:"Morning Message",title:"Kindness Target",meta:"2 min · Calm",time:120,prompt:"Good morning. Today our target is noticing. What is one thing you can notice and name for a classmate?",starter:"Today I will notice when someone...",directions:"Follow up before dismissal by asking who noticed something. Keep the target for a full week if it is landing.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:166,cat:"Morning Message",title:"Goal Check-In",meta:"3 min · Calm",time:180,prompt:"Good morning. Yesterday we set a class goal. Where are we with it today?",starter:"I think we are... because...",directions:"Keep the class goal posted. Use a simple scale of not yet, getting there, and got it.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:167,cat:"Morning Message",title:"Today at a Glance",meta:"2 min · Calm",time:120,prompt:"Good morning. Here is today: reading, math, specials, and a class meeting. Which part will you be most ready for?",starter:"I will be most ready for...",directions:"Write the real schedule. Naming one part they are ready for helps students who find transitions hard.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:168,cat:"Morning Message",title:"Word Sort Message",meta:"3 min · Medium",time:180,prompt:"Good morning, word scientists. Sort today's words into two groups and be ready to explain your rule.",starter:"My groups are... because...",directions:"Post six to eight words from your current unit. Accept any sort a student can justify.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:169,cat:"Morning Message",title:"Riddle Message",meta:"3 min · Medium",time:180,prompt:"Good morning, thinkers. I get shorter as I get older and stay useful until I disappear. What am I?",starter:"I think the answer is... because...",directions:"The answer is a candle or a pencil. Ask for the reasoning before confirming any answer.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:170,cat:"Morning Message",title:"Quote to Consider",meta:"3 min · Calm",time:180,prompt:"Good morning. Today's line to think about: it is okay to ask for help before you are stuck. Do you agree?",starter:"I agree or disagree because...",directions:"Choose quotes that invite disagreement. Take one voice from each side before moving on.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:171,cat:"Morning Message",title:"Mistake Friendly Message",meta:"3 min · Calm",time:180,prompt:"Good morning. Mistakes are part of learning here. What is one mistake that taught you something?",starter:"A mistake that taught me something was...",directions:"Share one of your own first. This message works well the day before or after an assessment.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"},
+  {id:172,cat:"Morning Message",title:"Countdown Message",meta:"2 min · Calm",time:120,prompt:"Good morning. We have three days until our project is due. What is your next step today?",starter:"My next step today is...",directions:"Use with any deadline on the calendar. Asking for a next step turns a countdown into a plan.",source:"Responsive Classroom Meeting",sourceUrl:"https://www.responsiveclassroom.org/morning-meeting-components/"}
 ];
 
 const DEFAULT_CATS = ["Greeting", "Sharing", "Group Activity", "Morning Message"];
 const GRADE_RITUAL_ACTIVITY_IDS = {
-  "K–2": new Set([1,4,19,21,32,33,101,201,202,204,206,207,208,30,31,111,113,121,123]),
-  "3–5": new Set([1,2,3,4,19,20,21,33,101,102,103,104,201,202,203,204,205,206,207,208,210,212,214,26,27,28,30,31,111,112,113,114,121,122,123,124]),
-  "6–8": new Set([1,2,3,19,20,102,103,104,203,205,207,208,209,210,211,212,213,214,26,27,28,30,111,112,114,122,123,124]),
-  "9–12": new Set([2,3,19,103,104,203,205,209,210,211,212,213,214,26,27,28,112,114,122,123,124])
+  "K–2": new Set([1,4,19,21,32,33,101,201,202,204,206,207,208,30,31,111,113,121,123,131,132,133,135,136,137,138,139,222,223,229,232,141,142,143,144,145,147,149,162,163,164,165,166,167,171]),
+  "3–5": new Set([1,2,3,4,19,20,21,33,101,102,103,104,201,202,203,204,205,206,207,208,210,212,214,26,27,28,30,31,111,112,113,114,121,122,123,124,131,132,133,134,135,136,137,138,139,140,221,222,223,224,226,228,229,232,141,142,143,144,145,146,147,148,149,150,151,161,162,163,164,165,166,167,168,169,171,172]),
+  "6–8": new Set([1,2,3,19,20,102,103,104,203,205,207,208,209,210,211,212,213,214,26,27,28,30,111,112,114,122,123,124,131,133,134,135,136,137,138,139,140,221,222,223,224,225,226,227,228,229,230,231,232,141,142,143,144,145,146,147,148,149,150,151,152,161,162,164,166,167,168,169,170,171,172]),
+  "9–12": new Set([2,3,19,103,104,203,205,209,210,211,212,213,214,26,27,28,112,114,122,123,124,131,136,138,139,140,221,222,223,224,225,226,227,228,229,230,231,232,141,143,145,146,148,149,150,151,152,161,162,166,167,168,169,170,171,172])
 };
 const TIME_LIMITS = { "5 min": 300, "10 min": 600, "15 min": 900, "20+ min": Infinity };
 const VOCAB_SOURCE = {
@@ -394,22 +440,121 @@ const DO_NOW_WRITING = {
   ]
 };
 
+const DO_NOW_ELA = {
+  "K–2": [
+    { title:"Rhyme Time", problem:"Name three words that rhyme with cat.", hint:"Say cat slowly and change the first sound.", answer:"Possible answers: hat, bat, mat, sat, rat.", teacherNote:"Listen for students who change the beginning sound and keep the ending." },
+    { title:"Beginning Sounds", problem:"What sound does the word sun start with? Name two more words with that sound.", hint:"Stretch the first sound out: sssun.", answer:"The /s/ sound. Examples: sock, seven, silly.", teacherNote:"Accept any real word with the correct beginning sound." },
+    { title:"Finish the Sentence", problem:"Finish this sentence with your own idea: The dog ran because ___.", hint:"Think about why a dog might run.", answer:"Answers vary. Look for a reason that makes sense.", teacherNote:"Check that the ending is a reason, not just another action." },
+    { title:"Naming Words", problem:"Look around the room and name three things. Which one is a person, place, or thing?", hint:"Nouns name people, places, and things.", answer:"Answers vary. All three should be nouns.", teacherNote:"Use this to introduce or review the word noun." }
+  ],
+  "3–5": [
+    { title:"Context Clues", problem:"Read this sentence: The hikers were famished after walking all day. What does famished mean?", hint:"Look at what happened before the word.", answer:"Very hungry. Walking all day is the clue.", teacherNote:"Ask students to point to the exact words that helped them." },
+    { title:"Fix the Sentence", problem:"Rewrite this sentence correctly: me and my brother goed to the store yesterday.", hint:"Check the pronoun and the past tense verb.", answer:"My brother and I went to the store yesterday.", teacherNote:"Two errors: pronoun order and case, and the irregular verb went." },
+    { title:"Prefix Power", problem:"The prefix re- means again. What do rewrite, rebuild, and reread mean?", hint:"Add again to the base word.", answer:"Write again, build again, read again.", teacherNote:"Ask students for one more re- word and its meaning." },
+    { title:"Main Idea Quick Check", problem:"A paragraph describes how bees find flowers, collect nectar, and return to the hive. What is the main idea?", hint:"The main idea covers the whole paragraph, not one detail.", answer:"How bees gather food for the hive.", teacherNote:"Push past listing details to a single sentence that covers all of them." }
+  ],
+  "6–8": [
+    { title:"Word Choice Matters", problem:"How does the meaning change between she walked into the room and she stormed into the room?", hint:"Focus on what the verb tells you about mood.", answer:"Stormed shows anger or urgency; walked is neutral.", teacherNote:"Connect to author's word choice and tone in your current text." },
+    { title:"Claim and Evidence", problem:"Claim: students should have longer lunch periods. What is one piece of evidence that would actually support it?", hint:"Strong evidence is specific and checkable.", answer:"Answers vary. Look for facts or data, not just opinions.", teacherNote:"Reject restated opinions. Ask what would make a skeptic believe it." },
+    { title:"Figurative Language", problem:"Identify the device: the wind whispered through the empty hallway. Explain your answer.", hint:"Ask whether the wind can really whisper.", answer:"Personification. Wind is given a human action.", teacherNote:"Ask for one more example from the text you are reading." },
+    { title:"Summarize in One Sentence", problem:"Summarize the last text we read in one sentence of twenty words or fewer.", hint:"Include who, what, and why it matters.", answer:"Answers vary. A good summary has no personal opinion.", teacherNote:"Count the words together. The limit forces prioritizing." }
+  ],
+  "9–12": [
+    { title:"Tone Analysis", problem:"Identify the tone of this line: of course, that plan worked perfectly, as everyone had predicted it would.", hint:"Consider whether the speaker means it literally.", answer:"Sarcastic or ironic. The praise does not match the situation.", teacherNote:"Ask which specific words carry the irony." },
+    { title:"Strengthen the Thesis", problem:"Improve this thesis: social media is bad for teenagers.", hint:"A strong thesis is arguable and specific about how and why.", answer:"Answers vary. Look for a narrowed claim with a reason.", teacherNote:"Test each revision with the question: could a reasonable person disagree?" },
+    { title:"Rhetorical Appeal", problem:"A speaker cites three studies and a statistic. Which appeal is that, and what is its limit?", hint:"Ethos, pathos, or logos?", answer:"Logos. Its limit is that data alone may not move an audience emotionally.", teacherNote:"Ask what appeal they would add and why." },
+    { title:"Syntax and Effect", problem:"Why might a writer use a series of very short sentences in a tense scene?", hint:"Read it aloud and notice the pacing.", answer:"Short sentences speed the pace and heighten tension.", teacherNote:"Have students rewrite one long sentence as three short ones and compare." }
+  ]
+};
+const DO_NOW_SCIENCE = {
+  "K–2": [
+    { title:"Living or Not", problem:"Is a tree living or nonliving? How do you know?", hint:"Living things grow and need food, water, and air.", answer:"Living. A tree grows and needs water, air, and sunlight.", teacherNote:"Listen for evidence, not just the label." },
+    { title:"Five Senses Check", problem:"Which sense would you use to know if popcorn is ready?", hint:"Think about what your body would notice first.", answer:"Hearing and smell. You hear popping and smell it.", teacherNote:"More than one right answer; ask students to justify." },
+    { title:"Weather Watch", problem:"Look outside. Name two words that describe today's weather.", hint:"Think about temperature, clouds, wind, and rain.", answer:"Answers vary. Both words should describe today.", teacherNote:"Record answers daily and look for patterns over a week." },
+    { title:"Push or Pull", problem:"Is opening a door a push or a pull? Can it be both?", hint:"Think about which way your hands move.", answer:"It can be both, depending on which side of the door you are on.", teacherNote:"This is a good early lesson that answers can depend on perspective." }
+  ],
+  "3–5": [
+    { title:"States of Matter", problem:"An ice cube melts on the counter. What changed and what stayed the same?", hint:"Think about the water itself versus its form.", answer:"The state changed from solid to liquid; it is still water.", teacherNote:"Draw out that the material stays the same even when the state changes." },
+    { title:"Food Chain Order", problem:"Put these in order: grass, hawk, mouse. Which way does the energy move?", hint:"Start with what makes its own food.", answer:"Grass to mouse to hawk. Energy moves from the producer up.", teacherNote:"Ask what happens to the hawk if the grass disappears." },
+    { title:"Fair Test", problem:"You want to know if plants grow taller in sunlight. What must stay the same in both pots?", hint:"Change only one thing at a time.", answer:"Water, soil, pot size, and plant type stay the same; only light changes.", teacherNote:"This is the core idea of a controlled variable." },
+    { title:"Observation vs Inference", problem:"The ground is wet. Which is the observation and which is the inference: it rained, or the ground is wet?", hint:"One you can see right now; one you conclude.", answer:"Observation: the ground is wet. Inference: it rained.", teacherNote:"Name another possible cause, like a sprinkler, to make the point." }
+  ],
+  "6–8": [
+    { title:"Energy Transfer", problem:"You rub your hands together and they get warm. Describe the energy change.", hint:"Start with the energy of motion.", answer:"Kinetic energy from motion becomes thermal energy through friction.", teacherNote:"Push for the word friction and the named energy forms." },
+    { title:"Cells Compare", problem:"Name one structure a plant cell has that an animal cell does not, and its job.", hint:"Think about what holds a plant upright.", answer:"Cell wall for structure, or chloroplasts for photosynthesis.", teacherNote:"Either answer works if the function is correct." },
+    { title:"Density Reasoning", problem:"An object sinks in water. What does that tell you about its density?", hint:"Compare it to the density of water.", answer:"Its density is greater than water's, about 1 g/cm3.", teacherNote:"Ask what would need to change for it to float." },
+    { title:"Graph Read", problem:"A line graph shows temperature rising steadily for six hours, then flat for two. What happened at hour six?", hint:"Look at where the slope changes.", answer:"The temperature stopped increasing and held steady.", teacherNote:"Ask for one real-world reason that could explain the plateau." }
+  ],
+  "9–12": [
+    { title:"Balance the Equation", problem:"Balance this equation: H2 + O2 yields H2O.", hint:"Count atoms of each element on both sides.", answer:"2H2 + O2 yields 2H2O.", teacherNote:"Check both hydrogen and oxygen counts before confirming." },
+    { title:"Independent Variable", problem:"A study tests whether caffeine affects reaction time. Name the independent and dependent variables.", hint:"The independent variable is the one the researcher changes.", answer:"Independent: caffeine amount. Dependent: reaction time.", teacherNote:"Ask for one variable that should be controlled." },
+    { title:"Natural Selection", problem:"A beetle population becomes mostly green over many generations on green leaves. Explain why.", hint:"Think about which beetles survived to reproduce.", answer:"Green beetles were harder for predators to see, so more survived and reproduced.", teacherNote:"Watch for the misconception that individuals change color on purpose." },
+    { title:"Evaluate the Claim", problem:"A headline says a study proves a new drink boosts memory. What is wrong with the word proves?", hint:"Think about what one study can establish.", answer:"A single study provides evidence, not proof; results need replication.", teacherNote:"Connect to sample size, controls, and peer review." }
+  ]
+};
+const DO_NOW_SOCIAL = {
+  "K–2": [
+    { title:"Community Helpers", problem:"Name a person who helps our community and one thing they do.", hint:"Think about who you see helping around town.", answer:"Answers vary: firefighter, nurse, crossing guard, librarian.", teacherNote:"Ask what would be harder without that person." },
+    { title:"Rules Matter", problem:"Why do we have a rule about walking in the hallway?", hint:"Think about what could happen if everyone ran.", answer:"To keep everyone safe and avoid collisions.", teacherNote:"Connect classroom rules to reasons rather than obedience." },
+    { title:"Map Basics", problem:"If you walk toward the top of a map, which direction are you going?", hint:"Maps usually put one direction at the top.", answer:"North.", teacherNote:"Use a classroom map and have students point in each direction." },
+    { title:"Then and Now", problem:"Name one thing that is different about school now compared to long ago.", hint:"Think about tools, clothing, or how people traveled.", answer:"Answers vary: computers, buses, electric lights.", teacherNote:"Great lead-in to a photo comparison activity." }
+  ],
+  "3–5": [
+    { title:"Needs and Wants", problem:"Is a winter coat a need or a want? Explain your thinking.", hint:"Needs are things you must have to live safely.", answer:"A need in a cold climate. Location changes the answer.", teacherNote:"The point is that context matters; accept reasoned answers." },
+    { title:"Read the Map Key", problem:"Why does a map need a key?", hint:"Think about what the symbols would mean without it.", answer:"The key explains what each symbol and color stands for.", teacherNote:"Show a map with the key covered to make the point." },
+    { title:"Cause and Effect", problem:"People moved west for land and opportunity. Name one effect of that movement.", hint:"Think about what changed for people already living there.", answer:"Answers vary: new towns, railroads, and displacement of Native nations.", teacherNote:"Make room for multiple perspectives on the same event." },
+    { title:"Government Jobs", problem:"Name one job of a local government that affects you directly.", hint:"Think about roads, parks, schools, and safety.", answer:"Answers vary: running schools, fixing roads, staffing fire departments.", teacherNote:"Connect to a real recent local decision if you can." }
+  ],
+  "6–8": [
+    { title:"Primary or Secondary", problem:"A soldier's letter home versus a textbook chapter about the war. Which is primary?", hint:"Primary sources come from someone who was there.", answer:"The letter is primary; the textbook is secondary.", teacherNote:"Ask what each source is better for showing." },
+    { title:"Push and Pull Factors", problem:"Name one push factor and one pull factor in migration.", hint:"Push drives people away; pull draws people in.", answer:"Push: conflict or drought. Pull: jobs or family.", teacherNote:"Connect to a migration your curriculum covers." },
+    { title:"Branch Check", problem:"Which branch of the U.S. government interprets laws?", hint:"Three branches: legislative, executive, judicial.", answer:"The judicial branch, through the courts.", teacherNote:"Ask for one check another branch has on it." },
+    { title:"Bias Detector", problem:"Two articles describe the same protest, one as a riot and one as a demonstration. What does the word choice reveal?", hint:"Consider what each word suggests about the people involved.", answer:"Word choice reveals the writer's perspective and shapes reader opinion.", teacherNote:"Great bridge to media literacy work." }
+  ],
+  "9–12": [
+    { title:"Corroborate the Source", problem:"You find one account of an event. What should you do before treating it as fact?", hint:"Historians rarely rely on a single source.", answer:"Corroborate it against other independent sources.", teacherNote:"Introduce sourcing, contextualization, and corroboration together." },
+    { title:"Economic Trade-Off", problem:"A government raises spending on infrastructure. Name one trade-off.", hint:"Every choice has an opportunity cost.", answer:"Answers vary: higher taxes, debt, or less spending elsewhere.", teacherNote:"Push for a named cost, not a general downside." },
+    { title:"Constitutional Tension", problem:"Free speech versus public safety. Name one real situation where they conflict.", hint:"Think about speech that creates immediate danger.", answer:"Answers vary: incitement, threats, or protest permits.", teacherNote:"Connect to a court case your curriculum covers." },
+    { title:"Analyze the Data", problem:"A chart shows voter turnout highest among people over 65. Name one possible explanation and one way to check it.", hint:"Correlation is not the same as a cause.", answer:"Answers vary: habit, free time, or targeted outreach. Check with survey data.", teacherNote:"Insist on a proposed method of checking, not just a guess." }
+  ]
+};
+
 const DO_NOW_SECTIONS = {
   math: {
     label: "Math",
     eyebrow: "Math Do Now",
+    cat: "Math Do Now",
     enabled: true,
     bank: DO_NOW_MATH
   },
   writing: {
     label: "Writing",
     eyebrow: "Writing Do Now",
+    cat: "Writing Do Now",
     enabled: true,
     bank: DO_NOW_WRITING
   },
-  ela: { label: "ELA", enabled: false },
-  science: { label: "Science", enabled: false },
-  socialStudies: { label: "Social Studies", enabled: false }
+  ela: {
+    label: "ELA",
+    eyebrow: "ELA Do Now",
+    cat: "ELA Do Now",
+    enabled: true,
+    bank: DO_NOW_ELA
+  },
+  science: {
+    label: "Science",
+    eyebrow: "Science Do Now",
+    cat: "Science Do Now",
+    enabled: true,
+    bank: DO_NOW_SCIENCE
+  },
+  socialStudies: {
+    label: "Social Studies",
+    eyebrow: "Social Studies Do Now",
+    cat: "Social Studies Do Now",
+    enabled: true,
+    bank: DO_NOW_SOCIAL
+  }
 };
 
 const VOCAB_WORDS = {
@@ -592,7 +737,7 @@ function doNowToActivity(problem, grade = "3–5", subject = "math") {
   const section = DO_NOW_SECTIONS[subject] || DO_NOW_SECTIONS.math;
   return {
     id: contentKey(subject, grade, problem, "title"),
-    cat: subject === "math" ? "Math Do Now" : subject === "writing" ? "Writing Do Now" : "Brain Teaser",
+    cat: section.cat || "Brain Teaser",
     title: `${section.label}: ${problem.title}`,
     meta: "5 min · Medium",
     time: 300,
@@ -605,10 +750,11 @@ function doNowToActivity(problem, grade = "3–5", subject = "math") {
 
 function buildContentActivities(grade = "3–5", customVocab = {}, customDoNow = {}) {
   const words = getVocabBank(grade, customVocab).map(word => vocabToActivity(word, grade));
-  const math = getDoNowBank("math", grade, customDoNow).map(problem => doNowToActivity(problem, grade, "math"));
-  const writing = getDoNowBank("writing", grade, customDoNow).map(prompt => doNowToActivity(prompt, grade, "writing"));
+  const doNow = Object.keys(DO_NOW_SECTIONS)
+    .filter(subject => DO_NOW_SECTIONS[subject].enabled)
+    .flatMap(subject => getDoNowBank(subject, grade, customDoNow).map(item => doNowToActivity(item, grade, subject)));
   const history = getFallbackHistory().slice(0, 6).map(item => historyToActivity(item, onThisDayUrl()));
-  return [...words, ...math, ...writing, ...history];
+  return [...words, ...doNow, ...history];
 }
 
 function uniqueActivities(activities = []) {
@@ -3136,7 +3282,7 @@ function MainApp({ account, onSignOut }) {
           <div className="topbar">
             <div className="topbar-left">
               <div className="topbar-title">Today’s Meeting</div>
-              <div className="topbar-date">{todayLabel} · {currentGrade} · Greeting, Sharing, Activity, Message · ~{totalMin} min{streakCount >= 2 && <span className="topbar-streak-pill">🔥 {streakCount}-day streak</span>}</div>
+              <div className="topbar-date">{todayLabel} · {currentGrade}{streakCount >= 2 && <span className="topbar-streak-pill">🔥 {streakCount}-day streak</span>}</div>
             </div>
             <div className="topbar-right grade-control-wrap">
               <GradePicker value={currentGrade} onChange={handleGradeChange}/>
@@ -3240,33 +3386,12 @@ function MainApp({ account, onSignOut }) {
                 {showWelcome && (
                 <div className="welcome-card">
                   <button className="welcome-dismiss" type="button" aria-label="Dismiss" onClick={() => dismissWelcome(null)}>✕</button>
-                  <div className="welcome-heading">Welcome to OfTheDay 👋</div>
-                  <div className="welcome-sub">Your morning meeting is already built. Three steps to get started:</div>
-                  <div className="welcome-steps">
-                    <div className="welcome-step">
-                      <div className="welcome-step-num">1</div>
-                      <div className="welcome-step-body">
-                        <strong>Choose your grade</strong>
-                        <span>Activities, vocabulary, and warm-ups adjust automatically.</span>
-                      </div>
-                    </div>
-                    <div className="welcome-step">
-                      <div className="welcome-step-num">2</div>
-                      <div className="welcome-step-body">
-                        <strong>See today's routine</strong>
-                        <span>A complete Greeting, Sharing, Activity, and Morning Message — ready now.</span>
-                      </div>
-                    </div>
-                    <div className="welcome-step">
-                      <div className="welcome-step-num">3</div>
-                      <div className="welcome-step-body">
-                        <strong>Project for your class</strong>
-                        <span>Hit "Project Today" to display the routine full-screen on your smartboard.</span>
-                      </div>
-                    </div>
+                  <div className="welcome-card-copy">
+                    <div className="welcome-heading">Welcome to OfTheDay 👋</div>
+                    <div className="welcome-sub">Your morning meeting is already built below. Pick a grade and it adjusts — then hit Project Today.</div>
                   </div>
                   <div className="welcome-grade-row">
-                    <span className="welcome-grade-label">Pick your grade to get started:</span>
+                    <span className="welcome-grade-label">Your grade:</span>
                     {["K–2","3–5","6–8","9–12"].map(g => (
                       <button
                         key={g} type="button"
@@ -3292,15 +3417,8 @@ function MainApp({ account, onSignOut }) {
                 </div>
               )}
               <div className="routine-header">
-                  <div className="routine-header-row">
-                    <div>
-                      <div className="section-eyebrow">Responsive Classroom Meeting</div>
-                      <div className="routine-ready">Ready · {routine.length} components · ~{totalMin} min{newCountToday > 0 && <span className="routine-new-count"> · {newCountToday} new to you</span>}</div>
-                    </div>
-                    <button className="btn-secondary btn-compact teacher-filter-button" type="button" onClick={() => setFilterOpen(true)}>Filters</button>
-                  </div>
                   <div className="morning-hero">
-                    <div>
+                    <div className="morning-hero-main">
                       <div className="morning-hero-title">
                         {projectedYesterday && !projectedToday
                           ? "Welcome back! New activities are waiting."
@@ -3308,28 +3426,16 @@ function MainApp({ account, onSignOut }) {
                             ? `${projectorStyle.className}'s morning meeting is ready.`
                             : "Your daily classroom ritual is ready."}
                       </div>
-                      <div className="morning-hero-text">
-                        {projectedYesterday && !projectedToday
-                          ? `Today's routine is built and ready for ${projectorStyle.className || 'your class'}. Your ${streakCount}-day streak is on the line — let's keep it going.`
-                          : "A complete classroom meeting built around greeting, sharing, group activity, and morning message so students start connected and ready to learn."}
-                      </div>
+                      <div className="routine-ready">Ready · {routine.length} components · ~{totalMin} min{newCountToday > 0 && <span className="routine-new-count"> · {newCountToday} new to you</span>}</div>
                     </div>
                     <div className="morning-hero-actions">
                       <button className="btn-primary btn-compact" type="button" onClick={() => projectToWindow(routine, 0)}>Project Today</button>
                       <button className="btn-secondary btn-compact" type="button" onClick={handleRandomize}>Shuffle</button>
+                      <button className="btn-secondary btn-compact" type="button" disabled={!routine.length} onClick={saveCurrentRoutine}>Save for later</button>
+                      <button className="btn-secondary btn-compact teacher-filter-button" type="button" onClick={() => setFilterOpen(true)}>Filters</button>
                     </div>
                   </div>
-                  <div className="component-rail" aria-label="Meeting components">
-                    {DEFAULT_CATS.map((cat, i) => {
-                      const cm = CAT_META[cat] || {};
-                      return <div key={cat} className="component-pill" style={{ borderTop: `3px solid ${cm.color || "#DDD"}` }}>
-                        <div className="component-pill-step">Step {i + 1}</div>
-                        <div className="component-pill-name">{cm.emoji} {cat}</div>
-                      </div>;
-                    })}
-                  </div>
                   <div className="today-tools">
-                    <span className="today-tools-label">More classroom tools</span>
                     <div className="library-pill-wrap">
                       <div className="library-pill-row" aria-label="More classroom tools">
                         <button type="button" className="library-pill-btn" onClick={() => setActiveNav("Word of the Day")}>📖 Word of the Day</button>
@@ -3355,9 +3461,6 @@ function MainApp({ account, onSignOut }) {
                     />
                   ))}
                   <button className="add-more add-more-quiet" type="button" onClick={() => setActiveNav("Library")}>+ Choose from Library</button>
-                </div>
-                <div className="action-bar today-save-bar">
-                  <button className="btn-secondary" type="button" disabled={!routine.length} onClick={saveCurrentRoutine}>Save for later</button>
                 </div>
               </div>
               <DetailPanel
