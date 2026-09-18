@@ -1599,6 +1599,14 @@ button:focus-visible,
 .today-tools { margin-top: 16px; }
 .today-tools-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin-bottom: 8px; }
 .today-tools .library-pill-wrap { margin-top: 0; }
+/* The shared pill row scrolls horizontally with a fade at the right edge. That
+   works where the row is a secondary shortcut strip, but on Today it hid real
+   navigation: at iPad widths the last pills (My Activities / Favorites / This
+   Week) sat past the edge, sliced mid-word, and a fade alone does not tell a
+   teacher to swipe. Wrap instead — on wide screens all six still fit one row,
+   so this costs no height until it would otherwise hide something. */
+.today-tools .library-pill-row { flex-wrap: wrap; overflow-x: visible; padding-bottom: 0; }
+.today-tools .library-pill-wrap::after { content: none; }
 .morning-card-index {
   width: 34px; height: 34px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;

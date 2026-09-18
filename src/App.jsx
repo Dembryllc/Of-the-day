@@ -460,6 +460,15 @@ function gradeToBand(g) {
   if (g === "9" || g === "10" || g === "11" || g === "12") return "9–12";
   return g; // already a band (legacy Firestore values)
 }
+// Grades are stored bare ("K", "3", or a legacy band like "3–5"). Rendering that
+// raw next to a "·" separator reads as a count, not a grade — a lone "3" in
+// "Sep 18 · 3 · Greeting, Sharing..." looks like a component count. Always label it.
+function gradeDisplayLabel(g) {
+  if (!g) return "All grades";
+  if (g === "K") return "Kindergarten";
+  if (INDIVIDUAL_GRADES.includes(g)) return `Grade ${g}`;
+  return `Grades ${g}`;
+}
 
 function activityMatchesGrade(activity, grade) {
   if (!grade) return true;
@@ -3136,7 +3145,7 @@ function MainApp({ account, onSignOut }) {
           <div className="topbar">
             <div className="topbar-left">
               <div className="topbar-title">Today’s Meeting</div>
-              <div className="topbar-date">{todayLabel} · {currentGrade} · Greeting, Sharing, Activity, Message · ~{totalMin} min{streakCount >= 2 && <span className="topbar-streak-pill">🔥 {streakCount}-day streak</span>}</div>
+              <div className="topbar-date">{todayLabel} · {gradeDisplayLabel(currentGrade)} · Greeting, Sharing, Activity, Message · ~{totalMin} min{streakCount >= 2 && <span className="topbar-streak-pill">🔥 {streakCount}-day streak</span>}</div>
             </div>
             <div className="topbar-right grade-control-wrap">
               <GradePicker value={currentGrade} onChange={handleGradeChange}/>
@@ -3198,7 +3207,7 @@ function MainApp({ account, onSignOut }) {
           <div className="topbar">
             <div className="topbar-left">
               <div className="topbar-title">Word of the Day</div>
-              <div className="topbar-date">Vocabulary · {currentGrade} · {vocabWord.word}</div>
+              <div className="topbar-date">Vocabulary · {gradeDisplayLabel(currentGrade)} · {vocabWord.word}</div>
             </div>
             <div className="topbar-right grade-control-wrap"><GradePicker value={currentGrade} onChange={handleGradeChange}/></div>
           </div>
@@ -3207,7 +3216,7 @@ function MainApp({ account, onSignOut }) {
           <div className="topbar">
             <div className="topbar-left">
               <div className="topbar-title">Do Now</div>
-              <div className="topbar-date">{(DO_NOW_SECTIONS[doNowSubject] || DO_NOW_SECTIONS.math).label} · {currentGrade}</div>
+              <div className="topbar-date">{(DO_NOW_SECTIONS[doNowSubject] || DO_NOW_SECTIONS.math).label} · {gradeDisplayLabel(currentGrade)}</div>
             </div>
             <div className="topbar-right grade-control-wrap"><GradePicker value={currentGrade} onChange={handleGradeChange}/></div>
           </div>
