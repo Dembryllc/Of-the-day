@@ -463,6 +463,15 @@ function gradeToBand(g) {
 // Grades are stored bare ("K", "3", or a legacy band like "3–5"). Rendering that
 // raw next to a "·" separator reads as a count, not a grade — a lone "3" in
 // "Sep 18 · 3 · Greeting, Sharing..." looks like a component count. Always label it.
+//
+// The empty case is unreachable from today's callers and is kept deliberately.
+// currentGrade ends in `|| tweaks.grade`, which useTweaks seeds from
+// TWEAK_DEFAULTS (`account?.grade || "3"`) and never persists, and the only
+// runtime writer (handleGradeChange) is called either from fixed-option chips
+// or behind an `if (grade)` guard — verified at runtime across all four chips
+// and all three topbars: 23 calls, zero falsy. Without the guard a future
+// caller lacking that chain would render "Grades undefined", so do not delete
+// it as dead code.
 function gradeDisplayLabel(g) {
   if (!g) return "All grades";
   if (g === "K") return "Kindergarten";
