@@ -921,7 +921,10 @@ function DetailContent({ activity, onSwap, onDisplayOne, onAddToRoutine, onRemov
       {actions !== undefined ? actions : (
       <div className="d-actions">
         <button className="d-btn-swap" type="button" onClick={() => onSwap(activity)}>↻ Replace</button>
-        <button className="d-btn-display" type="button" onClick={() => onDisplayOne(activity)}>▶ Project</button>
+        {/* Both callers of this default footer project the routine STARTING at
+            this activity, which is not what the topbar's "Project Today" does.
+            Same word for two behaviours was the ambiguity; say which. */}
+        <button className="d-btn-display" type="button" onClick={() => onDisplayOne(activity)}>▶ Project from here</button>
         <details className="d-more-actions">
           <summary>More options</summary>
           <div className="d-more-action-row">
@@ -3349,12 +3352,22 @@ function MainApp({ account, onSignOut }) {
           <div className="topbar">
             <div className="topbar-left">
               <div className="topbar-title">Today’s Meeting</div>
-              <div className="topbar-date">{todayLabel} · {gradeDisplayLabel(currentGrade)} · Greeting, Sharing, Activity, Message · ~{totalMin} min{streakCount >= 2 && <span className="topbar-streak-pill">🔥 {streakCount}-day streak</span>}</div>
+              {/* One operational line. This used to read "Greeting, Sharing,
+                  Activity, Message" — a hardcoded restatement of the cards
+                  below, repeated again by the status line, the hero paragraph
+                  and the step rail. The count is the part you can't see yet. */}
+              <div className="topbar-date">{todayLabel} · {gradeDisplayLabel(currentGrade)} · {routine.length} {routine.length === 1 ? "activity" : "activities"} · ~{totalMin} min{newCountToday > 0 && <span className="routine-new-count"> · {newCountToday} new to you</span>}{streakCount >= 2 && <span className="topbar-streak-pill">🔥 {streakCount}-day streak</span>}</div>
             </div>
             <div className="topbar-right grade-control-wrap">
               <GradePicker value={currentGrade} onChange={handleGradeChange}/>
+              {/* One control, not three. The chip already shows the current
+                  setting and opens the same sheet the separate "Adjust" chip
+                  and the "Filters" button both opened. */}
               <Chip label={`${filters.time || tweaks.time} · ${filters.energy || tweaks.energy}`} onClick={() => setFilterOpen(true)}/>
-              <Chip label="Adjust" onClick={() => setFilterOpen(true)}/>
+              <div className="topbar-actions">
+                <button className="btn-secondary btn-compact" type="button" disabled={!routine.length} onClick={handleRandomize}>Shuffle</button>
+                <button className="btn-primary btn-compact" type="button" disabled={!routine.length} onClick={() => projectToWindow(routine, 0)}>Project Today</button>
+              </div>
             </div>
           </div>
         )}
@@ -3509,57 +3522,18 @@ function MainApp({ account, onSignOut }) {
                   🌅 Have a great weekend! Come back Monday — your next routine will be ready.
                 </div>
               )}
-              <div className="routine-header">
-                  <div className="routine-header-row">
-                    <div>
-                      <div className="section-eyebrow">Responsive Classroom Meeting</div>
-                      <div className="routine-ready">Ready · {routine.length} components · ~{totalMin} min{newCountToday > 0 && <span className="routine-new-count"> · {newCountToday} new to you</span>}</div>
-                    </div>
-                    <button className="btn-secondary btn-compact teacher-filter-button" type="button" onClick={() => setFilterOpen(true)}>Filters</button>
+                {/* Everything that used to sit here — a marketing headline
+                    lifted verbatim from the logged-out landing page, a
+                    paragraph selling a product the teacher already has, and a
+                    STEP 1–4 rail that was the cards below with their content
+                    removed — took 45% of the screen before the first activity.
+                    The only part worth keeping is the re-engagement nudge. */}
+                {projectedYesterday && !projectedToday && (
+                  <div className="today-nudge">
+                    <strong>Welcome back — new activities are waiting.</strong>
+                    {streakCount >= 2 && <span> Your {streakCount}-day streak is on the line.</span>}
                   </div>
-                  <div className="morning-hero">
-                    <div>
-                      <div className="morning-hero-title">
-                        {projectedYesterday && !projectedToday
-                          ? "Welcome back! New activities are waiting."
-                          : projectorStyle.className && projectorStyle.className !== (account?.name ? account.name + "'s Class" : "Our Class")
-                            ? `${projectorStyle.className}'s morning meeting is ready.`
-                            : "Your daily classroom ritual is ready."}
-                      </div>
-                      <div className="morning-hero-text">
-                        {projectedYesterday && !projectedToday
-                          ? `Today's routine is built and ready for ${projectorStyle.className || 'your class'}. Your ${streakCount}-day streak is on the line — let's keep it going.`
-                          : "A complete classroom meeting built around greeting, sharing, group activity, and morning message so students start connected and ready to learn."}
-                      </div>
-                    </div>
-                    <div className="morning-hero-actions">
-                      <button className="btn-primary btn-compact" type="button" onClick={() => projectToWindow(routine, 0)}>Project Today</button>
-                      <button className="btn-secondary btn-compact" type="button" onClick={handleRandomize}>Shuffle</button>
-                    </div>
-                  </div>
-                  <div className="component-rail" aria-label="Meeting components">
-                    {DEFAULT_CATS.map((cat, i) => {
-                      const cm = CAT_META[cat] || {};
-                      return <div key={cat} className="component-pill" style={{ borderTop: `3px solid ${cm.color || "#DDD"}` }}>
-                        <div className="component-pill-step">Step {i + 1}</div>
-                        <div className="component-pill-name">{cm.emoji} {cat}</div>
-                      </div>;
-                    })}
-                  </div>
-                  <div className="today-tools">
-                    <span className="today-tools-label">More classroom tools</span>
-                    <div className="library-pill-wrap">
-                      <div className="library-pill-row" aria-label="More classroom tools">
-                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("Word of the Day")}>📖 Word of the Day</button>
-                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("Do Now")}>✏️ Do Now</button>
-                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("On This Day")}>⏳ On This Day</button>
-                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("My Activities")}>🗂️ My Activities</button>
-                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("Favorites")}>♥ Favorites</button>
-                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("This Week")}>📅 This Week</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
                 <div className="cards-scroll">
                   {routine.map((a, index) => (
                     <ActivityCard key={a.id} activity={a} index={index}
@@ -3573,6 +3547,22 @@ function MainApp({ account, onSignOut }) {
                     />
                   ))}
                   <button className="add-more add-more-quiet" type="button" onClick={() => setActiveNav("Library")}>+ Choose from Library</button>
+                  {/* Below the routine, not between the teacher and it. This is
+                      a browse action; the four cards are the reason they opened
+                      the app at 9am. */}
+                  <div className="today-tools">
+                    <span className="today-tools-label">More classroom tools</span>
+                    <div className="library-pill-wrap">
+                      <div className="library-pill-row" aria-label="More classroom tools">
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("Word of the Day")}>📖 Word of the Day</button>
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("Do Now")}>✏️ Do Now</button>
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("On This Day")}>⏳ On This Day</button>
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("My Activities")}>🗂️ My Activities</button>
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("Favorites")}>♥ Favorites</button>
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("This Week")}>📅 This Week</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="action-bar today-save-bar">
                   <button className="btn-secondary" type="button" disabled={!routine.length} onClick={saveCurrentRoutine}>Save for later</button>

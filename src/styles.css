@@ -1719,7 +1719,29 @@ button:focus-visible,
 .topbar-back:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-bg); }
 @media (max-width: 540px) { .topbar-back { margin-bottom: 6px; } }
 
-.today-tools { margin-top: 16px; }
+/* Today's primary actions live in the topbar so they never scroll away. They
+   sit outside .grade-control-wrap so the mobile rule that turns the chip row
+   into its own scrolling row doesn't drag the buttons into it. */
+.topbar-actions { display: flex; gap: 8px; align-items: center; margin-left: 4px; }
+/* Replaces the hero card on a return visit: operational, one line, no pitch. */
+.today-nudge {
+  margin: 0 28px 12px; padding: 10px 14px;
+  background: var(--teal-bg); border: 1.5px solid #B9DDD4; border-radius: 12px;
+  font-size: 13.5px; color: var(--ink); line-height: 1.45;
+}
+.today-nudge strong { color: var(--teal); }
+@media (max-width: 900px) {
+  .topbar-actions { margin-left: 0; }
+  .today-nudge { margin: 0 16px 10px; }
+}
+@media (max-width: 540px) {
+  /* The chips already take a full row here; give the actions their own so
+     neither squeezes the date line (see "Mobile Topbar Bug" in CLAUDE.md). */
+  .topbar-actions { flex: 1 1 100%; margin-top: 8px; }
+  .topbar-actions .btn-primary, .topbar-actions .btn-secondary { flex: 1; justify-content: center; }
+}
+.today-tools { margin-top: 22px; padding-top: 18px; border-top: 1.5px solid var(--border); }
+
 .today-tools-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin-bottom: 8px; }
 .today-tools .library-pill-wrap { margin-top: 0; }
 /* The shared pill row scrolls horizontally with a fade at the right edge. That

@@ -89,6 +89,17 @@ Word of the Day, Do Now, On This Day, My Activities, Favorites and This Week (`L
 - `.browse-scroll` stays the scroll container; `.browse-body` only splits the row beside it and must not take height/overflow of its own — see the routine-builder note above for what happens when an inner wrapper claims both.
 - Card heights are equalised by grid row stretch plus `margin-top: auto` on `.browse-card-actions`, **not** a `min-height` — a fixed height just adds dead space now that each card carries a single button.
 
+## Today Screen — The Routine Is The Screen (rebuilt 2026-09-18)
+Today was laid out like a landing page: eyebrow, hero headline, subhead paragraph, feature rail, secondary nav, and only then the activities. Measured on `/demo`, the first activity card started at **492px** (landscape 1366x1024), **688px** (portrait 1024x1366) and **496px** (phone 375x812) — on phone only 2 of 4 cards were visible at once. After: **151 / 175 / 253px**, and 4 / 4 / 3 cards visible.
+- **The hero card is gone.** Its headline, "Your daily classroom ritual is ready.", was the same sentence as the logged-out landing page, and its paragraph sold the product to someone who had already signed up. Onboarding belongs to the welcome card (`showWelcome`), which already covers grade -> routine -> project. The one part worth keeping — the return-visit nudge when `projectedYesterday && !projectedToday` — survives as `.today-nudge`, one line.
+- **The STEP 1-4 rail is gone.** It was the activity cards with their content removed; the cards are already numbered and carry the same category labels.
+- **The meeting is described once.** It used to be stated four times before you could see it: the topbar subtitle (hardcoded "Greeting, Sharing, Activity, Message"), the "Ready · N components · ~N min" line, the hero paragraph, and the rail. The topbar line now carries date, grade, activity count, minutes, new-to-you count and streak — the count being the part you can't see yet. "components" was product-speak; it says "activities".
+- **Project Today and Shuffle live in the topbar** (`.topbar-actions`, deliberately outside `.grade-control-wrap` so the <=540px rule that gives the chip row its own scrolling row doesn't drag the buttons in with it). The primary action must never scroll away.
+- **One routine control, not three.** The chip showing `time · energy` opens the same sheet that a separate "Adjust" chip and a mobile-only "Filters" button also opened; both are removed.
+- **"More classroom tools" moved below the cards.** It is a browse action and was sitting between the teacher and the routine they opened the app for.
+- The detail panel's project button says **"Project from here"** — both callers of `DetailContent`'s default footer project the routine *starting at* that activity, which is not what the topbar's "Project Today" does. Don't collapse the two labels back together.
+- **Still not done:** the detail panel is permanently open and spends ~35% of landscape width on one activity. Opening it on tap would give the cards the full width. That is an interaction change, not a layout one, and was left alone.
+
 ## Slide Saves — Direct Firestore (Not Cloud Function)
 Slide saves go directly to Firestore from the frontend. **Do not add a Cloud Function save path.** A function-based save path was tried and abandoned as unreliable.
 
