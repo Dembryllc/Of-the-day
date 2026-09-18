@@ -52,6 +52,11 @@ The first real `checkout.session.completed` verified fine, then the handler thre
 - Fix: `periodEndOf(sub)` reads `sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end ?? null`. The `?? null` is load-bearing — Firestore rejects `undefined` and throws away the entire write, so one missing field silently cost a subscriber their access.
 - If you ever bump the endpoint's API version or the stripe package, re-check this.
 
+## Billing Portal (added 2026-08-25, confirmed active 2026-09-18)
+Cancellation/card updates go through the **Stripe-hosted billing portal**, opened from the Subscription section of the profile sheet and backed by the `createPortalSession` callable (verifies the caller owns the account before creating the session). Hidden in demo mode — no uid to bill.
+- The commit that added this (`4dd092a`) warned the portal still needed one-time activation in the Stripe dashboard. **It does not** — configuration `bpc_1U8VPJB2eRKsbhTpsoquypgS` is live, active and `is_default`, with cancel-at-period-end, invoice history and payment-method update enabled. Do not re-open this as a blocker.
+- A portal cancellation only syncs back to Firestore because the live webhook is registered (`customer.subscription.deleted`). If that endpoint is ever removed, cancelled users silently keep `tier:'pro'`.
+
 ## Slide Saves — Direct Firestore (Not Cloud Function)
 Slide saves go directly to Firestore from the frontend. **Do not add a Cloud Function save path.** A function-based save path was tried and abandoned as unreliable.
 
@@ -63,6 +68,13 @@ Slide saves go directly to Firestore from the frontend. **Do not add a Cloud Fun
 | exitTicket | 250 |
 
 **These must stay in sync** between `src/LessonSlideCreator.jsx` LIMITS object AND `functions/index.js` SLIDE_SYSTEM_PROMPT. Both places, every time.
+
+## Projector Slide Sizing (fixed 2026-08-27)
+`src/LessonSlideDisplay.jsx` sizes projected lesson slides. The caps were originally tuned against a laptop preview, so body text bottomed out at ~18px on a 1080p smartboard with ~80% of each column empty.
+- Sizes are **vmin-based clamps**, so a single number only means something at a stated resolution — don't grep for the figures below expecting literals. At 1920×1080 (vmin = 10.8) they render as: learning target **54px** (`clamp(24px, 5vmin, 76px)`), body **32px** (`clamp(15px, 3vmin, 44px)`), column header **22px**. Previously ~32 / 18 / 19px. vmin (not vw) keeps it height-bound so taller content still fits.
+- **Column 3 is the constrained one** and must not be "simplified" back to a static clamp. It stacks three sections in the height columns 1–2 give to one, and `studentTask` allows 300 chars vs 250 for the others (see Character Limits above), so max-length lessons used to clip their last line — silently losing content mid-lesson. `useFitFontSize` now binary-searches (14 iterations, `scrollHeight <= clientHeight + 1`) for the largest size at which Student Task, Discussion Prompt and Exit Ticket all fit, between `min(22, max(11, 1.5·vmin))` and `min(36, max(13, 2.5·vmin))` — at 1080p roughly 16–27px. Typical lessons land at the 27px ceiling; worst case settles near 20px instead of truncating.
+- It re-fits on `resize`, and its dep array includes the three text fields and the theme — if you add a fourth section to column 3, add its ref and field there too.
+- If you raise any character limit, re-check the worst case here at 1920×1080 and 1366×768 before shipping.
 
 ## Slide Export — PowerPoint / Google Slides (added 2026-06-30)
 - `src/lib/exportSlide.js` builds a `.pptx` via **pptxgenjs** (`^4.0.1`), **lazy-loaded** with `await import('pptxgenjs')` so it splits into its own chunk (~368 KB) and stays out of the main bundle. Do NOT convert to a static import.
@@ -111,6 +123,8 @@ Never bypass `usePlan.js` for plan checks — don't add a second plan-resolution
 2. ~~Stripe live webhook not registered~~ — **registered 2026-08-25**, see "Stripe Live Webhook" below.
 3. ~~Mobile phone check~~ — done 2026-07-04 via Playwright at 375px. Found and fixed a real bug: see "Mobile Topbar Bug" below.
 4. **hello@oftheday.net inbound mail** — nothing RECEIVES mail there yet. Mailgun on `mg.oftheday.net` is send-only; fix is a ~10-min DNS task at Netlify (the domain registrar) + ImprovMX forwarding — exact steps: `notes/2026-07-13-session.md`. **Interim state (2026-07-13, user-approved):** all site-visible contact references were swapped to `dembryllc@gmail.com`, and outgoing email sets `Reply-To: dembryllc@gmail.com` (`REPLY_TO` in `functions/index.js`). `EMAIL_FROM` must STAY `hello@oftheday.net` — a gmail.com From via Mailgun fails DMARC. Once forwarding is live, swap back: grep `dembryllc@gmail.com` across `src/`, `functions/index.js` (REPLY_TO), and `scripts/resource-pack/pack.html` (then regenerate the PDF).
+5. **Two duplicate live subscriptions on the owner's own card** (found 2026-09-18) — `sub_1U8Qk1B2eRKsbhTpW6YWccxr` and `sub_1U8QklB2eRKsbhTptUiWmHFz`, both `cus_V8iApOF9EQQ61Q` / `dembryllc@gmail.com`, created 60 seconds apart during the 2026-08-25 go-live test. Both 14-day trials converted on 2026-09-08 and charged $79 each ($158 total, invoices `UI1IWEOS-0003`/`-0004`); both renew 2027-09-08. The monthly test sub from the same night was cancelled cleanly at $0. These are the ONLY subscriptions the live account has ever had — no real customer revenue is mixed in. Cancel + refund both; it also exercises `customer.subscription.deleted` in production for the first time. Detail: `notes/2026-09-18-session.md`.
+   - **When live-testing checkout in future:** use one subscription, cancel it in the same session, and record the subscription ID in the session note — a forgotten trial converts silently two weeks later.
 
 ## Mobile Topbar Bug — Fixed 2026-07-04
 At ≤540px, `.topbar-right.grade-control-wrap` (grade chips + filter chips on the Today/Library/etc. topbars) is `flex-shrink: 0` and wider than the viewport. In a `justify-content: space-between` flex row, all the shrink pressure fell on `.topbar-left`, collapsing it to `width: 0` — its text (date/component summary) rendered one word per line instead of wrapping normally. Landing-page nav was fine (fixed 2026-07-02); this was a separate bug in the app shell itself, not caught by that fix.
