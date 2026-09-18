@@ -1498,15 +1498,26 @@ function DoNowEditorSheet({ grade, subject, initialProblem, onSave, onClose }) {
 /* ── Browse Screen ── */
 function BrowseScreen({ activities, grade, favorites, usedToday, builderCount, replacementTarget, onCancelReplacement, onFave, onCreate, onAdd, onBuild, onDisplay, onReviewRoutine, onOpenTool, userTier = 'pro', onUpgradeNeeded }) {
   const [q, setQ] = useState("");
+  // Every card used to carry all three actions — 60 cards, 180 buttons — while
+  // nothing was clickable, so you chose from a title and "3 min · Medium" with
+  // no way to read the prompt first. Selecting a card now fills a detail panel
+  // and the secondary actions live there instead.
+  const [selected, setSelected] = useState(null);
+  const [catFilter, setCatFilter] = useState("All");
+  const allCats = useMemo(
+    () => ["All", ...Array.from(new Set(activities.map(a => a.cat))).filter(Boolean)],
+    [activities]
+  );
   const filtered = useMemo(() => {
-    if (!q.trim()) return activities;
-    const lq = q.toLowerCase();
+    const lq = q.trim().toLowerCase();
     return activities.filter(a =>
-      a.title.toLowerCase().includes(lq) ||
-      a.cat.toLowerCase().includes(lq) ||
-      a.prompt.toLowerCase().includes(lq)
+      (catFilter === "All" || a.cat === catFilter) &&
+      (!lq ||
+        a.title.toLowerCase().includes(lq) ||
+        a.cat.toLowerCase().includes(lq) ||
+        a.prompt.toLowerCase().includes(lq))
     );
-  }, [q, activities]);
+  }, [q, catFilter, activities]);
   const byCat = useMemo(() => {
     const map = {};
     filtered.forEach(a => { if (!map[a.cat]) map[a.cat] = []; map[a.cat].push(a); });
@@ -1531,10 +1542,6 @@ function BrowseScreen({ activities, grade, favorites, usedToday, builderCount, r
             <div style={{fontSize:14, color:"var(--muted)", marginTop:3}}>Choose a ready-to-use item, project it, or add it to your own routine.</div>
           </div>
           <button className="btn-secondary btn-compact" type="button" onClick={onCreate}>+ Create Activity</button>
-        </div>
-        <div className="library-grade-note">
-          <span>Grade {grade}</span>
-          <div><strong>Showing every library item.</strong> The grade picker updates Today, Word of the Day, and Do Now recommendations, but the Library stays complete.</div>
         </div>
         {replacementTarget && (
           <div className="library-replace-note" role="status">
@@ -1567,7 +1574,15 @@ function BrowseScreen({ activities, grade, favorites, usedToday, builderCount, r
           <input placeholder="Search activities…" value={q} onChange={e => setQ(e.target.value)}/>
           {q && <span onClick={() => setQ("")} style={{cursor:"pointer", color:"var(--muted)", fontSize:14}}>✕</span>}
         </div>
+        <div className="browse-cat-filter">
+          {allCats.map(c => (
+            <button key={c} type="button"
+              className={`builder-cat-chip${catFilter === c ? " active" : ""}`}
+              onClick={() => setCatFilter(c)}>{c}</button>
+          ))}
+        </div>
       </div>
+      <div className="browse-body">
       <div className="browse-scroll">
         {Object.keys(byCat).length === 0 && (
           <div style={{textAlign:"center", color:"var(--muted)", padding:"48px 0", fontSize:15}}>No activities found</div>
@@ -1584,7 +1599,12 @@ function BrowseScreen({ activities, grade, favorites, usedToday, builderCount, r
                 {items.map(a => {
                   const locked = lockedIds.has(a.id);
                   return (
-                    <div key={a.id} className={`browse-card${locked ? ' browse-card--locked' : ''}`} style={{ borderTop: `3px solid ${cm.color}` }}>
+                    <div key={a.id}
+                      className={`browse-card${locked ? ' browse-card--locked' : ''}${selected && selected.id === a.id ? ' selected' : ''}`}
+                      style={{ borderTop: `3px solid ${cm.color}` }}
+                      role="button" tabIndex="0"
+                      onClick={() => setSelected(a)}
+                      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(a); } }}>
                       <div style={{display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:8}}>
                         <div className="browse-card-title">{a.title}{usedToday?.has(a.id) && <span className="browse-card-used-badge">✓ Today</span>}</div>
                         {locked
@@ -1593,16 +1613,14 @@ function BrowseScreen({ activities, grade, favorites, usedToday, builderCount, r
                               className={`browse-card-heart${favorites.has(a.id) ? ' saved' : ''}`}
                               type="button"
                               aria-label={favorites.has(a.id) ? `Remove ${a.title} from favorites` : `Save ${a.title} to favorites`}
-                              onClick={() => onFave(a)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,flexShrink:0}}>
+                              onClick={e => { e.stopPropagation(); onFave(a); }} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,flexShrink:0}}>
                               {favorites.has(a.id) ? "♥" : "♡"}
                             </button>
                         }
                       </div>
                       <div className="browse-card-meta">{a.meta}</div>
                       <div className="browse-card-actions">
-                        <button className={replacementTarget ? "btn-primary btn-compact" : "btn-secondary btn-compact"} type="button" aria-label={replacementTarget ? `Replace ${replacementTarget.title} with ${a.title}` : `Use ${a.title} today`} onClick={() => locked ? onUpgradeNeeded?.() : onAdd(a)}>{replacementTarget ? "Replace" : "Use Today"}</button>
-                        <button className="btn-secondary btn-compact" type="button" aria-label={`Add ${a.title} to routine builder`} onClick={() => locked ? onUpgradeNeeded?.() : onBuild(a)}>Add to Routine</button>
-                        <button className="btn-secondary btn-compact" type="button" aria-label={`Project ${a.title}`} onClick={() => onDisplay(a)}>Project</button>
+                        <button className={replacementTarget ? "btn-primary btn-compact" : "btn-secondary btn-compact"} type="button" aria-label={replacementTarget ? `Replace ${replacementTarget.title} with ${a.title}` : `Use ${a.title} today`} onClick={e => { e.stopPropagation(); locked ? onUpgradeNeeded?.() : onAdd(a); }}>{replacementTarget ? "Replace" : "Use Today"}</button>
                       </div>
                     </div>
                   );
@@ -1611,6 +1629,37 @@ function BrowseScreen({ activities, grade, favorites, usedToday, builderCount, r
             </div>
           );
         })}
+      </div>
+      <div className="browse-detail">
+        {selected ? (
+          <DetailContent
+            activity={selected}
+            currentGrade={grade}
+            actions={
+              <div className="d-actions">
+                <button type="button" className="d-btn-display"
+                  onClick={() => (lockedIds.has(selected.id) ? onUpgradeNeeded?.() : onAdd(selected))}>
+                  {replacementTarget ? `Replace ${replacementTarget.title}` : "Use Today"}
+                </button>
+                <button type="button" className="d-btn-swap"
+                  onClick={() => (lockedIds.has(selected.id) ? onUpgradeNeeded?.() : onBuild(selected))}>
+                  Add to Routine
+                </button>
+                <button type="button" className="d-btn-swap" onClick={() => onDisplay(selected)}>▶ Project</button>
+                <button type="button" className={`d-btn-swap${favorites.has(selected.id) ? " saved" : ""}`}
+                  onClick={() => onFave(selected)}>
+                  {favorites.has(selected.id) ? "♥ Saved" : "♡ Save"}
+                </button>
+              </div>
+            }
+          />
+        ) : (
+          <div className="detail-empty">
+            <div className="detail-empty-icon">←</div>
+            <div className="detail-empty-text">Pick any activity to read its directions, student prompt, and sentence starter before you use it.</div>
+          </div>
+        )}
+      </div>
       </div>
     </div>
   );
@@ -3315,7 +3364,6 @@ function MainApp({ account, onSignOut }) {
               <div className="topbar-title">Library</div>
               <div className="topbar-date">All ready activities, Do Nows, words, history, writing prompts, favorites, and your own ideas</div>
             </div>
-            <div className="topbar-right grade-control-wrap"><GradePicker value={currentGrade} onChange={handleGradeChange}/></div>
           </div>
         )}
         {activeNav === "Favorites" && (

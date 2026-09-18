@@ -81,6 +81,14 @@ Word of the Day, Do Now, On This Day, My Activities, Favorites and This Week (`L
 - **`.build-workspace--stacked` is `display: block`, not a one-column grid — deliberate.** `.routine-col` carries `overflow: hidden; min-height: 0`, which collapses its intrinsic contribution, so an auto grid track sized to 514px against a section 978px tall and (with `align-items: start`) the section painted straight over the row below it. Block boxes size to their content. The doubled class is also deliberate: `.build-workspace` is defined later in `styles.css`, so a single-class override loses on source order.
 - The inner `.builder-workspace` grid must not declare its own height or `overflow` — `.build-workspace` is already the scroll container, and giving the inner grid one reintroduces the same overflow. Cap `.builder-picker-list` instead.
 
+## Library — Browse + Inspect (rebuilt 2026-09-18)
+`BrowseScreen` put Use Today / Add to Routine / Project on every card — 138 cards, 414 buttons — while the card itself was not clickable, so you chose an activity from its title and "3 min · Medium" with no way to read the prompt first.
+- Cards are selectable and fill a **detail panel** (`.browse-detail`) built from `DetailContent` with a Library-specific `actions` footer. Cards keep one visible button (Use Today, or Replace in replacement mode); the other three actions moved into the panel. 414 buttons -> 138.
+- Added a **category chip row** (same `.builder-cat-chip` styling as the routine builder) over what was a single flat list with ~6,700px of hidden scroll.
+- Removed the banner that read *"Showing every library item. The grade picker updates Today, Word of the Day, and Do Now recommendations, but the Library stays complete"* — along with the grade chips in the Library topbar that it was apologising for. They mutated a global preference and did nothing to this screen. **If a grade filter is wanted here, make it filter; don't re-add a control that explains why it doesn't.**
+- `.browse-scroll` stays the scroll container; `.browse-body` only splits the row beside it and must not take height/overflow of its own — see the routine-builder note above for what happens when an inner wrapper claims both.
+- Card heights are equalised by grid row stretch plus `margin-top: auto` on `.browse-card-actions`, **not** a `min-height` — a fixed height just adds dead space now that each card carries a single button.
+
 ## Slide Saves — Direct Firestore (Not Cloud Function)
 Slide saves go directly to Firestore from the frontend. **Do not add a Cloud Function save path.** A function-based save path was tried and abandoned as unreliable.
 
