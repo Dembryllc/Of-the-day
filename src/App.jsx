@@ -870,7 +870,10 @@ function ActivityCard({ activity, selected, onSelect, onSwap, onFave, favorites,
 }
 
 /* ── Detail Panel ── */
-function DetailContent({ activity, onSwap, onDisplayOne, onAddToRoutine, onRemove, onFave, isFavorite, currentGrade }) {
+// `actions` overrides the footer so other screens can reuse the whole detail body
+// (directions, prompt, sentence starter, supports, source) without inheriting
+// Today's buttons — "Replace" means nothing while you are assembling a routine.
+function DetailContent({ activity, onSwap, onDisplayOne, onAddToRoutine, onRemove, onFave, isFavorite, currentGrade, actions }) {
   const cm = CAT_META[activity.cat] || { color: "#CCC" };
   const gradeLabel = gradeLabelForActivity(activity, currentGrade);
   return (
@@ -915,6 +918,7 @@ function DetailContent({ activity, onSwap, onDisplayOne, onAddToRoutine, onRemov
           </div>
         )}
       </div>
+      {actions !== undefined ? actions : (
       <div className="d-actions">
         <button className="d-btn-swap" type="button" onClick={() => onSwap(activity)}>↻ Replace</button>
         <button className="d-btn-display" type="button" onClick={() => onDisplayOne(activity)}>▶ Project</button>
@@ -927,6 +931,7 @@ function DetailContent({ activity, onSwap, onDisplayOne, onAddToRoutine, onRemov
           </div>
         </details>
       </div>
+      )}
     </>
   );
 }
@@ -1839,11 +1844,28 @@ function MyActivitiesScreen({ customActivities, onCreate, onEdit, onDelete, onAd
 
 
 /* ── Routine Builder Screen ── */
-function RoutineBuilderScreen({ draft, routines = [], onDraftChange, onSaveRoutine, onLoadToday, onProject, onOpenLibrary, onLoadSaved, onEditSaved, onProjectSaved, onDeleteSaved, onCopySaved }) {
+function RoutineBuilderScreen({ draft, routines = [], activities = [], currentGrade, onDraftChange, onSaveRoutine, onLoadToday, onProject, onOpenLibrary, onLoadSaved, onEditSaved, onProjectSaved, onDeleteSaved, onCopySaved }) {
   const name = draft.name ?? "My Classroom Routine";
   const items = draft.items || [];
   const [customText, setCustomText] = useState("");
   const [timerMinutes, setTimerMinutes] = useState(3);
+  // Adding an activity used to mean leaving for the Library and coming back —
+  // two full screen changes per block. The picker and the detail view live here
+  // now, so building a routine never leaves the builder.
+  const [query, setQuery] = useState("");
+  const [pickerCat, setPickerCat] = useState("All");
+  const [selected, setSelected] = useState(null);
+  const pickerCats = useMemo(
+    () => ["All", ...Array.from(new Set(activities.map(a => a.cat))).filter(Boolean)],
+    [activities]
+  );
+  const pickerResults = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return activities.filter(a =>
+      (pickerCat === "All" || a.cat === pickerCat) &&
+      (!q || (a.title || "").toLowerCase().includes(q) || (a.prompt || "").toLowerCase().includes(q))
+    );
+  }, [activities, query, pickerCat]);
   const totalMin = Math.max(0, Math.round(items.reduce((sum, item) => sum + (item.time || 0), 0) / 60));
   const isEditingSavedRoutine = !!draft.editingRoutineId;
   const updateItems = nextItems => onDraftChange({ ...draft, items: nextItems });
@@ -1907,13 +1929,53 @@ function RoutineBuilderScreen({ draft, routines = [], onDraftChange, onSaveRouti
           <div className="routine-ready">{isEditingSavedRoutine ? "Editing saved routine · " : ""}{items.length ? items.length + " items · ~" + totalMin + " min" : "Build from scratch or choose from the Library."}</div>
         </div>
         <div className="header-actions">
-          <button className="btn-primary btn-compact" type="button" onClick={onOpenLibrary}>Browse Library</button>
           <button className="btn-secondary btn-compact" type="button" disabled={!items.length} onClick={clear}>Clear</button>
           <button className="btn-secondary btn-compact" type="button" disabled={!items.length} onClick={() => onLoadToday(items)}>Use Today</button>
           <button className="btn-primary btn-compact" type="button" disabled={!items.length} onClick={() => onProject(items)}>Project</button>
         </div>
       </div>
-      <div className="cards-scroll">
+      <div className="builder-workspace">
+        <div className="builder-panel builder-picker">
+          <div className="builder-panel-title">Add an activity</div>
+          <input
+            className="builder-search" type="search" value={query}
+            placeholder="Search activities…" aria-label="Search activities"
+            onChange={e => setQuery(e.target.value)}
+          />
+          <div className="builder-picker-cats">
+            {pickerCats.map(c => (
+              <button key={c} type="button"
+                className={`builder-cat-chip${pickerCat === c ? " active" : ""}`}
+                onClick={() => setPickerCat(c)}>{c}</button>
+            ))}
+          </div>
+          <div className="builder-picker-list">
+            {pickerResults.map(a => {
+              const cm = CAT_META[a.cat] || { color: "#CCC" };
+              const isSel = selected && selected.id === a.id;
+              return (
+                <div key={a.id} className={`builder-picker-row${isSel ? " selected" : ""}`}
+                  role="button" tabIndex="0"
+                  onClick={() => setSelected(a)}
+                  onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(a); } }}>
+                  <span className="builder-picker-stripe" style={{ background: cm.color }} aria-hidden="true"/>
+                  <div className="builder-picker-main">
+                    <div className="builder-picker-cat">{a.cat}</div>
+                    <div className="builder-picker-title">{a.title}</div>
+                    <div className="builder-picker-meta">{a.meta}</div>
+                  </div>
+                  <button type="button" className="builder-picker-add" aria-label={`Add ${a.title} to this routine`}
+                    onClick={e => { e.stopPropagation(); addItem(a); setSelected(a); }}>+ Add</button>
+                </div>
+              );
+            })}
+            {!pickerResults.length && (
+              <div className="builder-picker-empty">Nothing matches “{query}”.</div>
+            )}
+          </div>
+          <button type="button" className="builder-picker-full" onClick={onOpenLibrary}>Open the full Library →</button>
+        </div>
+      <div className="builder-canvas">
         <div className="builder-panel builder-current" style={{width:"100%"}}>
           <div className="builder-current-top">
             <label className="form-field builder-name-field"><span>Routine Name</span><input value={name} onChange={e => setName(e.target.value)} /></label>
@@ -1930,7 +1992,12 @@ function RoutineBuilderScreen({ draft, routines = [], onDraftChange, onSaveRouti
               {items.map((item, index) => {
                 const cm = CAT_META[item.cat] || { color: "#CCC", emoji: "" };
                 return (
-                  <div key={item.builderKey || item.id + "-" + index} className="builder-block" style={{ borderTopColor: cm.color }}>
+                  <div key={item.builderKey || item.id + "-" + index}
+                    className={`builder-block${selected && selected.id === item.id ? " selected" : ""}`}
+                    style={{ borderTopColor: cm.color }}
+                    role="button" tabIndex="0"
+                    onClick={() => setSelected(item)}
+                    onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(item); } }}>
                     <div className="builder-block-index">{index + 1}</div>
                     <div className="builder-block-main">
                       <div className="builder-block-cat">{cm.emoji} {item.cat}</div>
@@ -1938,10 +2005,10 @@ function RoutineBuilderScreen({ draft, routines = [], onDraftChange, onSaveRouti
                       <div className="builder-block-prompt">{item.prompt}</div>
                     </div>
                     <div className="builder-block-actions">
-                      <button type="button" onClick={() => moveItem(index, -1)} disabled={index === 0}>Up</button>
-                      <button type="button" onClick={() => moveItem(index, 1)} disabled={index === items.length - 1}>Down</button>
-                      <button type="button" onClick={() => duplicateItem(index)}>Copy</button>
-                      <button type="button" className="danger" onClick={() => removeItem(index)}>Remove</button>
+                      <button type="button" onClick={e => { e.stopPropagation(); moveItem(index, -1); }} disabled={index === 0}>Up</button>
+                      <button type="button" onClick={e => { e.stopPropagation(); moveItem(index, 1); }} disabled={index === items.length - 1}>Down</button>
+                      <button type="button" onClick={e => { e.stopPropagation(); duplicateItem(index); }}>Copy</button>
+                      <button type="button" className="danger" onClick={e => { e.stopPropagation(); removeItem(index); }}>Remove</button>
                     </div>
                   </div>
                 );
@@ -1958,8 +2025,9 @@ function RoutineBuilderScreen({ draft, routines = [], onDraftChange, onSaveRouti
           </div>
           <div className="builder-custom-box compact">
             <div className="builder-mini-title">Timer Block</div>
+            <label className="builder-timer-label" htmlFor="builder-timer-minutes">Length in minutes</label>
             <div className="builder-timer-row">
-              <input type="number" min="1" max="60" value={timerMinutes} onChange={e => setTimerMinutes(e.target.value)}/>
+              <input id="builder-timer-minutes" type="number" min="1" max="60" value={timerMinutes} onChange={e => setTimerMinutes(e.target.value)}/>
               <button className="btn-secondary btn-compact" type="button" onClick={addTimer}>Add Timer</button>
             </div>
           </div>
@@ -1990,15 +2058,49 @@ function RoutineBuilderScreen({ draft, routines = [], onDraftChange, onSaveRouti
           )}
         </div>
       </div>
+        <div className="builder-panel builder-detail">
+          <div className="builder-panel-title">Details</div>
+          {selected ? (
+            <DetailContent
+              activity={selected}
+              currentGrade={currentGrade}
+              actions={
+                <div className="d-actions">
+                  {items.some(i => i.id === selected.id) ? (
+                    <button type="button" className="d-btn-swap btn-remove"
+                      onClick={() => {
+                        const idx = items.findIndex(i => i.id === selected.id);
+                        if (idx >= 0) removeItem(idx);
+                        setSelected(null);
+                      }}>Remove from routine</button>
+                  ) : (
+                    <button type="button" className="d-btn-display"
+                      onClick={() => addItem(selected)}>+ Add to routine</button>
+                  )}
+                </div>
+              }
+            />
+          ) : (
+            <div className="detail-empty">
+              <div className="detail-empty-icon">←</div>
+              <div className="detail-empty-text">Pick an activity to read its directions, student prompt, and sentence starter before you add it.</div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
 function BuildScreen({ customActivities, onCreateActivity, onEditActivity, onDeleteActivity, onAddActivityToday, onBuildActivity, routineProps }) {
   return (
-    <div className="build-workspace">
+    <div className="build-workspace build-workspace--stacked">
       <div className="build-section">
-        <div className="build-section-title">Activity Builder</div>
+        <div className="build-section-title">Build a routine</div>
+        <RoutineBuilderScreen {...routineProps}/>
+      </div>
+      <div className="build-section">
+        <div className="build-section-title">Your custom activities</div>
         <MyActivitiesScreen
           customActivities={customActivities}
           onCreate={onCreateActivity}
@@ -2007,10 +2109,6 @@ function BuildScreen({ customActivities, onCreateActivity, onEditActivity, onDel
           onAdd={onAddActivityToday}
           onBuild={onBuildActivity}
         />
-      </div>
-      <div className="build-section">
-        <div className="build-section-title">Routine Builder</div>
-        <RoutineBuilderScreen {...routineProps}/>
       </div>
     </div>
   );
@@ -3502,6 +3600,8 @@ function MainApp({ account, onSignOut }) {
               routineProps={{
                 draft: builderDraft,
                 routines: savedRoutines,
+                activities: allActivities,
+                currentGrade,
                 onDraftChange: setBuilderDraft,
                 onSaveRoutine: saveBuiltRoutine,
                 onLoadToday: useBuiltRoutineToday,

@@ -72,6 +72,15 @@ Word of the Day, Do Now, On This Day, My Activities, Favorites and This Week (`L
 - Every view now belongs to exactly one nav group.
 - **Structurally these should be sheets over Today, not nav destinations** — they're glanceable content (Word of the Day is one word), not places. This fix makes the current model honest; it doesn't make it right.
 
+## Routine Builder — Pick / Arrange / Inspect (rebuilt 2026-09-18)
+`RoutineBuilderScreen` used to have no way to add an activity from inside it: three separate "Browse Library" buttons all called `setActiveNav("Library")`, so a five-block routine cost ten full screen changes. It also showed no detail — blocks rendered `cat`/`title`/`prompt` with Up/Down/Copy/Remove and nothing was clickable, so you assembled a routine from titles alone.
+- Three columns now: **picker** (search + category chips + `+ Add`, fed by `allActivities` via `routineProps`), **canvas** (the draft blocks, selectable), **detail**. Building never leaves the builder.
+- `DetailContent` takes an optional **`actions`** prop that replaces its footer. That is how the builder reuses the whole detail body (directions, prompt, sentence starter, supports, source) without inheriting Today's buttons — "Replace" is meaningless mid-build. Don't fork the detail markup; pass `actions`.
+- Block buttons call `e.stopPropagation()` because the block row is now itself a click target.
+- `BuildScreen` stacks its two panels instead of placing them side by side, and they are named "Build a routine" / "Your custom activities" — the old "Activity Builder" / "Routine Builder" pair was indistinguishable, and the custom-activity panel (usually empty) held ~35% of the screen.
+- **`.build-workspace--stacked` is `display: block`, not a one-column grid — deliberate.** `.routine-col` carries `overflow: hidden; min-height: 0`, which collapses its intrinsic contribution, so an auto grid track sized to 514px against a section 978px tall and (with `align-items: start`) the section painted straight over the row below it. Block boxes size to their content. The doubled class is also deliberate: `.build-workspace` is defined later in `styles.css`, so a single-class override loses on source order.
+- The inner `.builder-workspace` grid must not declare its own height or `overflow` — `.build-workspace` is already the scroll container, and giving the inner grid one reintroduces the same overflow. Cap `.builder-picker-list` instead.
+
 ## Slide Saves — Direct Firestore (Not Cloud Function)
 Slide saves go directly to Firestore from the frontend. **Do not add a Cloud Function save path.** A function-based save path was tried and abandoned as unreliable.
 

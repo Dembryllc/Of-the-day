@@ -1396,6 +1396,83 @@ button:focus-visible,
 .library-pill-btn { flex-shrink: 0; border: 1.5px solid #E2DDD5; background: #fff; border-radius: 20px; padding: 7px 16px; font: 600 13px/1 'Outfit', sans-serif; color: var(--ink); cursor: pointer; white-space: nowrap; transition: border-color .12s, background .12s, color .12s; }
 .library-pill-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-bg); }
 .library-pill-btn.primary { background: var(--teal); color: #fff; border-color: var(--teal); }
+/* ── Routine builder workspace (rebuilt 2026-09-18) ──
+   Pick / arrange / inspect. Adding a block used to mean navigating to the
+   Library and back, and nothing in the builder showed what an activity
+   actually was, so you assembled a routine from titles alone. */
+/* .build-workspace (the outer wrapper) is already the scroll container, so this
+   grid must NOT declare its own height or overflow — doing so let the column
+   content run past the section and the next panel rendered underneath it. */
+.builder-workspace {
+  padding: 0 28px 28px;
+  display: grid; grid-template-columns: minmax(250px, 320px) minmax(340px, 1fr) minmax(240px, 300px);
+  gap: 14px; align-items: start;
+}
+.builder-canvas { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.builder-picker, .builder-detail { display: flex; flex-direction: column; min-width: 0; }
+/* The picker holds the whole library, so cap the scrolling area rather than
+   letting the column grow to ~84 rows and drag the layout with it. */
+.builder-picker-list { max-height: 430px; }
+.builder-detail .detail-scroll { max-height: 520px; }
+.builder-picker .builder-search { margin: 0 0 10px; }
+.builder-picker-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.builder-cat-chip {
+  border: 1.5px solid #E2DDD5; background: #fff; border-radius: 999px;
+  padding: 5px 11px; font: 700 11.5px/1 'Outfit', sans-serif; color: var(--muted);
+  cursor: pointer; transition: border-color .12s, color .12s, background .12s;
+}
+.builder-cat-chip:hover { border-color: var(--teal); color: var(--teal); }
+.builder-cat-chip.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+.builder-picker-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.builder-picker-row {
+  display: grid; grid-template-columns: 4px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  border: 1.5px solid #EEEAE4; border-radius: 12px; padding: 9px 10px; background: #fff;
+  cursor: pointer; transition: border-color .12s, background .12s;
+}
+.builder-picker-row:hover { border-color: var(--teal); background: var(--teal-bg); }
+.builder-picker-row.selected { border-color: var(--teal); box-shadow: 0 0 0 1.5px var(--teal) inset; }
+.builder-picker-stripe { width: 4px; align-self: stretch; border-radius: 2px; min-height: 30px; }
+.builder-picker-main { min-width: 0; }
+.builder-picker-cat { font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.builder-picker-title { font-size: 13.5px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+.builder-picker-meta { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.builder-picker-add {
+  border: 1.5px solid var(--teal); background: #fff; color: var(--teal); border-radius: 999px;
+  padding: 5px 10px; font: 800 11.5px/1 'Outfit', sans-serif; cursor: pointer; white-space: nowrap;
+}
+.builder-picker-add:hover { background: var(--teal); color: #fff; }
+.builder-picker-empty { padding: 18px 4px; font-size: 13px; color: var(--muted); text-align: center; }
+.builder-picker-full {
+  margin-top: 10px; border: none; background: none; padding: 6px 0;
+  font: 700 12.5px/1 'Outfit', sans-serif; color: var(--teal); cursor: pointer; text-align: left;
+}
+.builder-picker-full:hover { text-decoration: underline; }
+.builder-detail .detail-scroll { overflow-y: auto; }
+.builder-detail .detail-empty { padding: 20px 6px; }
+.builder-timer-label { display: block; font-size: 11.5px; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
+.builder-block { cursor: pointer; transition: border-color .12s, box-shadow .12s; }
+.builder-block.selected { box-shadow: 0 0 0 1.5px var(--teal) inset; }
+/* Stacked, not side by side: the two panels do different jobs and the old
+   two-up layout gave a usually-empty custom-activity list ~35% of the screen.
+   Block flow rather than a one-column grid, and doubled class deliberately —
+   .build-workspace is defined later in this file, so a single-class override
+   would lose on source order.
+
+   Grid is wrong here: .routine-col carries `overflow: hidden; min-height: 0`,
+   so its intrinsic contribution collapses and the auto track sized to 514px
+   against a section 978px tall. With `align-items: start` the section then
+   painted straight over the row below it. Block boxes size to their content. */
+.build-workspace.build-workspace--stacked { display: block; }
+.build-workspace.build-workspace--stacked > .build-section + .build-section { margin-top: 18px; }
+@media (max-width: 1100px) {
+  .builder-workspace { grid-template-columns: minmax(230px, 300px) minmax(0, 1fr); }
+  .builder-detail { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .builder-workspace { grid-template-columns: 1fr; padding: 0 16px 96px; }
+  .builder-picker-list { max-height: 320px; }
+}
+
 .routine-hub-list { display: flex; flex-direction: column; gap: 10px; }
 .routine-hub-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; border: 1.5px solid #EEEAE4; border-radius: 14px; padding: 13px; background: #fff; }
 .routine-hub-actions { justify-content: flex-end; max-width: 360px; }
