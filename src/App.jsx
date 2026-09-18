@@ -451,6 +451,9 @@ function getEnergy(activity) {
   return (activity.meta || "").split("·").map(x => x.trim()).pop();
 }
 
+// Views reachable only from Today's shortcut row or the Library tab row — never
+// from the sidebar. They need an explicit way back; see leafOrigin in MainApp.
+const LEAF_VIEWS = ["Word of the Day", "Do Now", "On This Day", "My Activities", "Favorites", "This Week"];
 const INDIVIDUAL_GRADES = ["K","1","2","3","4","5","6","7","8","9","10","11","12"];
 function gradeToBand(g) {
   if (!g) return "3–5";
@@ -485,9 +488,12 @@ function activityMatchesGrade(activity, grade) {
   if (Array.isArray(activity.grades)) return activity.grades.includes(band) || activity.grades.includes(grade);
   if (activity.custom) return true;
   if (typeof activity.id === "string" && activity.id.includes(`-${grade}-`)) return true;
-  if (GRADE_RITUAL_ACTIVITY_IDS[grade]) {
-    return GRADE_RITUAL_ACTIVITY_IDS[grade].has(Number(activity.id));
-  }
+  // Keyed by band ("3–5"), but `grade` may be an individual grade ("3"). Looking
+  // up the raw value alone returned undefined for every individual grade and fell
+  // through to `return true`, silently disabling grade filtering for anyone who
+  // set their grade in Profile rather than clicking a topbar band chip.
+  const ritual = GRADE_RITUAL_ACTIVITY_IDS[grade] || GRADE_RITUAL_ACTIVITY_IDS[band];
+  if (ritual) return ritual.has(Number(activity.id));
   return true;
 }
 
@@ -518,15 +524,35 @@ function activityMatches(activity, filters = {}, excludeId) {
   return true;
 }
 
+// Energy used to be a hard exclusion, which quietly starved the daily routine:
+// at the default "Medium" the whole library offered 2 Greetings, 2 Group
+// Activities and exactly 1 Morning Message, so that slot could never change and
+// Shuffle had nothing to shuffle. Energy is a preference, not a requirement, so
+// honour it strictly only while it can still offer real variety, and otherwise
+// widen to everything grade-appropriate with the requested energy weighted up.
+const MIN_ENERGY_POOL = 4;
+const ENERGY_WEIGHT = 3;
+
+function weightedPick(items, weightOf) {
+  const total = items.reduce((sum, a) => sum + weightOf(a), 0);
+  if (total <= 0) return items[Math.floor(Math.random() * items.length)];
+  let r = Math.random() * total;
+  for (const a of items) { r -= weightOf(a); if (r <= 0) return a; }
+  return items[items.length - 1];
+}
+
 function pickRandom(cat, excludeId, filters = {}, source = POOL) {
   const excluded = excludedActivityIds(excludeId);
-  let pool = source.filter(a => a.cat === cat && activityMatches(a, filters, excludeId));
-  if (!pool.length && filters.grade && filters.energy) {
-    pool = source.filter(a => a.cat === cat && activityMatchesGrade(a, filters.grade) && !excluded.has(a.id));
-  }
+  let pool = source.filter(a => a.cat === cat && !excluded.has(a.id)
+    && (!filters.grade || activityMatchesGrade(a, filters.grade)));
   if (!pool.length) pool = source.filter(a => a.cat === cat && !excluded.has(a.id));
   if (!pool.length) pool = source.filter(a => a.cat === cat);
-  return pool[Math.floor(Math.random() * pool.length)];
+  if (!pool.length) return undefined;
+  if (!filters.energy) return pool[Math.floor(Math.random() * pool.length)];
+
+  const onEnergy = pool.filter(a => getEnergy(a) === filters.energy);
+  if (onEnergy.length >= MIN_ENERGY_POOL) return onEnergy[Math.floor(Math.random() * onEnergy.length)];
+  return weightedPick(pool, a => (getEnergy(a) === filters.energy ? ENERGY_WEIGHT : 1));
 }
 
 function pickRoutine(filters = {}, source = POOL) {
@@ -2316,6 +2342,18 @@ function MainApp({ account, onSignOut }) {
   const [historySource, setHistorySource] = useState("Built-in classroom fallback");
   const [historySourceUrl, setHistorySourceUrl] = useState(() => onThisDayUrl());
   const [activeNav, setActiveNav] = useState("Today");
+  // Word of the Day, Do Now and friends are launched from Today's shortcut row
+  // AND from the Library tab row, but they are not sidebar destinations — so
+  // once you were in one, nothing said where you came from and nothing took you
+  // back. Remember the screen a leaf view was entered from and offer it back.
+  const [leafOrigin, setLeafOrigin] = useState("Today");
+  const prevNavRef = useRef("Today");
+  useEffect(() => {
+    const prev = prevNavRef.current;
+    if (prev === activeNav) return;
+    if (LEAF_VIEWS.includes(activeNav) && !LEAF_VIEWS.includes(prev)) setLeafOrigin(prev);
+    prevNavRef.current = activeNav;
+  }, [activeNav]);
   const [showWelcome, setShowWelcome] = useState(
     () => !localStorage.getItem(`ofd:welcomed:${account?.uid}`)
   );
@@ -2964,6 +3002,14 @@ function MainApp({ account, onSignOut }) {
     persistProjectorStyle(normalized);
   }, [account]);
 
+  // A render helper, not a component: declaring a component inside the render
+  // body makes a new type every render, so React remounts it and drops focus.
+  const backToOrigin = () => (
+    <button type="button" className="topbar-back" onClick={() => setActiveNav(leafOrigin)}>
+      <span aria-hidden="true">←</span> {leafOrigin}
+    </button>
+  );
+
   const navItems = [
     { icon:"☀️", label:"Today" },
     { icon:"⊞",  label:"Library" },
@@ -2971,8 +3017,10 @@ function MainApp({ account, onSignOut }) {
     { icon:"🖼️", label:"Lesson Slides" },
   ];
   const mobileNavItems = navItems.concat({ icon:"⚙", label:"Settings", modal:true });
-  const libraryViews = ["Library", "Word of the Day", "Do Now", "On This Day", "My Activities", "Favorites"];
-  const buildViews = ["Routines", "My Routines", "My Activities"];
+  // "My Activities" used to sit in both groups, so two sidebar items lit at once;
+  // "This Week" sat in neither, so nothing lit. Every view belongs to exactly one.
+  const libraryViews = ["Library", ...LEAF_VIEWS];
+  const buildViews = ["Routines", "My Routines"];
   const navActive = label => label === activeNav || (label === "Library" && libraryViews.includes(activeNav)) || (label === "Routines" && buildViews.includes(activeNav));
 
   const totalMin = Math.round(routine.reduce((s,a) => s + a.time, 0) / 60);
@@ -3175,6 +3223,7 @@ function MainApp({ account, onSignOut }) {
         {activeNav === "Favorites" && (
           <div className="topbar">
             <div className="topbar-left">
+              {backToOrigin()}
               <div className="topbar-title">Favorites</div>
               <div className="topbar-date">{favorites.size} saved</div>
             </div>
@@ -3184,6 +3233,7 @@ function MainApp({ account, onSignOut }) {
         {activeNav === "This Week" && (
           <div className="topbar">
             <div className="topbar-left">
+              {backToOrigin()}
               <div className="topbar-title">This Week</div>
               <div className="topbar-date">{usedThisWeek.size} {usedThisWeek.size === 1 ? "activity" : "activities"} used · resets Monday</div>
             </div>
@@ -3215,6 +3265,7 @@ function MainApp({ account, onSignOut }) {
         {activeNav === "Word of the Day" && (
           <div className="topbar">
             <div className="topbar-left">
+              {backToOrigin()}
               <div className="topbar-title">Word of the Day</div>
               <div className="topbar-date">Vocabulary · {gradeDisplayLabel(currentGrade)} · {vocabWord.word}</div>
             </div>
@@ -3224,6 +3275,7 @@ function MainApp({ account, onSignOut }) {
         {activeNav === "Do Now" && (
           <div className="topbar">
             <div className="topbar-left">
+              {backToOrigin()}
               <div className="topbar-title">Do Now</div>
               <div className="topbar-date">{(DO_NOW_SECTIONS[doNowSubject] || DO_NOW_SECTIONS.math).label} · {gradeDisplayLabel(currentGrade)}</div>
             </div>
@@ -3233,6 +3285,7 @@ function MainApp({ account, onSignOut }) {
         {activeNav === "On This Day" && (
           <div className="topbar">
             <div className="topbar-left">
+              {backToOrigin()}
               <div className="topbar-title">On This Day</div>
               <div className="topbar-date">Daily history · {historySource}</div>
             </div>
@@ -3242,6 +3295,7 @@ function MainApp({ account, onSignOut }) {
         {activeNav === "My Activities" && (
           <div className="topbar">
             <div className="topbar-left">
+              {backToOrigin()}
               <div className="topbar-title">My Activities</div>
               <div className="topbar-date">{customActivities.length} custom</div>
             </div>

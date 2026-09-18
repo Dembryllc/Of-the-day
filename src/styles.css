@@ -1596,6 +1596,20 @@ button:focus-visible,
 }
 .component-pill-step { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .component-pill-name { margin-top: 4px; font-size: 14px; font-weight: 800; color: var(--ink); }
+/* Leaf views (Word of the Day, Do Now, …) are launched from Today or Library but
+   are not sidebar destinations, so they need their own way back. Labelled with
+   the destination rather than a bare "Back" — it says where it will take you. */
+.topbar-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  align-self: flex-start; /* .topbar-left stretches its children; keep this pill its own width */
+  margin-bottom: 4px; padding: 4px 10px 4px 8px;
+  border: 1.5px solid var(--border); border-radius: 999px; background: #fff;
+  font: 700 12px/1 'Outfit', sans-serif; color: var(--muted);
+  cursor: pointer; transition: border-color .12s, color .12s, background .12s;
+}
+.topbar-back:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-bg); }
+@media (max-width: 540px) { .topbar-back { margin-bottom: 6px; } }
+
 .today-tools { margin-top: 16px; }
 .today-tools-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin-bottom: 8px; }
 .today-tools .library-pill-wrap { margin-top: 0; }

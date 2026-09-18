@@ -57,6 +57,21 @@ Cancellation/card updates go through the **Stripe-hosted billing portal**, opene
 - The commit that added this (`4dd092a`) warned the portal still needed one-time activation in the Stripe dashboard. **It does not** — configuration `bpc_1U8VPJB2eRKsbhTpsoquypgS` is live, active and `is_default`, with cancel-at-period-end, invoice history and payment-method update enabled. Do not re-open this as a blocker.
 - A portal cancellation only syncs back to Firestore because the live webhook is registered (`customer.subscription.deleted`). If that endpoint is ever removed, cancelled users silently keep `tier:'pro'`.
 
+## Routine Variety — Energy Is A Ranking Signal, Not A Filter (fixed 2026-09-18)
+`pickRandom` used to exclude anything whose energy didn't match `filters.energy`. Against a 60-item library that starved the daily routine: at the default **Medium**, the whole app offered 2 Greetings, 5 Sharings, 2 Group Activities and **exactly 1 Morning Message** — that slot could never change, and Shuffle had nothing to shuffle. Measured total: 20 distinct routines, one slot deterministic.
+- Energy now honours the setting **strictly only while it can still offer variety** (`onEnergy.length >= MIN_ENERGY_POOL`, currently 4); below that it widens to everything grade-appropriate and weights the requested energy up (`ENERGY_WEIGHT`, currently 3). Verified live over 30 shuffles: 8 / 15 / 4 / 4 distinct per category, 1,920 distinct routines.
+- **Do not turn energy back into a hard `!==` exclusion.** It self-corrects as content grows — once a category has 4+ activities at a given energy it goes strict again on its own.
+- The real fix is still content. Morning Message and Group Activity have 4 activities each; those are the thinnest categories in the app. Also consider collapsing the 4-way energy taxonomy (Calm / Low / Medium / Active) to 3 — nobody can distinguish Calm from Low, and four buckets shred a small library.
+
+## `activityMatchesGrade` — Band Lookup Bug (fixed 2026-09-18)
+`GRADE_RITUAL_ACTIVITY_IDS` is keyed by **band** ("K–2", "3–5", …), but the function looked it up with the raw `grade`. It computed `const band = gradeToBand(grade)` and then used `band` only in the `activity.grades` branch. So an individual grade ("3", set via the Profile picker) returned `undefined` and fell through to `return true` — **grade filtering was silently off entirely** for those users, while anyone who clicked a topbar band chip got filtered content. Two paths, two behaviours, no indication which you were on. Now falls back to the band.
+
+## Navigation — Leaf Views Need A Way Back (fixed 2026-09-18)
+Word of the Day, Do Now, On This Day, My Activities, Favorites and This Week (`LEAF_VIEWS`) are launched from Today's shortcut row **and** the Library tab row, but are not sidebar destinations. Before the fix: no back button, and `navActive` mapped them to the **Library** nav item — so arriving from Today, the app claimed you were in a section you'd never visited. "My Activities" was in both `libraryViews` and `buildViews` so two items lit at once; "This Week" was in neither so nothing lit.
+- `leafOrigin` records the screen a leaf was entered from (a `useEffect` on `activeNav`, so it works from every entry point without touching each call site) and `BackToOrigin` renders a pill labelled with the destination — "← Today" or "← Library", never a bare "Back".
+- Every view now belongs to exactly one nav group.
+- **Structurally these should be sheets over Today, not nav destinations** — they're glanceable content (Word of the Day is one word), not places. This fix makes the current model honest; it doesn't make it right.
+
 ## Slide Saves — Direct Firestore (Not Cloud Function)
 Slide saves go directly to Firestore from the frontend. **Do not add a Cloud Function save path.** A function-based save path was tried and abandoned as unreliable.
 
