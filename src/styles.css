@@ -1602,11 +1602,19 @@ button:focus-visible,
 /* The shared pill row scrolls horizontally with a fade at the right edge. That
    works where the row is a secondary shortcut strip, but on Today it hid real
    navigation: at iPad widths the last pills (My Activities / Favorites / This
-   Week) sat past the edge, sliced mid-word, and a fade alone does not tell a
-   teacher to swipe. Wrap instead — on wide screens all six still fit one row,
-   so this costs no height until it would otherwise hide something. */
-.today-tools .library-pill-row { flex-wrap: wrap; overflow-x: visible; padding-bottom: 0; }
-.today-tools .library-pill-wrap::after { content: none; }
+   Week) sat past the edge, sliced mid-word, and with a mouse a fade alone does
+   not tell a teacher to swipe. Wrap instead — landscape still fits all six on
+   one row, portrait takes two, and nothing is hidden either way.
+
+   Phone keeps the scroller on purpose. Measured at 375px, wrapping runs to
+   three rows and pushes the first activity card from 496px down to 566px —
+   on an 812px screen that is most of a card's worth of extra scrolling, to
+   solve a swipe affordance that phones already have natively. Vertical space
+   is scarcest exactly where the horizontal gesture is best understood. */
+@media (min-width: 541px) {
+  .today-tools .library-pill-row { flex-wrap: wrap; overflow-x: visible; padding-bottom: 0; }
+  .today-tools .library-pill-wrap::after { content: none; }
+}
 .morning-card-index {
   width: 34px; height: 34px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
