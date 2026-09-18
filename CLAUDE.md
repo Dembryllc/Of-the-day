@@ -140,5 +140,9 @@ Full redesign shipped to `main` (`src/LandingPage.jsx` + `src/landing.css`): her
 - Sync flow (run locally): `git pull origin main` → copy the note into the vault (`cp notes/<file>.md ~/Library/Mobile\ Documents/com~apple~CloudDocs/obsidianvault/`) OR run the user's local `/record-to-vault` skill.
 - The `/record-to-vault` skill and the vault both exist only on the user's Mac — they are not available in cloud sessions.
 
-## Co-founder Note
-OfTheDay.net is co-founded. Coordinate on major product/business decisions before implementing.
+## Ownership — Sole, Not Co-founded (corrected 2026-09-18)
+OfTheDay.net is **solely owned by Mike Radicone**. There is no co-founder and there never was.
+
+This file previously carried a "Co-founder Note" instructing sessions to coordinate on major product/business decisions before implementing. It was wrong, and it had real cost: the 2026-07-04 session cited it as the reason for deferring Stripe go-live (`notes/2026-07-04-session.md`), and later sessions repeated the deferral. **Do not reintroduce it, and do not stall a product or business decision waiting on a second approver — there isn't one.** Mike is the only decision-maker; ask him directly.
+
+Live-money and outward-facing actions still need his explicit go-ahead, as they would for any owner.
