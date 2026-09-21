@@ -548,6 +548,42 @@ exports.createCheckoutSession = onCall(async (request) => {
   return { url: session.url };
 });
 
+// One-time $7 checkout for the "10-Day Morning Meeting Bank" tripwire —
+// mode: "payment", not "subscription". Deliberately a separate function from
+// createCheckoutSession rather than a branch in it: the two modes need
+// different Checkout Session shapes (no subscription_data here) and
+// different webhook handling, and keeping them apart avoids a shared
+// function whose behavior depends on which price was passed in.
+exports.createTripwireCheckoutSession = onCall(async (request) => {
+  const { userId } = request.data;
+  if (!userId) throw new Error("userId is required");
+  if (!request.auth || request.auth.uid !== userId) {
+    throw new Error("You must be signed in as this user to start checkout");
+  }
+  const priceId = process.env.STRIPE_TRIPWIRE_PRICE_ID;
+  if (!priceId) throw new Error("Tripwire checkout is not configured");
+  const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+  const db = admin.firestore();
+  const userRef = db.collection("users").doc(userId);
+  const userSnap = await userRef.get();
+  const userData = userSnap.data() || {};
+  let stripeCustomerId = userData.stripeCustomerId;
+  if (!stripeCustomerId) {
+    const customer = await stripe.customers.create({ email: userData.email || "", metadata: { firebaseUserId: userId } });
+    stripeCustomerId = customer.id;
+    await userRef.set({ stripeCustomerId }, { merge: true });
+  }
+  const session = await stripe.checkout.sessions.create({
+    customer: stripeCustomerId,
+    line_items: [{ price: priceId, quantity: 1 }],
+    mode: "payment",
+    metadata: { firebaseUserId: userId, product: "tripwire_10day_bank" },
+    success_url: "https://oftheday.net/dashboard?tripwire=purchased",
+    cancel_url: "https://oftheday.net/dashboard",
+  });
+  return { url: session.url };
+});
+
 // Stripe-hosted billing portal: where a subscriber updates their card, sees
 // invoices, or cancels. Requires the Customer portal to be activated once in
 // the Stripe Dashboard (Settings → Billing → Customer portal) — without that
@@ -604,8 +640,13 @@ exports.stripeWebhook = onRequest(async (req, res) => {
         const session = event.data.object;
         const ref = await userByCustomer(session.customer);
         if (ref) {
-          const sub = await stripe.subscriptions.retrieve(session.subscription);
-          await ref.set({ tier: "pro", subscriptionId: session.subscription, stripeCustomerId: session.customer, currentPeriodEnd: periodEndOf(sub) }, { merge: true });
+          if (session.mode === "payment" && session.metadata?.product === "tripwire_10day_bank") {
+            // One-time tripwire purchase — no subscription, no tier change.
+            await ref.set({ tripwireBankPurchasedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+          } else {
+            const sub = await stripe.subscriptions.retrieve(session.subscription);
+            await ref.set({ tier: "pro", subscriptionId: session.subscription, stripeCustomerId: session.customer, currentPeriodEnd: periodEndOf(sub) }, { merge: true });
+          }
         }
         break;
       }
