@@ -224,7 +224,7 @@ function addLegacyLayout(prs, slide, data) {
 async function buildPptx(data) {
   const PptxGenJS = await getPptxGen();
   const prs = new PptxGenJS();
-  prs.layout = 'LAYOUT_WIDE';
+  prs.layout = 'LAYOUT_16x9'; // 10 x 5.625 in — must match SLIDE_W/SLIDE_H above
   prs.author = 'OfTheDay.net';
   prs.subject = data.lessonName || 'Lesson Slide';
 
