@@ -9,6 +9,7 @@ import AuthScreen from './AuthScreen';
 import DisplayMode from './DisplayMode';
 import LessonSlideCreator from './LessonSlideCreator';
 import LessonSlideDisplay from './LessonSlideDisplay';
+import TripwireBankScreen from './TripwireBankScreen';
 import { CAT_META, MORNING_MEETING_CATS } from './lib/catMeta';
 import {
   PROJECTOR_THEMES, THEME_BACKGROUND_PRESETS, PROJECTOR_BACKGROUNDS, DEFAULT_PROJECTOR_STYLE,
@@ -453,7 +454,7 @@ function getEnergy(activity) {
 
 // Views reachable only from Today's shortcut row or the Library tab row — never
 // from the sidebar. They need an explicit way back; see leafOrigin in MainApp.
-const LEAF_VIEWS = ["Word of the Day", "Do Now", "On This Day", "My Activities", "Favorites", "This Week"];
+const LEAF_VIEWS = ["Word of the Day", "Do Now", "On This Day", "My Activities", "Favorites", "This Week", "10-Day Bank"];
 const INDIVIDUAL_GRADES = ["K","1","2","3","4","5","6","7","8","9","10","11","12"];
 function gradeToBand(g) {
   if (!g) return "3–5";
@@ -2510,6 +2511,29 @@ function MainApp({ account, onSignOut }) {
   const [builderDraft, setBuilderDraft] = useState({ name: "My Classroom Routine", items: [] });
   const [replacementTarget, setReplacementTarget] = useState(null);
   const { toasts, show: showToast } = useToast();
+  // Fires right after the $7 tripwire checkout succeeds — the one-click
+  // upsell moment. Stays up until dismissed or acted on (no auto-timeout,
+  // unlike showProBanner) because it carries a real decision, not just a
+  // congratulations message.
+  const [showTripwireBanner, setShowTripwireBanner] = useState(() => new URLSearchParams(window.location.search).get('tripwire') === 'purchased');
+  const [tripwireUpsellBusy, setTripwireUpsellBusy] = useState(false);
+  useEffect(() => {
+    if (!showTripwireBanner) return;
+    window.history.replaceState({}, '', window.location.pathname);
+  }, [showTripwireBanner]);
+  const tripwireUpsell = useCallback(async () => {
+    const monthlyPriceId = import.meta.env.VITE_STRIPE_MONTHLY_PRICE_ID;
+    if (!monthlyPriceId || !account?.uid) { setShowTripwireBanner(false); setActiveNav("10-Day Bank"); return; }
+    setTripwireUpsellBusy(true);
+    try {
+      const fn = httpsCallable(functions, 'createCheckoutSession');
+      const { data } = await fn({ priceId: monthlyPriceId, userId: account.uid });
+      window.location.href = data.url;
+    } catch {
+      setTripwireUpsellBusy(false);
+      showToast("Something went wrong — try again from Upgrade");
+    }
+  }, [account, showToast]);
   useEffect(() => {
     const msg = STREAK_MILESTONES[streakCount];
     if (!msg) return;
@@ -3218,6 +3242,23 @@ function MainApp({ account, onSignOut }) {
           <button className="pro-success-banner-close" type="button" onClick={() => setShowProBanner(false)} aria-label="Dismiss">✕</button>
         </div>
       )}
+      {showTripwireBanner && (
+        <div className="pro-success-banner" role="status">
+          <span>
+            You're in! 10 days of Morning Meeting are waiting.{' '}
+            There are 170+ more days in the school year —{' '}
+            <button
+              type="button"
+              onClick={tripwireUpsell}
+              disabled={tripwireUpsellBusy}
+              style={{ background: "none", border: "none", padding: 0, textDecoration: "underline", cursor: "pointer", color: "inherit", font: "inherit" }}
+            >
+              {tripwireUpsellBusy ? "redirecting…" : "unlock everything for $9/mo"}
+            </button>
+          </span>
+          <button className="pro-success-banner-close" type="button" onClick={() => setShowTripwireBanner(false)} aria-label="Dismiss">✕</button>
+        </div>
+      )}
       {showTrialBanner && (
         <div className={`trial-banner${trialDaysLeft <= 3 ? ' trial-banner--urgent' : trialDaysLeft <= 7 ? ' trial-banner--warning' : ''}`} role="status">
           <span>
@@ -3451,6 +3492,15 @@ function MainApp({ account, onSignOut }) {
             <div className="topbar-right grade-control-wrap"><GradePicker value={currentGrade} onChange={handleGradeChange}/></div>
           </div>
         )}
+        {activeNav === "10-Day Bank" && (
+          <div className="topbar">
+            <div className="topbar-left">
+              {backToOrigin()}
+              <div className="topbar-title">10-Day Morning Meeting Bank</div>
+              <div className="topbar-date">{account?.tripwireBankPurchasedAt ? "Unlocked" : "$7, one time"}</div>
+            </div>
+          </div>
+        )}
         {activeNav === "My Activities" && (
           <div className="topbar">
             <div className="topbar-left">
@@ -3560,6 +3610,7 @@ function MainApp({ account, onSignOut }) {
                         <button type="button" className="library-pill-btn" onClick={() => setActiveNav("My Activities")}>🗂️ My Activities</button>
                         <button type="button" className="library-pill-btn" onClick={() => setActiveNav("Favorites")}>♥ Favorites</button>
                         <button type="button" className="library-pill-btn" onClick={() => setActiveNav("This Week")}>📅 This Week</button>
+                        <button type="button" className="library-pill-btn" onClick={() => setActiveNav("10-Day Bank")}>🎁 10-Day Bank</button>
                       </div>
                     </div>
                   </div>
@@ -3612,6 +3663,16 @@ function MainApp({ account, onSignOut }) {
               onAdd={addToToday}
               onBuild={startBuilderWithActivity}
               onDisplay={displaySingle}
+            />
+          )}
+
+          {/* 10-DAY MORNING MEETING BANK (tripwire) */}
+          {activeNav === "10-Day Bank" && (
+            <TripwireBankScreen
+              activities={libraryActivities}
+              account={account}
+              onProjectDeck={items => projectToWindow(items, 0)}
+              onAddDeckToday={items => { setRoutine(r => [...r, ...items]); setActiveNav("Today"); showToast("Day added to Today"); }}
             />
           )}
 
@@ -3979,6 +4040,7 @@ function App() {
           plan: userDoc?.plan || "trial",
           trialStartedAt: tsToMs(userDoc?.trialStartedAt),
           tier: userDoc?.tier || null,
+          tripwireBankPurchasedAt: tsToMs(userDoc?.tripwireBankPurchasedAt),
           behavioralExpectations: userDoc?.behavioralExpectations || [],
         };
         await migrateFromLocalStorage(user.uid);
