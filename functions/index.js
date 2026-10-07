@@ -693,6 +693,38 @@ exports.saveSlide = httpsV1.onRequest(async (req, res) => {
 });
 
 // ── Lesson Slide: AI generation (onRequest — Gen2 onCall is incompatible with Gen1 deployments) ──
+// ── Lesson Slide: free-tier monthly generation cap ────────────────────────────
+// Free accounts get FREE_SLIDE_GENERATIONS AI generations per calendar month
+// (UTC), counted in users/{uid}.slideGen = { month: "YYYY-MM", count }.
+// Firestore rules block clients from writing slideGen, so only this function can.
+// Fails OPEN: Gen 1 functions have hit PERMISSION_DENIED on Firestore before
+// (see onUserCreate), and a broken check must never lock out paying users.
+const FREE_SLIDE_GENERATIONS = 5;
+const currentMonth = () => new Date().toISOString().slice(0, 7);
+
+async function slideGenerationAllowed(uid) {
+  try {
+    const snap = await admin.firestore().collection("users").doc(uid).get();
+    const userData = snap.data() || {};
+    if (userIsPro(userData)) return { allowed: true, metered: false };
+    const gen = userData.slideGen || {};
+    const used = gen.month === currentMonth() ? (gen.count || 0) : 0;
+    return { allowed: used < FREE_SLIDE_GENERATIONS, metered: true, used };
+  } catch (e) {
+    console.error("slideGen check failed — allowing generation:", e?.code, e?.message);
+    return { allowed: true, metered: false };
+  }
+}
+
+async function countSlideGeneration(uid, used) {
+  try {
+    await admin.firestore().collection("users").doc(uid)
+      .set({ slideGen: { month: currentMonth(), count: used + 1 } }, { merge: true });
+  } catch (e) {
+    console.error("slideGen count failed:", e?.code, e?.message);
+  }
+}
+
 exports.generateSlide = httpsV1.onRequest(async (req, res) => {
   setCors(res);
   if (req.method === "OPTIONS") return res.status(204).send("");
@@ -700,10 +732,16 @@ exports.generateSlide = httpsV1.onRequest(async (req, res) => {
   const authHeader = req.headers.authorization || "";
   const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!idToken) return res.status(401).json({ error: "Missing Authorization header" });
+  let uid;
   try {
-    await admin.auth().verifyIdToken(idToken);
+    uid = (await admin.auth().verifyIdToken(idToken)).uid;
   } catch (e) {
     return res.status(401).json({ error: "Invalid or expired token" });
+  }
+
+  const quota = await slideGenerationAllowed(uid);
+  if (!quota.allowed) {
+    return res.status(402).json({ error: "SLIDE_GEN_LIMIT_REACHED", limit: FREE_SLIDE_GENERATIONS });
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -735,12 +773,17 @@ exports.generateSlide = httpsV1.onRequest(async (req, res) => {
     return parsed;
   };
 
+  const succeed = async (slide) => {
+    if (quota.metered) await countSlideGeneration(uid, quota.used);
+    return res.status(200).json(slide);
+  };
+
   try {
-    return res.status(200).json(await run());
+    return await succeed(await run());
   } catch (e1) {
     console.warn("generateSlide attempt 1:", e1?.message);
     try {
-      return res.status(200).json(await run());
+      return await succeed(await run());
     } catch (e2) {
       console.warn("generateSlide attempt 2:", e2?.message);
       return res.status(503).json({ error: "Generation unavailable right now — fill in the fields below." });

@@ -269,6 +269,11 @@ export default function LessonSlideCreator({
       });
       if (!resp.ok) {
         const errData = await resp.json().catch(() => ({}));
+        if (errData.error === 'SLIDE_GEN_LIMIT_REACHED') {
+          setGenError(`You've used your ${errData.limit || 5} free AI slides this month.`);
+          onUpgradeNeeded();
+          return;
+        }
         throw new Error(errData.error || 'Generation failed (' + resp.status + ')');
       }
       const data = await resp.json();
