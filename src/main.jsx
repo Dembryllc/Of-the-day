@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './lib/heycatch';
+import './lib/attribution'; // records first-touch UTM source on load
 import './styles.css';
 import App from './App';
 

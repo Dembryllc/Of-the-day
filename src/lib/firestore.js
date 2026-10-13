@@ -1,9 +1,14 @@
+import { getAttribution } from './attribution';
 import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from './firebase';
 
 export async function createUserDocument(uid, { name, email, grade }) {
   const ref = doc(db, 'users', uid);
-  await setDoc(ref, { name, email, grade, plan: 'trial', trialStartedAt: serverTimestamp(), createdAt: serverTimestamp() }, { merge: true });
+  const acquisition = getAttribution();
+  await setDoc(ref, {
+    name, email, grade, plan: 'trial', trialStartedAt: serverTimestamp(), createdAt: serverTimestamp(),
+    ...(acquisition ? { acquisition } : {}),
+  }, { merge: true });
 }
 
 export async function updateUserGrade(uid, grade) {

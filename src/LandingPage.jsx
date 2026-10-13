@@ -1,8 +1,9 @@
-import { useState, useLayoutEffect } from 'react';
+import { useState, useLayoutEffect, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from './lib/firebase';
+import { getAttribution } from './lib/attribution';
 import './landing.css';
 
 const FAQ_ITEMS = [
@@ -53,6 +54,15 @@ export default function LandingPage() {
     };
   }, []);
 
+  // Deep links like /#waitlist (used by resource-pack pins): the browser tries
+  // to scroll before React has rendered the section, so do it after mount.
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    const t = setTimeout(() => document.getElementById(id)?.scrollIntoView(), 50);
+    return () => clearTimeout(t);
+  }, []);
+
   const toggleFaq = (id) => setOpenFaqId(prev => prev === id ? null : id);
 
   const handleSchoolInquiry = async (e) => {
@@ -73,7 +83,8 @@ export default function LandingPage() {
     e.preventDefault();
     const email = captureEmail.trim().toLowerCase();
     try {
-      await addDoc(collection(db, 'waitlist'), { email, source: 'landing-page', submittedAt: serverTimestamp() });
+      const acquisition = getAttribution();
+      await addDoc(collection(db, 'waitlist'), { email, source: 'landing-page', ...(acquisition ? { acquisition } : {}), submittedAt: serverTimestamp() });
     } catch {}
     try {
       const sendLeadMagnet = httpsCallable(functions, 'sendLeadMagnet');
