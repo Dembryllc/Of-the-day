@@ -4,6 +4,8 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from './lib/firebase';
 import { getAttribution } from './lib/attribution';
+import { useSeo } from './lib/seo';
+import { ROUTE_META } from './lib/routes';
 import './landing.css';
 
 const FAQ_ITEMS = [
@@ -13,6 +15,7 @@ const FAQ_ITEMS = [
   { id: 'chromebook', q: 'Does it work on a Chromebook?', a: 'Yes. OfTheDay.net is a web app that runs in any modern browser — Chrome, Safari, Firefox, or Edge. No download or installation required.' },
   { id: 'projector', q: 'Can I use it with my classroom projector or smartboard?', a: 'Yes. Pro includes a dedicated full-screen projector view that opens in a second browser window. Choose from four visual themes — Calm, Bright, Minimal, or Primary — to match your classroom.' },
   { id: 'grades', q: 'What grade levels are supported?', a: 'K–2, 3–5, 6–8, and 9–12. The grade picker filters activities, vocabulary words, Do Now problems, and AI slide content to match your students.' },
+  { id: 'not-for', q: 'Who is OfTheDay not for?', a: "It is a planning tool for the teacher, so it is not for students to use on their own: students do not log in. It does not replace your curriculum, and it does not connect to Google Classroom, Canvas or other learning management systems. If you want a full lesson library or student devices in the loop, a tool like Nearpod fits better." },
   { id: 'purchase', q: 'Does my school need to purchase it, or can I pay myself?', a: 'Individual teachers can subscribe directly with a credit card. School and district licensing (single invoice, multiple seats) is also available — contact us at dembryllc@gmail.com.' },
   { id: 'rc', q: 'Is this specifically for Responsive Classroom?', a: "It's built with Responsive Classroom structure in mind — the four Morning Meeting components are the foundation. But the activities work for any morning meeting format, including PBIS morning circles and SEL-focused check-in routines." },
   { id: 'cancel', q: 'What happens to my saved routines if I cancel?', a: "Your routines and custom activities are yours. If you cancel Pro, you keep your account and any saved content — you'll just be moved to the Free tier limits." },
@@ -27,7 +30,29 @@ const SLIDE_THEMES = [
   { id: 'depth', label: 'Layered Depth' },
 ];
 
+// Teacher quotes, published exactly as Mike supplied them (first name, grade,
+// quote). No photos exist yet, so each card shows an initial.
+// TODO(Mike): a third quote was mentioned but never pasted. Add it here as
+// { name, role, quote } and the grid picks it up. Do not invent one.
+const TESTIMONIALS = [
+  { name: 'Laura', role: 'Elementary 5th grade', quote: 'Since using Of The Day to plan my mornings, the Sunday Scaries are a thing of the past!' },
+  { name: 'Alicia', role: 'Elementary 2nd Grade', quote: "Of the Day gives me a complete Responsive Classroom Morning Meeting along with really interesting Do Now's." },
+];
+
+// FAQ markup for search engines and AI assistants, generated from FAQ_ITEMS so
+// the markup can never drift from what the page says.
+const FAQ_JSON_LD = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ_ITEMS.map(i => ({
+    '@type': 'Question',
+    name: i.q,
+    acceptedAnswer: { '@type': 'Answer', text: i.a },
+  })),
+});
+
 export default function LandingPage() {
+  useSeo({ ...ROUTE_META['/'], path: '/' });
   const [navOpen, setNavOpen] = useState(false);
   const [openFaqId, setOpenFaqId] = useState(null);
   const [captureSubmitted, setCaptureSubmitted] = useState(false);
@@ -129,7 +154,7 @@ export default function LandingPage() {
         <div className="hero-inner">
           <div className="hero-content">
             <div className="hero-badge">
-              <span></span> For Teachers Who Care About Classroom Culture
+              <span></span> For K–12 Teachers Who Run a Daily Morning Meeting
             </div>
             <h1>Start Every Day With a Morning Meeting<br /><em>Students Actually Look Forward To</em></h1>
             <p className="hero-sub">
@@ -139,6 +164,7 @@ export default function LandingPage() {
               <span className="hero-pill">☀️ Morning Meetings</span>
               <span className="hero-pill">📚 Responsive Classroom-Inspired</span>
               <span className="hero-pill">🎓 Grades K–12</span>
+              <span className="hero-pill">🗂️ 60 ready-to-run activities</span>
               <span className="hero-pill">🖥️ Projector Ready</span>
             </div>
             <div className="hero-ctas">
@@ -212,7 +238,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="text-center">
             <h2 className="section-title">Stop Reusing the Same Morning Meeting Slides</h2>
-            <p className="section-sub">You know Morning Meeting matters. But creating something fresh every day takes energy teachers do not always have at 7:15 AM. OfTheDay gives you a complete routine before students walk in — so your day starts with structure instead of scrambling.</p>
+            <p className="section-sub">You know Morning Meeting matters. But creating something fresh every day takes energy teachers do not always have at 7:15 AM. OfTheDay gives you a complete routine before students walk in — so your day starts with structure instead of scrambling. Planning it on a Sunday night, or in the ten minutes before the bell, is time nobody pays you for.</p>
           </div>
           <div className="pain-grid">
             <div className="pain-card">
@@ -337,7 +363,10 @@ export default function LandingPage() {
         <div className="container">
           <div className="founder-inner">
             <h2>Built From Real Classroom Experience</h2>
-            <p>Created by a veteran special education teacher after years of running Morning Meetings, repeating the same activities, and running out of fresh ideas. OfTheDay was built to give teachers a better way to start every day.</p>
+            <p>Created by <strong>Mike Radicone</strong>, a veteran special education teacher with 24 years in the classroom, after years of running Morning Meetings, repeating the same activities, and running out of fresh ideas. OfTheDay was built to give teachers a better way to start every day.</p>
+            <p className="founder-role">Mike Radicone, founder and classroom teacher</p>
+            {/* TODO(Mike): add a headshot (public/assets/) and a LinkedIn or X
+                link here. Neither exists in the repo yet, so none is shown. */}
           </div>
         </div>
       </section>
@@ -466,6 +495,27 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ══════════ TEACHER QUOTES ══════════ */}
+      <section className="testimonials" id="teachers">
+        <div className="container">
+          <div className="text-center">
+            <div className="section-label">From Teachers</div>
+            <h2 className="section-title">What Teachers Say</h2>
+          </div>
+          <div className="testimonial-grid">
+            {TESTIMONIALS.map(t => (
+              <figure className="testimonial-card" key={t.name}>
+                <blockquote>“{t.quote}”</blockquote>
+                <figcaption>
+                  <span className="testimonial-avatar" aria-hidden="true">{t.name[0]}</span>
+                  <span><strong>{t.name}</strong><br />{t.role}</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ══════════ PRICING ══════════ */}
       <section id="pricing" style={{background:'#FAF8F4', borderTop:'1px solid rgba(0,0,0,0.06)'}}>
         <div className="container">
@@ -504,6 +554,7 @@ export default function LandingPage() {
                 <div className="pricing-price">
                   <sup>$</sup>79<span>/year</span>
                   <div className="pricing-per-month">$6.58/month — 2 months free</div>
+                  <div className="pricing-anchor">About 44¢ a school day, over a 180-day year</div>
                 </div>
               ) : (
                 <div className="pricing-price"><sup>$</sup>9<span>/month</span></div>
@@ -525,6 +576,7 @@ export default function LandingPage() {
               <Link to="/upgrade" className="pricing-cta pricing-cta-primary">
                 {billingPeriod === 'annual' ? 'Start Annual Free Trial' : 'Start Pro Free Trial'}
               </Link>
+              <p className="pricing-secure">Payments are handled by Stripe. We never see your card number.</p>
             </div>
 
             <div className="pricing-card">
@@ -555,11 +607,15 @@ export default function LandingPage() {
           <p style={{textAlign:'center', marginTop:'24px', fontSize:'13px', color:'#9CA3AF'}}>
             School and district licensing available. <a href="mailto:dembryllc@gmail.com?subject=School Pricing" style={{color:'#9CA3AF'}}>Contact us</a> for a quote.
           </p>
+          <p className="compare-links">
+            Comparing options? <Link to="/vs/nearpod">OfTheDay vs Nearpod</Link> · <Link to="/vs/simple-mondays">OfTheDay vs Simple Mondays</Link> · <Link to="/vs/google-slides">OfTheDay vs Google Slides</Link>
+          </p>
         </div>
       </section>
 
       {/* ══════════ FAQ ══════════ */}
       <section className="faq" id="faq">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: FAQ_JSON_LD }} />
         <div className="container">
           <div className="text-center">
             <div className="section-label">FAQ</div>
@@ -628,6 +684,10 @@ export default function LandingPage() {
           <a href="#faq">FAQ</a>
           <a href="mailto:dembryllc@gmail.com">Contact</a>
           <Link to="/district">For Districts</Link>
+          <Link to="/changelog">Changelog</Link>
+          <Link to="/vs/nearpod">vs Nearpod</Link>
+          <Link to="/vs/simple-mondays">vs Simple Mondays</Link>
+          <Link to="/vs/google-slides">vs Google Slides</Link>
           <Link to="/privacy">Privacy Policy</Link>
           <Link to="/terms">Terms of Service</Link>
           <Link to="/login">Sign In</Link>

@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useLayoutEffect } from 'react';
+import { useSeo } from './lib/seo';
+import { ROUTE_META } from './lib/routes';
 import './landing.css';
 
 export default function TermsPage() {
+  useSeo({ ...ROUTE_META['/terms'], path: '/terms' });
   useLayoutEffect(() => {
     const prevBodyOverflow = document.body.style.overflow;
     const prevBodyBg = document.body.style.background;

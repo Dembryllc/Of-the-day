@@ -158,7 +158,7 @@ Never bypass `usePlan.js` for plan checks — don't add a second plan-resolution
 
 ## Removed — Do Not Re-Add
 - `TutorialModal` (blocking modal, `ofd:tutorialSeen`) — removed, sole onboarding is the welcome card
-- Testimonials / Use Cases sections on landing page — removed, unattributed quotes hurt credibility
+- **Unattributed** testimonials / Use Cases on the landing page — removed, unattributed quotes hurt credibility. (Re-added 2026-10-14 in a different form: named teacher quotes — first name, grade, quote — supplied word for word by the owner, in `TESTIMONIALS` in `src/LandingPage.jsx`. Never add a quote the owner did not supply.)
 - Cloud Function save path for slides — abandoned, direct Firestore only
 
 ## Pending Ops (code complete — no code work needed)
@@ -189,3 +189,9 @@ OfTheDay.net is **solely owned by Mike Radicone**. Co-founding was under conside
 This file previously carried a "Co-founder Note" instructing sessions to coordinate on major product/business decisions before implementing. It reflected that open possibility rather than a fact, and it outlived it — at real cost: the 2026-07-04 session cited it as the reason for deferring Stripe go-live (`notes/2026-07-04-session.md`), and later sessions repeated the deferral. **Do not reintroduce it, and do not stall a product or business decision waiting on a second approver — there isn't one.** Mike is the only decision-maker; ask him directly.
 
 Live-money and outward-facing actions still need his explicit go-ahead, as they would for any owner.
+
+## HeyCatch site-audit fixes (2026-10-14, branch `feature/heycatch-audit-fixes`)
+- **Per-route `<head>`:** `src/lib/routes.js` (`ROUTE_META`) is the one list of public marketing routes. `useSeo` (`src/lib/seo.js`) sets title/description/canonical in the browser; the `per-route-html` plugin in `vite.config.js` also writes `dist/<route>/index.html` at build so crawlers that skip JavaScript get the same head. Firebase serves exact files before the `**` rewrite; `trailingSlash: false` keeps `/vs/nearpod` canonical. Add a new public page = add it to `ROUTE_META` (this also puts it in HeyCatch's marketing-only filter) and to `public/sitemap.xml`.
+- **`robots.txt` and `sitemap.xml` live in `public/`** (they used to sit in the repo root, which Vite does not copy, so the site served the app shell instead). `public/llms.txt` summarises the site for AI assistants.
+- **Structured data:** the three offers in `index.html` JSON-LD and the School/Pro prices on the page must agree. FAQ JSON-LD is generated from `FAQ_ITEMS`, so never hand-write it.
+- **`/vs/:rival` and `/changelog`** are in `src/MarketingPages.jsx`. Rival claims there must come from what the rival publishes; the changelog lists only real shipped changes with their live dates.

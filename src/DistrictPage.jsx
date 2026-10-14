@@ -2,9 +2,12 @@ import { Link } from 'react-router-dom';
 import { useLayoutEffect, useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './lib/firebase';
+import { useSeo } from './lib/seo';
+import { ROUTE_META } from './lib/routes';
 import './landing.css';
 
 export default function DistrictPage() {
+  useSeo({ ...ROUTE_META['/district'], path: '/district' });
   const [form, setForm] = useState({ name: '', title: '', district: '', email: '', seats: '' });
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);

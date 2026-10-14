@@ -4,11 +4,12 @@ import { analytics } from '@heycatch/sdk';
 // Every event from any other path (dashboard, demo, login, upgrade,
 // projector windows) is dropped here, in the browser, before it is sent.
 // We never call setIdentity: no teacher emails or names leave the app.
-const MARKETING_PATHS = new Set(['/', '/privacy', '/terms', '/district']);
+import { MARKETING_PATHS } from './routes';
+const MARKETING_SET = new Set(MARKETING_PATHS);
 
 const isMarketingPage = () => {
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
-  return MARKETING_PATHS.has(path);
+  return MARKETING_SET.has(path);
 };
 
 analytics.init({
