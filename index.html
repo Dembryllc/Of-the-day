@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Primary SEO -->
-  <title>OfTheDay.net — Morning Meeting Planner for Responsive Classroom Teachers</title>
+  <title>OfTheDay.net — Morning Meeting Planner for K-12 Teachers</title>
   <meta name="description" content="Automatically generate grade-appropriate morning meeting routines every day. Greeting, Sharing, Group Activity, and Morning Message — ready in seconds. Built for K-12 Responsive Classroom teachers.">
   <link rel="canonical" href="https://oftheday.net/">
 
@@ -33,13 +33,55 @@
     "name": "OfTheDay.net",
     "operatingSystem": "Web",
     "applicationCategory": "EducationApplication",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Free",
+        "description": "Daily routine, basic activity library, 3 saved routines, 5 AI lesson slides per month.",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro Teacher (annual)",
+        "description": "Full activity library, projector mode, unlimited AI lesson slides, cloud sync. $9 per month if billed monthly.",
+        "price": "79",
+        "priceCurrency": "USD",
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "79",
+          "priceCurrency": "USD",
+          "billingDuration": "P1Y",
+          "unitCode": "ANN"
+        }
+      },
+      {
+        "@type": "Offer",
+        "name": "School (annual)",
+        "description": "Pro access for a school: up to 50 teacher accounts, one invoice.",
+        "price": "199",
+        "priceCurrency": "USD",
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "199",
+          "priceCurrency": "USD",
+          "billingDuration": "P1Y",
+          "unitCode": "ANN"
+        }
+      }
+    ],
     "description": "Morning meeting planner for K-12 teachers using Responsive Classroom.",
     "url": "https://oftheday.net"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "OfTheDay.net",
+    "url": "https://oftheday.net",
+    "logo": "https://oftheday.net/assets/ofthedaylogi.png",
+    "description": "OfTheDay.net builds a daily Morning Meeting for K-12 teachers."
   }
   </script>
 </head>
