@@ -23,7 +23,7 @@ with sync_playwright() as p:
 <div class="how"><b style="color:#1B2D5B">How to run it:</b> {html.escape(a['directions'])}</div></div>
 <div class="foot"><div class="brand"><img src="sunrise-mark.png">OfTheDay</div><div class="cta">Try today's meeting free →</div></div>'''
     open('tmp.html','w').write(f'<!doctype html><html><head><meta charset="utf-8"><style>{css}</style></head><body>{body}</body></html>')
-    pg.goto('file:///home/claude/pins/tmp.html');pg.wait_for_timeout(250)
+    pg.goto('file://'+os.path.join(HERE,'tmp.html'));pg.wait_for_timeout(250)
     slug=re.sub(r'[^a-z0-9]+','-',t.lower()).strip('-')
     pg.screenshot(path=f'{REPO}/public/pins/{slug}.png')
     h=pg.evaluate("document.body.scrollHeight")
