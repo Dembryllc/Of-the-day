@@ -114,11 +114,11 @@ export default function TermsPage() {
             renewal period.
           </p>
 
-          <h3>School Plan</h3>
+          <h3>Purchase Orders</h3>
           <p>
-            School plans are invoiced annually. Seats are licensed per named user (teacher).
-            Unused seats do not roll over. Payment terms are net-30 from invoice date unless
-            otherwise agreed in writing.
+            Pro subscriptions bought by purchase order are invoiced annually at the standard Pro price.
+            Each paid subscription is for one named user (teacher). Unused subscriptions do not roll over.
+            Payment terms are net-30 from invoice date unless otherwise agreed in writing.
           </p>
 
           <h3>Free Trial</h3>

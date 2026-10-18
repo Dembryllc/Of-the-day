@@ -39,7 +39,7 @@ export default function DistrictPage() {
         district: form.district.trim(),
         email: form.email.trim().toLowerCase(),
         seats: form.seats.trim(),
-        source: 'district-inquiry',
+        source: 'po-request-district',
         submittedAt: serverTimestamp(),
       });
     } catch {}
@@ -110,32 +110,9 @@ export default function DistrictPage() {
           </ul>
 
           {/* Pricing */}
-          <h2>School &amp; District Pricing</h2>
-          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, marginBottom:32}}>
-            <div style={{border:'1.5px solid #E5E7EB', borderRadius:12, padding:'20px 24px'}}>
-              <div style={{fontWeight:700, fontSize:'1rem', marginBottom:4}}>School License</div>
-              <div style={{fontSize:'1.5rem', fontWeight:800, color:'#1B2D5B', marginBottom:8}}>$199<span style={{fontSize:'1rem', fontWeight:400, color:'#6B7280'}}>/year</span></div>
-              <ul style={{paddingLeft:18, color:'#374151', fontSize:'0.9rem', lineHeight:1.7}}>
-                <li>Up to 50 teacher accounts</li>
-                <li>All Pro features</li>
-                <li>Single purchase order / invoice</li>
-                <li>Priority email support</li>
-              </ul>
-            </div>
-            <div style={{border:'1.5px solid #E5E7EB', borderRadius:12, padding:'20px 24px'}}>
-              <div style={{fontWeight:700, fontSize:'1rem', marginBottom:4}}>District License</div>
-              <div style={{fontSize:'1.5rem', fontWeight:800, color:'#1B2D5B', marginBottom:8}}>Custom</div>
-              <ul style={{paddingLeft:18, color:'#374151', fontSize:'0.9rem', lineHeight:1.7}}>
-                <li>Unlimited teacher accounts</li>
-                <li>All Pro features</li>
-                <li>Single purchase order / invoice</li>
-                <li>Dedicated onboarding support</li>
-                <li>Usage report on request</li>
-              </ul>
-            </div>
-          </div>
-          <p style={{fontSize:'0.9rem', color:'#6B7280'}}>
-            Individual teachers can subscribe at <strong>$79/year</strong> with a credit card and expense it. Many districts approve reimbursement without a formal procurement process at this price point.
+          <h2>Pricing and Purchase Orders</h2>
+          <p style={{fontSize:'0.95rem', color:'#374151', lineHeight:1.7}}>
+            There is one price for everyone: <strong>$79 per teacher per year</strong> for Pro, the same as an individual teacher pays. There is no separate school or district tier. Teachers can pay by credit card and expense it, or your office can buy by purchase order. Use the form below or email <a href="mailto:dembryllc@gmail.com?subject=Purchase%20order%20request">dembryllc@gmail.com</a> and we will send you what your purchasing office needs.
           </p>
 
           {/* FAQ */}
@@ -160,7 +137,7 @@ export default function DistrictPage() {
           <p>OfTheDay.net is built by a team of educators and developers. The product was designed by a practicing K–12 special education teacher with 24 years of classroom experience. Questions go directly to the people who built it.</p>
 
           {/* Contact form */}
-          <h2>Contact Us</h2>
+          <h2>Request a Purchase Order Quote</h2>
           <p>Fill out the form below and we'll respond within 1 business day. Or email us directly at <a href="mailto:dembryllc@gmail.com">dembryllc@gmail.com</a>.</p>
 
           {submitted ? (

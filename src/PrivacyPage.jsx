@@ -78,7 +78,7 @@ export default function PrivacyPage() {
 
           <h3>Payment Information</h3>
           <p>
-            If you subscribe to a Pro or School plan, payment is processed by Stripe. We do
+            If you subscribe to a Pro plan, payment is processed by Stripe. We do
             not store your credit card number, CVV, or full payment details. Stripe handles
             all payment data under PCI DSS compliance. We store only a Stripe customer
             identifier and subscription status.
@@ -188,10 +188,9 @@ export default function PrivacyPage() {
 
           <h2>11. School and District Accounts</h2>
           <p>
-            If your school or district purchases a School plan, the account administrator
-            (typically a principal or technology coordinator) manages teacher seat assignments.
-            The administrator can view which teacher accounts are active but cannot access
-            any teacher's saved routines, custom activities, or personal content.
+            If your school or district buys Pro by purchase order, each teacher still has their
+            own account. There is no administrator view: no one at the school can open another
+            teacher's saved routines, custom activities, or personal content.
           </p>
           <p>
             Schools or districts that require a Data Processing Agreement (DPA) or Student
