@@ -1006,3 +1006,5 @@
 .lp .po-box p { font-size: 0.9rem; color: #4B5563; line-height: 1.6; margin: 0 0 14px; }
 .lp .po-box .po-alt { margin: 14px 0 0; font-size: 0.8rem; color: #6B7280; }
 .lp .po-box .po-alt a { color: #6B7280; text-decoration: underline; }
+.lp .founder-inner .founder-links { margin-top: 6px; font-size: 13px; }
+.lp .founder-inner .founder-links a { color: var(--lp-ink); text-decoration: underline; }

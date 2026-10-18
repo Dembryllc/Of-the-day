@@ -365,8 +365,8 @@ export default function LandingPage() {
             <h2>Built From Real Classroom Experience</h2>
             <p>Created by <strong>Mike Radicone</strong>, a veteran special education teacher with 24 years in the classroom, after years of running Morning Meetings, repeating the same activities, and running out of fresh ideas. OfTheDay was built to give teachers a better way to start every day.</p>
             <p className="founder-role">Mike Radicone, founder and classroom teacher</p>
-            {/* TODO(Mike): add a headshot (public/assets/) and a LinkedIn or X
-                link here. Neither exists in the repo yet, so none is shown. */}
+            <p className="founder-links"><a href="https://www.linkedin.com/in/mikeradicone" target="_blank" rel="noopener noreferrer">Mike on LinkedIn</a></p>
+            {/* TODO(Mike): add a headshot (public/assets/); none exists in the repo yet. */}
           </div>
         </div>
       </section>
