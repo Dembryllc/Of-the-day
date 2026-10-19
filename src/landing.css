@@ -735,7 +735,7 @@
   margin-top: 4px; display: block;
 }
 .lp .pricing-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; max-width: 760px; margin-left: auto; margin-right: auto;
   margin-top: 24px; align-items: start;
 }
 .lp .pricing-card {
@@ -1000,3 +1000,11 @@
 .lp .vs-row { padding: 6px 20px 2px; border-bottom: 1px solid var(--lp-border); }
 .lp .vs-row:last-child { border-bottom: none; }
 .lp .vs-row h3 { margin-top: 14px; }
+
+.lp .po-box { max-width: 520px; margin: 32px auto 0; padding: 24px; border: 1.5px solid #E5E7EB; border-radius: 12px; text-align: center; }
+.lp .po-box h3 { margin: 0 0 8px; font-size: 1.1rem; }
+.lp .po-box p { font-size: 0.9rem; color: #4B5563; line-height: 1.6; margin: 0 0 14px; }
+.lp .po-box .po-alt { margin: 14px 0 0; font-size: 0.8rem; color: #6B7280; }
+.lp .po-box .po-alt a { color: #6B7280; text-decoration: underline; }
+.lp .founder-inner .founder-links { margin-top: 6px; font-size: 13px; }
+.lp .founder-inner .founder-links a { color: var(--lp-ink); text-decoration: underline; }

@@ -62,7 +62,7 @@ function Shell({ children }) {
 // cannot be read on its public site. Last checked: October 2026.
 const OFD_ROWS = {
   job: 'A fresh four-part Morning Meeting for your grade band every day: Greeting, Sharing, Group Activity, Morning Message.',
-  price: 'Free plan (5 AI lesson slides a month). Pro is $79 a year or $9 a month. School license $199 a year for up to 50 teachers.',
+  price: 'Free plan (5 AI lesson slides a month). Pro is $79 a year or $9 a month. Schools pay the same price per teacher and can buy by purchase order.',
   students: 'No. Students never log in and we collect no student data.',
 };
 

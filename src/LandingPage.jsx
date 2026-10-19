@@ -16,7 +16,7 @@ const FAQ_ITEMS = [
   { id: 'projector', q: 'Can I use it with my classroom projector or smartboard?', a: 'Yes. Pro includes a dedicated full-screen projector view that opens in a second browser window. Choose from four visual themes — Calm, Bright, Minimal, or Primary — to match your classroom.' },
   { id: 'grades', q: 'What grade levels are supported?', a: 'K–2, 3–5, 6–8, and 9–12. The grade picker filters activities, vocabulary words, Do Now problems, and AI slide content to match your students.' },
   { id: 'not-for', q: 'Who is OfTheDay not for?', a: "It is a planning tool for the teacher, so it is not for students to use on their own: students do not log in. It does not replace your curriculum, and it does not connect to Google Classroom, Canvas or other learning management systems. If you want a full lesson library or student devices in the loop, a tool like Nearpod fits better." },
-  { id: 'purchase', q: 'Does my school need to purchase it, or can I pay myself?', a: 'Individual teachers can subscribe directly with a credit card. School and district licensing (single invoice, multiple seats) is also available — contact us at dembryllc@gmail.com.' },
+  { id: 'purchase', q: 'Does my school need to purchase it, or can I pay myself?', a: 'Either. Pro is the same $79 a year whether you pay yourself with a credit card or your school pays. If your school pays by purchase order, use the “Buying with a purchase order?” form below the prices or email dembryllc@gmail.com.' },
   { id: 'rc', q: 'Is this specifically for Responsive Classroom?', a: "It's built with Responsive Classroom structure in mind — the four Morning Meeting components are the foundation. But the activities work for any morning meeting format, including PBIS morning circles and SEL-focused check-in routines." },
   { id: 'cancel', q: 'What happens to my saved routines if I cancel?', a: "Your routines and custom activities are yours. If you cancel Pro, you keep your account and any saved content — you'll just be moved to the Free tier limits." },
   { id: 'student-data', q: 'Does OfTheDay store student data?', a: 'No. OfTheDay.net is a teacher planning tool — students do not create accounts and submit no information through this service. We collect only teacher account information (name, email, grade preference, saved routines). No student PII is ever collected or stored.' },
@@ -97,7 +97,7 @@ export default function LandingPage() {
         name: schoolForm.name.trim(),
         school: schoolForm.school.trim(),
         email: schoolForm.email.trim().toLowerCase(),
-        source: 'school-inquiry',
+        source: 'po-request',
         submittedAt: serverTimestamp(),
       });
     } catch {}
@@ -365,8 +365,8 @@ export default function LandingPage() {
             <h2>Built From Real Classroom Experience</h2>
             <p>Created by <strong>Mike Radicone</strong>, a veteran special education teacher with 24 years in the classroom, after years of running Morning Meetings, repeating the same activities, and running out of fresh ideas. OfTheDay was built to give teachers a better way to start every day.</p>
             <p className="founder-role">Mike Radicone, founder and classroom teacher</p>
-            {/* TODO(Mike): add a headshot (public/assets/) and a LinkedIn or X
-                link here. Neither exists in the repo yet, so none is shown. */}
+            <p className="founder-links"><a href="https://www.linkedin.com/in/mikeradicone" target="_blank" rel="noopener noreferrer">Mike on LinkedIn</a></p>
+            {/* TODO(Mike): add a headshot (public/assets/); none exists in the repo yet. */}
           </div>
         </div>
       </section>
@@ -578,35 +578,22 @@ export default function LandingPage() {
               </Link>
               <p className="pricing-secure">Payments are handled by Stripe. We never see your card number.</p>
             </div>
-
-            <div className="pricing-card">
-              <div className="pricing-tier">School</div>
-              <div className="pricing-price"><sup>$</sup>199<span>/year</span></div>
-              <div className="pricing-desc">Pro access for your whole building. One invoice, up to 50 teacher accounts.</div>
-              <ul className="pricing-features">
-                <li>Everything in Pro</li>
-                <li>Up to 50 teacher accounts</li>
-                <li>Priority email support</li>
-                <li>Single invoice for the school</li>
-              </ul>
-              {schoolSubmitted ? (
-                <div className="school-form-success">✓ Got it — we'll be in touch within 1 business day.</div>
-              ) : (
-                <form className="school-inquiry-form" onSubmit={handleSchoolInquiry}>
-                  <input type="text" placeholder="Your name" required value={schoolForm.name} onChange={e => setSchoolForm(f => ({ ...f, name: e.target.value }))} />
-                  <input type="text" placeholder="School or district name" required value={schoolForm.school} onChange={e => setSchoolForm(f => ({ ...f, school: e.target.value }))} />
-                  <input type="email" placeholder="your@school.edu" required value={schoolForm.email} onChange={e => setSchoolForm(f => ({ ...f, email: e.target.value }))} />
-                  <button type="submit" className="pricing-cta pricing-cta-outline">Request School Pricing</button>
-                </form>
-              )}
-              <div style={{textAlign:'center', marginTop:'12px'}}>
-                <Link to="/district" style={{fontSize:'0.8rem', color:'#6B7280'}}>Privacy &amp; compliance info for IT directors →</Link>
-              </div>
-            </div>
           </div>
-          <p style={{textAlign:'center', marginTop:'24px', fontSize:'13px', color:'#9CA3AF'}}>
-            School and district licensing available. <a href="mailto:dembryllc@gmail.com?subject=School Pricing" style={{color:'#9CA3AF'}}>Contact us</a> for a quote.
-          </p>
+          <div className="po-box">
+            <h3>Buying with a purchase order?</h3>
+            <p>Schools and districts pay the same price as individual teachers: $79 per teacher per year. If your office needs a purchase order or an invoice, tell us who to send it to and we will email you.</p>
+            {schoolSubmitted ? (
+              <div className="school-form-success">Got it. We will email you at the address you gave.</div>
+            ) : (
+              <form className="school-inquiry-form" onSubmit={handleSchoolInquiry}>
+                <input type="text" placeholder="Your name" required value={schoolForm.name} onChange={e => setSchoolForm(f => ({ ...f, name: e.target.value }))} />
+                <input type="text" placeholder="School or district name" required value={schoolForm.school} onChange={e => setSchoolForm(f => ({ ...f, school: e.target.value }))} />
+                <input type="email" placeholder="your@school.edu" required value={schoolForm.email} onChange={e => setSchoolForm(f => ({ ...f, email: e.target.value }))} />
+                <button type="submit" className="pricing-cta pricing-cta-outline">Request a Purchase Order Quote</button>
+              </form>
+            )}
+            <p className="po-alt">Prefer email? <a href="mailto:dembryllc@gmail.com?subject=Purchase%20order%20request">dembryllc@gmail.com</a>. IT directors: <Link to="/district">privacy and compliance info</Link>.</p>
+          </div>
           <p className="compare-links">
             Comparing options? <Link to="/vs/nearpod">OfTheDay vs Nearpod</Link> · <Link to="/vs/simple-mondays">OfTheDay vs Simple Mondays</Link> · <Link to="/vs/google-slides">OfTheDay vs Google Slides</Link>
           </p>

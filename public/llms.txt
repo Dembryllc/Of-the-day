@@ -5,11 +5,11 @@
 ## Pricing (as published on the homepage)
 - Free: daily routine, basic activity library, 3 saved routines, 5 AI lesson slides per month. No credit card.
 - Pro Teacher: $79 per year, or $9 per month. Full library, projector mode, unlimited AI lesson slides, cloud sync.
-- School: $199 per year, up to 50 teacher accounts, one invoice. District licensing is quoted on request.
+- One price for everyone: schools and districts pay the same $79 per teacher per year as individuals. Schools that need to pay by purchase order can request one on the homepage or the district page.
 
 ## Pages
 - [Homepage](https://oftheday.net/): what it does, pricing, FAQ
-- [Schools and districts](https://oftheday.net/district): pricing, privacy, Data Privacy Agreement
+- [Schools and districts](https://oftheday.net/district): privacy, Data Privacy Agreement, buying by purchase order
 - [OfTheDay vs Nearpod](https://oftheday.net/vs/nearpod)
 - [OfTheDay vs Simple Mondays](https://oftheday.net/vs/simple-mondays)
 - [OfTheDay vs Google Slides](https://oftheday.net/vs/google-slides)
