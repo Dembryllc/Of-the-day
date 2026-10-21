@@ -4,6 +4,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './lib/firebase';
 import { useSeo } from './lib/seo';
 import { ROUTE_META } from './lib/routes';
+import { track } from './lib/heycatch';
 import './landing.css';
 
 export default function DistrictPage() {
@@ -43,6 +44,7 @@ export default function DistrictPage() {
         submittedAt: serverTimestamp(),
       });
     } catch {}
+    track('district_quote_request');
     setSubmitted(true);
     setBusy(false);
   };
