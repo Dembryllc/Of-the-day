@@ -10,6 +10,7 @@ import {
   signInWithCredential,
 } from 'firebase/auth';
 import { auth } from './lib/firebase';
+import { track } from './lib/heycatch';
 import { createUserDocument, getUserDocument } from './lib/firestore';
 
 const LOGO_SRC = '/assets/ofthedaylogi.png';
@@ -109,6 +110,7 @@ export default function AuthScreen({ onAuthed, googleError }) {
     setError('');
     try {
       await signInWithGoogleIdentity();
+      track('signin_completed', { method: 'google' });
       setBusy(false);
     } catch (err) {
       console.error('Google sign-in failed', err);
@@ -117,6 +119,7 @@ export default function AuthScreen({ onAuthed, googleError }) {
           const provider = new GoogleAuthProvider();
           provider.setCustomParameters({ prompt: 'select_account' });
           await signInWithPopup(auth, provider);
+          track('signin_completed', { method: 'google' });
           return;
         } catch (popupErr) {
           console.error('Google Firebase popup fallback failed', popupErr);
@@ -151,9 +154,11 @@ export default function AuthScreen({ onAuthed, googleError }) {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await sendEmailVerification(cred.user);
         await createUserDocument(cred.user.uid, { name: form.name.trim(), email, grade: form.grade });
+        track('signup_completed', { method: 'email' });
         onAuthed({ uid: cred.user.uid, email, emailVerified: false, name: form.name.trim(), grade: form.grade, plan: 'trial', trialStartedAt: Date.now() });
       } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
+        track('signin_completed', { method: 'email' });
         const userDoc = await getUserDocument(cred.user.uid);
         onAuthed({
           uid: cred.user.uid,

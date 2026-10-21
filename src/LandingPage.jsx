@@ -6,6 +6,7 @@ import { db, functions } from './lib/firebase';
 import { getAttribution } from './lib/attribution';
 import { useSeo } from './lib/seo';
 import { ROUTE_META } from './lib/routes';
+import { track } from './lib/heycatch';
 import './landing.css';
 
 const FAQ_ITEMS = [
@@ -101,6 +102,7 @@ export default function LandingPage() {
         submittedAt: serverTimestamp(),
       });
     } catch {}
+    track('school_quote_request');
     setSchoolSubmitted(true);
   };
 
@@ -115,6 +117,7 @@ export default function LandingPage() {
       const sendLeadMagnet = httpsCallable(functions, 'sendLeadMagnet');
       await sendLeadMagnet({ email });
     } catch {}
+    track('free_pdf_signup');
     setCaptureSubmitted(true);
   };
 
