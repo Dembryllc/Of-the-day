@@ -73,7 +73,7 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_STRIPE_MONTHLY_PRICE_ID: ${{ secrets.VITE_STRIPE_MONTHLY_PRICE_ID }}
           VITE_STRIPE_ANNUAL_PRICE_ID: ${{ secrets.VITE_STRIPE_ANNUAL_PRICE_ID }}
-          VITE_HEYCATCH_API_KEY: ${{ secrets.VITE_HEYCATCH_API_KEY }}
+          VITE_HEYCATCH_API_KEY: ${{ secrets.HEYCATCH }}
 
       - name: Write functions/.env
         run: |
