@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { useLayoutEffect } from 'react';
 import { useSeo } from './lib/seo';
 import { ROUTE_META } from './lib/routes';
+import { BlogLink } from './lib/blog';
 import './landing.css';
 
 // Public marketing pages: /vs/:rival and /changelog. They reuse the landing
@@ -21,7 +22,7 @@ function usePageChrome() {
   }, []);
 }
 
-function Shell({ children }) {
+export function Shell({ children }) {
   usePageChrome();
   return (
     <div className="lp">
@@ -42,6 +43,7 @@ function Shell({ children }) {
         <div className="footer-links">
           <Link to="/">Home</Link>
           <Link to="/district">For Districts</Link>
+          <BlogLink />
           <Link to="/changelog">Changelog</Link>
           <Link to="/vs/nearpod">vs Nearpod</Link>
           <Link to="/vs/simple-mondays">vs Simple Mondays</Link>
