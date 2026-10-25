@@ -7,6 +7,7 @@ import { getAttribution } from './lib/attribution';
 import { useSeo } from './lib/seo';
 import { ROUTE_META } from './lib/routes';
 import { track } from './lib/heycatch';
+import { BlogLink } from './lib/blog';
 import './landing.css';
 
 const FAQ_ITEMS = [
@@ -674,6 +675,7 @@ export default function LandingPage() {
           <a href="#faq">FAQ</a>
           <a href="mailto:dembryllc@gmail.com">Contact</a>
           <Link to="/district">For Districts</Link>
+          <BlogLink />
           <Link to="/changelog">Changelog</Link>
           <Link to="/vs/nearpod">vs Nearpod</Link>
           <Link to="/vs/simple-mondays">vs Simple Mondays</Link>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { VsPage, ChangelogPage } from './MarketingPages';
+import { BlogIndexPage, BlogArticlePage } from './BlogPages';
 import { useTweaks, TweaksPanel, TweakSection, TweakSelect, TweakText } from './tweaks-panel';
 import LandingPage from './LandingPage';
 import PrivacyPage from './PrivacyPage';
@@ -4032,6 +4033,8 @@ function App() {
         <Route path="/district" element={<DistrictPage />} />
         <Route path="/vs/:rival" element={<VsPage />} />
         <Route path="/changelog" element={<ChangelogPage />} />
+        <Route path="/blog" element={<BlogIndexPage />} />
+        <Route path="/blog/:slug" element={<BlogArticlePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

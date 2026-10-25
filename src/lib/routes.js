@@ -22,6 +22,10 @@ export const ROUTE_META = {
     title: 'OfTheDay Changelog — What We Changed and When',
     description: 'A dated list of changes to OfTheDay.net: new features, fixes and plan changes, newest first.',
   },
+  '/blog': {
+    title: 'OfTheDay Blog — Morning Meeting Ideas for Teachers',
+    description: 'Articles on running a better morning meeting: routines, greetings, sharing and activities for K-12 classrooms.',
+  },
   '/vs/nearpod': {
     title: 'OfTheDay vs Nearpod — Which Fits a Morning Meeting?',
     description: 'An honest comparison of OfTheDay and Nearpod for K-12 teachers: what each is built for, what each costs, and when to pick the other one.',
