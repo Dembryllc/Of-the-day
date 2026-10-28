@@ -58,9 +58,15 @@
 }
 .lp .nav-links a {
   text-decoration: none; color: #52525B; font-size: 14px; font-weight: 500;
-  transition: color 0.15s;
+  transition: color 0.15s; white-space: nowrap;
 }
 .lp .nav-links a:hover { color: #0A0F1E; }
+/* Between the hamburger breakpoint and full desktop width the row is tight:
+   labels used to wrap onto two lines ("Lesson / Slides") on an iPad held sideways. */
+@media (min-width: 1024px) and (max-width: 1180px) {
+  .lp .nav-links { gap: 16px; }
+  .lp .nav-links a { font-size: 13px; }
+}
 .lp .nav-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .lp .btn-ghost {
   text-decoration: none; color: #52525B; font-size: 14px; font-weight: 500;
@@ -865,7 +871,10 @@
 .lp .footer-copy { font-size: 11px; color: rgba(255,255,255,0.18); }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 900px) {
+/* The top menu folds into the hamburger below 1024px, before the rest of the
+   page goes single-column at 900px: between the two, the full row of links
+   no longer fits on one line. */
+@media (max-width: 1023px) {
   .lp .nav-collapse { display: none; }
   .lp .nav-collapse.open {
     display: flex; flex-direction: column; gap: 0;
@@ -882,6 +891,9 @@
   .lp .nav-collapse.open .nav-actions .btn-ghost { text-align: left; padding: 14px 0; font-size: 16px; }
   .lp .nav-collapse.open .nav-actions .btn-primary { display: block; text-align: center; margin-top: 6px; padding: 14px; font-size: 16px; }
   .lp .hamburger { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+}
+
+@media (max-width: 900px) {
   .lp .hero-inner { grid-template-columns: 1fr; gap: 40px; }
   .lp .hero-sunrise-mark { width: 340px; top: -30px; right: -60px; opacity: 0.18; }
   .lp .app-mockup { max-width: 420px; margin: 0 auto; }

@@ -68,13 +68,17 @@ export function useArticles() {
   return state;
 }
 
-// "Blog" nav/footer link, hidden while there are no articles.
-export function BlogLink() {
+// "Blog" nav/footer link, hidden while there are no articles. `inList` wraps
+// it in an <li> for the top nav's <ul>, so no empty item is left behind
+// while it's hidden. Requests are shared, so several links cost one call.
+export function BlogLink({ inList = false, onClick } = {}) {
   const [total, setTotal] = useState(0);
   useEffect(() => {
     let live = true;
     get('/articles', { limit: 1 }).then(d => live && setTotal(d?.total || 0)).catch(() => {});
     return () => { live = false; };
   }, []);
-  return total > 0 ? <Link to="/blog">Blog</Link> : null;
+  if (total === 0) return null;
+  const link = <Link to="/blog" onClick={onClick}>Blog</Link>;
+  return inList ? <li>{link}</li> : link;
 }
